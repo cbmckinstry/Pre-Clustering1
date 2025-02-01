@@ -59,50 +59,75 @@
         }
         .results-section {
             margin-top: 15px;
-        }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-        }
-        table, th, td {
-            border: 1px solid #ccc;
-        }
-        th, td {
-            padding: 8px;
-            text-align: center;
-        }
-        .results-section {
-            margin-top: 15px;
-            overflow-x: auto; /* Enables horizontal scrolling if needed */
             max-width: 100%;
         }
 
         .results-section table {
             width: 100%;
             border-collapse: collapse;
-            min-width: 600px; /* Ensures readability */
         }
 
-        .results-section th,
-        .results-section td {
+        /* Table Styles */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+
+        table, th, td {
+            border: 1px solid #ccc;
+        }
+
+        th, td {
             padding: 8px;
             text-align: center;
-            border: 1px solid #ccc;
-            word-wrap: break-word;
         }
 
-        @media (max-width: 768px) {
-            .results-section table {
-                min-width: 100%;
-            }
-        }
+        /* Mobile-friendly table */
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
             }
             .left-column, .right-column {
                 width: 100%;
+            }
+
+            /* Make table rows stack vertically */
+            .results-section table,
+            .results-section thead,
+            .results-section tbody,
+            .results-section th,
+            .results-section td,
+            .results-section tr {
+                display: block;
+                width: 100%;
+            }
+
+            .results-section tr {
+                margin-bottom: 10px;
+                border: 1px solid #ccc;
+                padding: 10px;
+            }
+
+            /* Hide table headers */
+            .results-section th {
+                display: none;
+            }
+
+            /* Stack table cells like a list */
+            .results-section td {
+                text-align: left;
+                padding: 10px;
+                border: none;
+                display: flex;
+                justify-content: space-between;
+                border-bottom: 1px solid #ddd;
+            }
+
+            /* Add labels dynamically */
+            .results-section td::before {
+                content: attr(data-label);
+                font-weight: bold;
             }
         }
     </style>
