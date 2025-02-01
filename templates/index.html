@@ -72,6 +72,31 @@
             padding: 8px;
             text-align: center;
         }
+        .results-section {
+            margin-top: 15px;
+            overflow-x: auto; /* Enables horizontal scrolling if needed */
+            max-width: 100%;
+        }
+
+        .results-section table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px; /* Ensures readability */
+        }
+
+        .results-section th,
+        .results-section td {
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ccc;
+            word-wrap: break-word;
+        }
+
+        @media (max-width: 768px) {
+            .results-section table {
+                min-width: 100%;
+            }
+        }
         @media (max-width: 768px) {
             .container {
                 flex-direction: column;
