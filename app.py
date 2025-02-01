@@ -30,13 +30,13 @@ def index():
 
             # Validate inputs
             validate_inputs(vehlist, pers5, pers6, pers7)
-            vehlist.sort(reverse=True)
 
             backup_group = pers7 if pers7 != 0 else pers5
             backupsize = 5 if pers7 == 0 else 7
             primary_group = pers6
             use_backup = pers7 != 0
-            vehlist.sort(reverse=True)
+            vehlist_sorted=vehlist.copy()
+            vehlist_sorted.sort()
 
             allocations = []
             for priority in range(2):
@@ -44,14 +44,14 @@ def index():
                     for opt2 in [False, True]:
                         for opt1 in [False, True]:
                             allocations.append(allocate_groups(
-                                vehlist[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
+                                vehlist_sorted[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
                             ))
 
             for order in [None, "asc", "desc"]:
                 for opt2 in [False, True]:
                     for opt1 in [False, True]:
                         allocations.append(allocate_groups_simultaneous(
-                            vehlist[:].copy(), backup_group, primary_group, order, opt2, opt1, use_backup
+                            vehlist_sorted[:].copy(), backup_group, primary_group, order, opt2, opt1, use_backup
                         ))
 
             results = closestalg([backup_group, pers6], allocations,backupsize)
