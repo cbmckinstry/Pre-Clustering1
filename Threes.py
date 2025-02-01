@@ -269,6 +269,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                             if shortfall5[0]==0:
                                 break
                             if spaces[i]+spaces[j]+spaces[k]>=5 and (shortfall5[0]>0) and (i not in used5 and j not in used5 and k not in used5) and sum(allocations[i])+sum(allocations[k])+sum(allocations[j])<=bound6:
+                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos5,trial[1]+init4
                                 used5.add(i)
