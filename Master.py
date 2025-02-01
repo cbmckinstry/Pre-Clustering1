@@ -19,31 +19,12 @@ def alltogether(combos,allist,damage):
         out.append(elem[1])
     twos=[]
     threes=[]
-    fours=[]
-    fives=[]
     for item in out:
         if len(item[0])==2:
             twos.append(item)
         if len(item[0])==3:
             threes.append(item)
-        if len(item[0])==4:
-            fours.append(item)
-        if len(item[0])==5:
-            fives.append(item)
-    return twos,threes,fours,fives
-
-
-def assigntogether(allocations,spaces,shortfall,backupsize,boundlst):
-    round1=[],[]
-    if len(allocations)>=5:
-        round1=fives(shortfall,allocations,spaces,backupsize,None,boundlst)
-    elif len(allocations)>=4:
-        round1=fours(shortfall,allocations,spaces,backupsize,None,boundlst)
-    elif len(allocations)>=3:
-        round1=threes(shortfall,allocations,spaces,backupsize,None,boundlst)
-    elif len(allocations)>=2:
-        round1=combine(allocations,spaces,shortfall,backupsize,None,boundlst)
-    return round1
+    return twos,threes
 
 def compute_ranges(people):
     final=[]
