@@ -69,7 +69,10 @@ def index():
             # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
             boundlst=sort_by_sum(sorted_allocations.copy())
-            combos,listing=threes(results[1].copy(),sorted_allocations,sorted_spaces,backupsize,None,boundlst)
+            if len(sorted_allocations)>=3:
+                combos,listing=threes(results[1].copy(),sorted_allocations,sorted_spaces,backupsize,None,boundlst)
+            else:
+                combos,listing=combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
             damage=harm(combos,sorted_allocations.copy())
             alllist=alltogether(combos,listing,damage)
             rem_vehs=unused(sorted_allocations.copy(),combos.copy())

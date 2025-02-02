@@ -2,7 +2,7 @@ def combine(allocations, space, shortfall, backup_size=5, used=None, boundlst=No
     if used is None:
         used = set()
     if boundlst is None:
-        boundlst=[[0,0],[0,0],[0,0],[0,0]]
+        boundlst=[[0,0],[0,0]]
     backup=shortfall[0]
     six=shortfall[1]
 

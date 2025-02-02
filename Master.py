@@ -67,20 +67,14 @@ def compute_matrices(people,crews):
 
 def sort_by_sum(lst):
     x=sorted(lst, key=lambda sublist: sum(sublist), reverse=True)
-    twoup=twolow=threeup=threelow=fourup=fourlow=fiveup=fivelow=0
+    twoup=twolow=threeup=threelow=0
     if len(lst)>=2:
         twoup=sum(x[1])+sum(x[0])+1
         twolow=sum(x[-1])+sum(x[-2])
     if len(lst)>=3:
         threeup=sum(x[1])+sum(x[2])+sum(x[0])+1
         threelow=sum(x[-1])+sum(x[-2])+sum(x[-3])
-    if len(lst)>=4:
-        fourup=sum(x[1])+sum(x[2])+sum(x[3])+sum(x[0])+1
-        fourlow=sum(x[-1])+sum(x[-2])+sum(x[-3])+sum(x[-4])
-    if len(lst)>=5:
-        fiveup=sum(x[1])+sum(x[2])+sum(x[3])+sum(x[0])+sum(x[4])+1
-        fivelow=sum(x[-1])+sum(x[-2])+sum(x[-3])+sum(x[-4])+sum(x[-5])
-    return [[twolow,twoup],[threelow,threeup],[fourlow,fourup],[fivelow,fiveup]]
+    return [[twolow,twoup],[threelow,threeup]]
 def harm(combos,allocations):
     out=[]
     for combo in combos:

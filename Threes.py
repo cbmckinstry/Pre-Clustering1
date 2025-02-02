@@ -1,7 +1,7 @@
 from Combine import *
 def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=None):
     if boundlst is None:
-        boundlst = [[0,0], [0,0], [0,0]]
+        boundlst = [[0,0], [0,0]]
     if used5 is None:
         used5=set()
     allocations=[]
@@ -13,7 +13,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
             allocations.append(allocations1[i])
             spaces.append(spaces1[i])
 
-    x=combine(allocations,spaces,shortfall.copy(),backupsize,used5,[[0,1],[0,1],[0,1],[0,1]])
+    x=combine(allocations,spaces,shortfall.copy(),backupsize,used5,[[0,1],[0,1]])
     if x[1]:
         return x
 
@@ -39,7 +39,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                         break
                     if (i not in used6 and j not in used6 and k not in used6) and spaces[i]+spaces[k]+spaces[j]>=(2*max(backupsize,6)) and (six6>0 or backup6>0) and (sum(allocations[i])+sum(allocations[j])+sum(allocations[k]))<=m:
                         if spaces[i]+spaces[k]+spaces[j]>=(2*max(backupsize,6)):
-                            trial=combine(allocations,spaces,[backup6,six6],backupsize,used6,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup6,six6],backupsize,used6,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes6,trial[1]+init
                             if backupsize==7 and backup6>=2:
@@ -54,7 +54,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init.append([0,2])
                             if six6==0 and backup6==0:
                                 return threes6,init
-                            trial=combine(allocations,spaces,[backup6,six6],backupsize,used6,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup6,six6],backupsize,used6,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes6,trial[1]+init
     six7=six6
@@ -79,7 +79,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                         break
                     if (i not in used7 and j not in used7 and k not in used7) and spaces[i]+spaces[k]+spaces[j]>=(max(backupsize,6)+min(backupsize,6)) and (six7>0 and backup7>0) and (sum(allocations[i])+sum(allocations[j])+sum(allocations[k]))<=m:
                         if spaces[i]+spaces[k]+spaces[j]>=(max(backupsize,6)+min(backupsize,6)):
-                            trial=combine(allocations,spaces,[backup7,six7],backupsize,used7,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup7,six7],backupsize,used7,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes7,trial[1]+init1
                             if backup7>0 and six7>0:
@@ -90,7 +90,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init1.append([1,1])
                             if six7==0 and backup7==0:
                                 return threes7,init1
-                            trial=combine(allocations,spaces,[backup7,six7],backupsize,used7,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup7,six7],backupsize,used7,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes7,trial[1]+init1
     six8=six7
@@ -115,7 +115,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                         break
                     if (i not in used8 and j not in used8 and k not in used8) and spaces[i]+spaces[k]+spaces[j]>=(2*min(backupsize,6)) and (six8>0 or backup8>0) and (sum(allocations[i])+sum(allocations[j])+sum(allocations[k]))<=m:
                         if spaces[i]+spaces[k]+spaces[j]>=(2*min(backupsize,6)):
-                            trial=combine(allocations,spaces,[backup8,six8],backupsize,used8,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup8,six8],backupsize,used8,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes8,trial[1]+init2
                             if backupsize==7 and six8>=2:
@@ -130,7 +130,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init2.append([2,0])
                             if six8==0 and backup8==0:
                                 return threes8,init2
-                            trial=combine(allocations,spaces,[backup8,six8],backupsize,used8,[[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
+                            trial=combine(allocations,spaces,[backup8,six8],backupsize,used8,[[boundlst[0][0],m+1],[boundlst[0][0],m+1]])
                             if trial[1]:
                                 return trial[0]+threes8,trial[1]+init2
 
@@ -167,7 +167,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                             if shortfall4[0]==0:
                                 break
                             if spaces[i]+spaces[j]+spaces[k]>=7 and (shortfall4[0]>0) and (i not in used4 and j not in used4 and k not in used4) and sum(allocations[i])+sum(allocations[k])+sum(allocations[j])<=bound5:
-                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
+                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos4,trial[1]+init3
                                 used4.add(i)
@@ -178,7 +178,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init3.append([1,0])
                                 if shortfall4[0]==0 and shortfall4[1]==0:
                                     return triplecombos4,init3
-                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
+                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos4,trial[1]+init3
             shortfall5=shortfall4.copy()
@@ -202,7 +202,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                             if shortfall5[1]==0:
                                 break
                             if spaces[i]+spaces[j]+spaces[k]>=6 and (shortfall5[1]>0) and (i not in used5 and j not in used5 and k not in used5) and sum(allocations[i])+sum(allocations[k])+sum(allocations[j])<=bound6:
-                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
+                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos5,trial[1]+init4
                                 used5.add(i)
@@ -213,7 +213,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init4.append([0,1])
                                 if shortfall5[0]==0 and shortfall5[1]==0:
                                     return triplecombos5,init4
-                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
+                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos5,trial[1]+init4
         else:
@@ -234,7 +234,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                             if shortfall4[1]==0:
                                 break
                             if spaces[i]+spaces[j]+spaces[k]>=6 and (shortfall4[1]>0) and (i not in used4 and j not in used4 and k not in used4) and sum(allocations[i])+sum(allocations[k])+sum(allocations[j])<=bound5:
-                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
+                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos4,trial[1]+init3
                                 used4.add(i)
@@ -245,7 +245,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init3.append([0,1])
                                 if shortfall4[0]==0 and shortfall4[1]==0:
                                     return triplecombos4,init3
-                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
+                                trial=combine(allocations,spaces,shortfall4,backupsize,used4,[[boundlst[0][0],bound5+1],[boundlst[0][0],bound5+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos4,trial[1]+init3
             shortfall5=shortfall4.copy()
@@ -269,7 +269,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                             if shortfall5[0]==0:
                                 break
                             if spaces[i]+spaces[j]+spaces[k]>=5 and (shortfall5[0]>0) and (i not in used5 and j not in used5 and k not in used5) and sum(allocations[i])+sum(allocations[k])+sum(allocations[j])<=bound6:
-                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
+                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos5,trial[1]+init4
                                 used5.add(i)
@@ -280,7 +280,7 @@ def threes(shortfall, allocations1, spaces1, backupsize=5, used5=None, boundlst=
                                 init4.append([1,0])
                                 if shortfall5[0]==0 and shortfall5[1]==0:
                                     return triplecombos5,init4
-                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
+                                trial=combine(allocations,spaces,shortfall5,backupsize,used5,[[boundlst[0][0],bound6+1],[boundlst[0][0],bound6+1]])
                                 if trial[1]:
                                     return trial[0]+triplecombos5,trial[1]+init4
     if shortfall5[0]==0 and shortfall5[1]==0:
