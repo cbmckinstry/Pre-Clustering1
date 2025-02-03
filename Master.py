@@ -95,3 +95,68 @@ def unused(allocations,combos):
         if elem+1 not in used:
             unused.append(elem+1)
     return unused
+
+def optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces):
+    # Convert harm_list into correct weight values
+    harm_weights = [sum(x) for x in harm_list]
+
+    # Compute weights of each combination
+    combo_weights = [sum(harm_weights[i] for i in combo) for combo in combo_indices]
+
+    max_weight = max(combo_weights)
+
+    while max_weight >= 0:
+        target_weight = max_weight - 2
+        if target_weight<0:
+            break
+
+        max_weight_indices = [i for i, w in enumerate(combo_weights) if w == max_weight]
+        target_weight_indices = [i for i, w in enumerate(combo_weights) if w == target_weight]
+
+        print(f"Max weight: {max_weight}, Target weight: {target_weight}")
+        print(f"Max indices: {[x + 1 for x in max_weight_indices]}, Target indices: {[x + 1 for x in target_weight_indices]}")
+
+        if not max_weight_indices or not target_weight_indices:
+            max_weight -= 1
+            continue
+
+        for i in max_weight_indices:
+            for j in target_weight_indices:
+                for idx1 in combo_indices[i]:
+                    for idx2 in combo_indices[j]:
+                        new_combo_i = set(combo_indices[i]) - {idx1} | {idx2}
+                        new_combo_j = set(combo_indices[j]) - {idx2} | {idx1}
+
+                        # Compute new weights
+                        new_weight_i = sum(harm_weights[x] for x in new_combo_i)
+                        new_weight_j = sum(harm_weights[x] for x in new_combo_j)
+
+                        # Compute allocation constraints
+                        alloc_i = allocations[i][1] * 6 + allocations[i][0] * backup_size
+                        alloc_j = allocations[j][1] * 6 + allocations[j][0] * backup_size
+
+                        # Check remaining spaces for feasibility
+                        remaining_i = sum(remaining_spaces[x] for x in new_combo_i)
+                        remaining_j = sum(remaining_spaces[x] for x in new_combo_j)
+
+                        print(f"Trying swap: {idx1 + 1} <-> {idx2 + 1}")
+                        print(f"New Weights: {new_weight_i}, {new_weight_j}")
+                        print(f"Required allocations: {alloc_i}, {alloc_j}")
+                        print(f"Available spaces: {remaining_i}, {remaining_j}")
+
+                        # Ensure new combinations meet allocation requirements
+                        if remaining_i >= alloc_i and remaining_j >= alloc_j and max(new_weight_i, new_weight_j) < max_weight:
+                            # Apply swap
+                            combo_indices[i] = list(new_combo_i)
+                            combo_indices[j] = list(new_combo_j)
+                            combo_weights[i] = new_weight_i
+                            combo_weights[j] = new_weight_j
+
+                            return optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces)
+
+        max_weight -= 1
+
+    adjusted_combos = [[index + 1 for index in combo] for combo in combo_indices]
+    return adjusted_combos
+
+
