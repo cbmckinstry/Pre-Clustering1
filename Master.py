@@ -96,67 +96,82 @@ def unused(allocations,combos):
             unused.append(elem+1)
     return unused
 
-def optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces):
-    # Convert harm_list into correct weight values
-    harm_weights = [sum(x) for x in harm_list]
+def optimize_combinations(sorted_allocations, allocations, backupsize, out_combos, spaces):
+    combos=[]
+    for item in out_combos:
+        combos1=[]
+        for elem in item:
+            combos1.append(elem-1)
+        combos.append(combos1)
+    index_combos=combos.copy()
 
-    # Compute weights of each combination
-    combo_weights = [sum(harm_weights[i] for i in combo) for combo in combo_indices]
+    weights = [sum(item) for item in sorted_allocations]
 
-    max_weight = max(combo_weights)
+    def total_weight(combo):
+        return sum(weights[i] for i in combo)
 
-    while max_weight >= 0:
-        target_weight = max_weight - 2
-        if target_weight<0:
-            break
+    def total_space(combo):
+        return sum(spaces[i] for i in combo)
 
-        max_weight_indices = [i for i, w in enumerate(combo_weights) if w == max_weight]
-        target_weight_indices = [i for i, w in enumerate(combo_weights) if w == target_weight]
+    def total_allocation_threshold(idx):
+        return allocations[idx][0] * backupsize + allocations[idx][1] * 6
 
-        print(f"Max weight: {max_weight}, Target weight: {target_weight}")
-        print(f"Max indices: {[x + 1 for x in max_weight_indices]}, Target indices: {[x + 1 for x in target_weight_indices]}")
+    progress = True
 
-        if not max_weight_indices or not target_weight_indices:
-            max_weight -= 1
-            continue
+    while progress:
+        progress = False
 
-        for i in max_weight_indices:
-            for j in target_weight_indices:
-                for idx1 in combo_indices[i]:
-                    for idx2 in combo_indices[j]:
-                        new_combo_i = set(combo_indices[i]) - {idx1} | {idx2}
-                        new_combo_j = set(combo_indices[j]) - {idx2} | {idx1}
+        for i in range(len(index_combos) - 1):
+            for j in range(i + 1, len(index_combos)):
+                combo1, combo2 = index_combos[i], index_combos[j]
 
-                        # Compute new weights
-                        new_weight_i = sum(harm_weights[x] for x in new_combo_i)
-                        new_weight_j = sum(harm_weights[x] for x in new_combo_j)
+                if len(combo1) == 1 and len(combo2) == 1:
+                    continue
 
-                        # Compute allocation constraints
-                        alloc_i = allocations[i][1] * 6 + allocations[i][0] * backup_size
-                        alloc_j = allocations[j][1] * 6 + allocations[j][0] * backup_size
+                for idx1 in combo1:
+                    for idx2 in combo2:
+                        weight1_before = total_weight(combo1)
+                        weight2_before = total_weight(combo2)
 
-                        # Check remaining spaces for feasibility
-                        remaining_i = sum(remaining_spaces[x] for x in new_combo_i)
-                        remaining_j = sum(remaining_spaces[x] for x in new_combo_j)
+                        new_combo1 = combo1[:]
+                        new_combo2 = combo2[:]
 
-                        print(f"Trying swap: {idx1 + 1} <-> {idx2 + 1}")
-                        print(f"New Weights: {new_weight_i}, {new_weight_j}")
-                        print(f"Required allocations: {alloc_i}, {alloc_j}")
-                        print(f"Available spaces: {remaining_i}, {remaining_j}")
+                        new_combo1[new_combo1.index(idx1)] = idx2
+                        new_combo2[new_combo2.index(idx2)] = idx1
 
-                        # Ensure new combinations meet allocation requirements
-                        if remaining_i >= alloc_i and remaining_j >= alloc_j and max(new_weight_i, new_weight_j) < max_weight:
-                            # Apply swap
-                            combo_indices[i] = list(new_combo_i)
-                            combo_indices[j] = list(new_combo_j)
-                            combo_weights[i] = new_weight_i
-                            combo_weights[j] = new_weight_j
+                        weight1_after = total_weight(new_combo1)
+                        weight2_after = total_weight(new_combo2)
 
-                            return optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces)
+                        space1_after = total_space(new_combo1)
+                        space2_after = total_space(new_combo2)
 
-        max_weight -= 1
+                        min_space1 = total_allocation_threshold(i)
+                        min_space2 = total_allocation_threshold(j)
 
-    adjusted_combos = [[index + 1 for index in combo] for combo in combo_indices]
-    return adjusted_combos
+                        # Handle the case where exactly one of the combos is of length 1
+                        if len(combo1) == 1 or len(combo2) == 1:
+                            if (len(combo1) == 1 and weight2_after < weight2_before) or \
+                                    (len(combo2) == 1 and weight1_after < weight1_before):
+                                if space1_after >= min_space1 and space2_after >= min_space2:
+                                    index_combos[i] = new_combo1
+                                    index_combos[j] = new_combo2
+                                    progress = True
+                                    break
+                        else:
+                            if max(weight1_after, weight2_after) < max(weight1_before, weight2_before) and \
+                                    space1_after >= min_space1 and space2_after >= min_space2:
+                                index_combos[i] = new_combo1
+                                index_combos[j] = new_combo2
+                                progress = True
+                                break
+
+                    if progress:
+                        break
+            if progress:
+                break
+
+    index_combos = [[idx + 1 for idx in combo] for combo in index_combos if len(combo) > 1]
+
+    return index_combos
 
 

@@ -73,14 +73,12 @@ def index():
                 combos,listing=threes(results[1].copy(),sorted_allocations,sorted_spaces,backupsize,None,boundlst)
             else:
                 combos,listing=combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
-            combos1=[]
-            for elem in combos:
-                combos2=[]
-                for i in elem:
-                   combos2.append(i-1)
-                combos1.append(combos2)
-            if combos1:
-                combos=optimize_combinations(sorted_allocations.copy(),combos1,listing,backupsize,sorted_spaces)
+            rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+            for elem in rem_vehs1:
+                combos.append([elem])
+                listing.append([0,0])
+            if combos:
+                combos=optimize_combinations(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
 
             damage=harm(combos,sorted_allocations.copy())
             alllist=alltogether(combos,listing,damage)
