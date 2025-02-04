@@ -304,26 +304,32 @@ def sort_closestalg_output(closestalg_output, backup):
     non_zero_data = [entry for entry in combined_data if entry[2] != 0]
     zero_data = [entry for entry in combined_data if entry[2] == 0]
 
-    # Sort non-zero data by remaining spaces (descending), and size (ascending for ties)
+    # Sort non-zero data by remaining spaces (descending) and then by size (ascending for ties)
     non_zero_data.sort(key=lambda x: (-x[2], x[0]))
-    result = []
-    left, right = 0, len(non_zero_data) - 1
+
+    # Apply zig-zag ordering on the remaining spaces
+    zigzag_result = []
+    grouped_remainders = {}
+    for entry in non_zero_data:
+        grouped_remainders.setdefault(entry[2], []).append(entry)
+
+    sorted_remainders = sorted(grouped_remainders.keys(), reverse=True)
+    left, right = 0, len(sorted_remainders) - 1
     while left <= right:
-        if right != left:
-            result.append(non_zero_data[right])  # Largest
-        result.append(non_zero_data[left])   # Smallest
-        right -= 1
+        if left != right:
+            zigzag_result.extend(sorted(grouped_remainders[sorted_remainders[left]], key=lambda x: x[0]))
+        zigzag_result.extend(sorted(grouped_remainders[sorted_remainders[right]], key=lambda x: x[0]))
         left += 1
+        right -= 1
 
     # Append zero data to the end, sorted in ascending order by size
     zero_data.sort(key=lambda x: x[0])
-    result.extend(zero_data)
+    zigzag_result.extend(zero_data)
 
     # Separate the sorted data into three lists
-    sorted_sizes = [entry[0] for entry in result]
-    sorted_allocations = [entry[1] for entry in result]
-    sorted_remaining_spaces = [entry[2] for entry in result]
+    sorted_sizes = [entry[0] for entry in zigzag_result]
+    sorted_allocations = [entry[1] for entry in zigzag_result]
+    sorted_remaining_spaces = [entry[2] for entry in zigzag_result]
     number = list(range(1, len(sorted_sizes) + 1))
 
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes, number
-
