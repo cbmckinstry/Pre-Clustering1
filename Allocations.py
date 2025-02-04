@@ -280,7 +280,7 @@ def closestalg(required_groups, allocations,backupsize=5):
     best_index = best_indices[0]
     return [allocations[best_index], offby[best_index]]
 
-def sort_closestalg_output(closestalg_output,backup):
+def sort_closestalg_output(closestalg_output, backup):
     # Safely extract the allocation details
     try:
         allocation = closestalg_output[0]  # First element contains totals, allocations, and remaining spaces
@@ -300,16 +300,30 @@ def sort_closestalg_output(closestalg_output,backup):
     for i in range(len(remaining_spaces)):
         combined_data.append((vehicle_sizes[i], allocations[i], remaining_spaces[i]))
 
-    # Sort the combined data by remaining spaces in descending order
-    combined_data.sort(key=lambda x: x[2], reverse=True)
+    # Separate entries where remaining space is zero
+    non_zero_data = [entry for entry in combined_data if entry[2] != 0]
+    zero_data = [entry for entry in combined_data if entry[2] == 0]
+
+    # Sort non-zero data by remaining spaces (descending), and size (ascending for ties)
+    non_zero_data.sort(key=lambda x: (-x[2], x[0]))
+    result = []
+    left, right = 0, len(non_zero_data) - 1
+    while left <= right:
+        if right != left:
+            result.append(non_zero_data[right])  # Largest
+        result.append(non_zero_data[left])   # Smallest
+        right -= 1
+        left += 1
+
+    # Append zero data to the end, sorted in ascending order by size
+    zero_data.sort(key=lambda x: x[0])
+    result.extend(zero_data)
 
     # Separate the sorted data into three lists
-    sorted_sizes = [entry[0] for entry in combined_data]
-    sorted_allocations = [entry[1] for entry in combined_data]
-    sorted_remaining_spaces = [entry[2] for entry in combined_data]
-    number=[]
-    for i in range(len(sorted_sizes)):
-        number.append(i+1)
+    sorted_sizes = [entry[0] for entry in result]
+    sorted_allocations = [entry[1] for entry in result]
+    sorted_remaining_spaces = [entry[2] for entry in result]
+    number = list(range(1, len(sorted_sizes) + 1))
 
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes, number
 

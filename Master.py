@@ -173,5 +173,3 @@ def optimize_combinations(sorted_allocations, allocations, backupsize, out_combo
     index_combos = [[idx + 1 for idx in combo] for combo in index_combos if len(combo) > 1]
 
     return index_combos
-
-
