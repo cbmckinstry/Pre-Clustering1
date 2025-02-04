@@ -231,22 +231,22 @@
                             {% if len(alllist[0])!=0 %}
                                 {% if backupsize==5 %}
                                     {% for vehicle in alllist[0] %}
-                                        <p>Combine Vehicle {{ vehicle[0][0] }} and {{ vehicle[0][1] }}, ({{ vehicle[1][0] }} 5-person, {{ vehicle[1][1] }} 6-person; Impacts {{ vehicle[2] }} crews)</p>
+                                        <p>Combine a {{ vehicle[0][0] }}-person and {{ vehicle[0][1] }}-person vehicle, ({{ vehicle[1][0] }} 5-person, {{ vehicle[1][1] }} 6-person; Impacts {{ vehicle[2] }} crews)</p>
                                     {% endfor %}
                                 {% else %}
                                     {% for vehicle in alllist[0] %}
-                                        <p>Combine Vehicle {{ vehicle[0][0] }} and {{ vehicle[0][1] }}, ({{ vehicle[1][1] }} 6-person, {{ vehicle[1][0] }} 7-person; Impacts {{ vehicle[2] }} crews)</p>
+                                        <p>Combine a {{ vehicle[0][0] }}-person and {{ vehicle[0][1] }}-person vehicle, ({{ vehicle[1][1] }} 6-person, {{ vehicle[1][0] }} 7-person; Impacts {{ vehicle[2] }} crews)</p>
                                     {% endfor %}
                                 {% endif %}
                             {% endif %}
                             {% if len(alllist[1])!=0%}
                                 {% if backupsize==5 %}
                                     {% for vehicle in alllist[1] %}
-                                        <p>Combine Vehicle {{ vehicle[0][0] }}, {{ vehicle[0][1] }}, and {{ vehicle[0][2] }}, ({{ vehicle[1][0] }} 5-person, {{ vehicle[1][1] }} 6-person; Impacts {{ vehicle[2] }} crews)</p>
+                                        <p>Combine a {{ vehicle[0][0] }}-person, {{ vehicle[0][1] }}-person, and {{ vehicle[0][2] }}-person vehicle, ({{ vehicle[1][0] }} 5-person, {{ vehicle[1][1] }} 6-person; Impacts {{ vehicle[2] }} crews)</p>
                                     {% endfor %}
                                 {% else %}
                                     {% for vehicle in alllist[1] %}
-                                        <p>Combine Vehicle {{ vehicle[0][0] }}, {{ vehicle[0][1] }}, and {{ vehicle[0][2] }}, ({{ vehicle[1][1] }} 6-person, {{ vehicle[1][0] }} 7-person; Impacts {{ vehicle[2] }} crews)</p>
+                                        <p>Combine a {{ vehicle[0][0] }}-person, {{ vehicle[0][1] }}-person, and {{ vehicle[0][2] }}-person vehicle, ({{ vehicle[1][1] }} 6-person, {{ vehicle[1][0] }} 7-person; Impacts {{ vehicle[2] }} crews)</p>
                                     {% endfor %}
                                 {% endif %}
                             {% endif %}
@@ -254,7 +254,11 @@
                                 <p>No Combinations Available</p>
                             {% endif %}
                         {% if rem_vehs and (len(alllist[0])!=0 or len(alllist[1])!=0)%}
-                            <p><strong>Remaining Vehicles:</strong> Vehicle {{ rem_vehs | join(", Vehicle ") }}</p>
+                            <p><strong>Remaining Vehicles:</strong>
+                                {% for veh in rem_vehs %}
+                                    {{ veh[0] }}  {{ veh[1] }}-person{% if not loop.last %}, {% endif %}
+                                {% endfor %}
+                            </p>
                         {% elif not rem_vehs %}
                             <p><strong>Remaining Vehicles:</strong> None</p>
                         {% endif %}

@@ -56,16 +56,8 @@ def index():
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
 
-            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
+            sorted_allocations, sorted_spaces, sorted_sizes = sort_closestalg_output1(results, backupsize)
 
-            # Combine the sorted data for the template
-            combined_sorted_data = [
-                [sorted_sizes[i], sorted_allocations[i], sorted_spaces[i], number[i]]
-                for i in range(len(sorted_sizes))
-            ]
-
-            # Store sorted allocations and results in session
-            session["sorted_allocations"] = combined_sorted_data
             boundlst=sort_by_sum(sorted_allocations.copy())
             if len(sorted_allocations)>=3:
                 combos,listing=threes(results[1].copy(),sorted_allocations,sorted_spaces,backupsize,None,boundlst)
@@ -78,9 +70,23 @@ def index():
             if combos:
                 combos=optimize_combinations(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
 
-            damage=harm(combos,sorted_allocations.copy())
+            damage=harm(combos.copy(),sorted_allocations.copy())
+            combos1=combos.copy()
+            combos=person_calc(combos1.copy(),sorted_sizes.copy())
             alllist=alltogether(combos,listing,damage)
-            rem_vehs=unused(sorted_allocations.copy(),combos.copy())
+            rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())
+            rem_vehs=quant(rem_vehs2)
+
+            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
+
+            # Combine the sorted data for the template
+            combined_sorted_data = [
+                [sorted_sizes[i], sorted_allocations[i], sorted_spaces[i], number[i]]
+                for i in range(len(sorted_sizes))
+            ]
+
+            # Store sorted allocations and results in session
+            session["sorted_allocations"] = combined_sorted_data
 
             session["alllist"]=alllist
             session["backupsize"]=backupsize

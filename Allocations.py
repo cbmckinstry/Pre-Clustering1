@@ -333,3 +333,29 @@ def sort_closestalg_output(closestalg_output, backup):
     number = list(range(1, len(sorted_sizes) + 1))
 
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes, number
+
+
+def sort_closestalg_output1(closestalg_output,backup):
+    # Safely extract the allocation details
+    try:
+        allocation = closestalg_output[0]  # First element contains totals, allocations, and remaining spaces
+        remaining_spaces = allocation[2]   # Remaining spaces in vehicles
+        allocations = allocation[1]        # Group allocations (5-person, 6-person)
+    except (IndexError, TypeError, ValueError) as e:
+        raise ValueError("Invalid closestalg_output structure") from e
+    # Calculate vehicle sizes dynamically
+    vehicle_sizes = []
+    for remaining_space, assignment in zip(remaining_spaces, allocations):
+        size = remaining_space + (backup * assignment[0]) + (6 * assignment[1])
+        vehicle_sizes.append(size)
+    # Combine sizes, allocations, and remaining spaces into a list of tuples
+    combined_data = []
+    for i in range(len(remaining_spaces)):
+        combined_data.append((vehicle_sizes[i], allocations[i], remaining_spaces[i]))
+    # Sort the combined data by remaining spaces in descending order
+    combined_data.sort(key=lambda x: x[2], reverse=True)
+    # Separate the sorted data into three lists
+    sorted_sizes = [entry[0] for entry in combined_data]
+    sorted_allocations = [entry[1] for entry in combined_data]
+    sorted_remaining_spaces = [entry[2] for entry in combined_data]
+    return sorted_allocations, sorted_remaining_spaces, sorted_sizes

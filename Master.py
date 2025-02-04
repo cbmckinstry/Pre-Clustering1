@@ -96,6 +96,15 @@ def unused(allocations,combos):
             unused.append(elem+1)
     return unused
 
+def unused1(sizes,combos):
+    usable=[]
+    for elem in combos:
+        for i in elem:
+            usable.append(i)
+    for item in usable:
+        sizes.remove(item)
+    return sizes
+
 def optimize_combinations(sorted_allocations, allocations, backupsize, out_combos, spaces):
     combos=[]
     for item in out_combos:
@@ -173,3 +182,19 @@ def optimize_combinations(sorted_allocations, allocations, backupsize, out_combo
     index_combos = [[idx + 1 for idx in combo] for combo in index_combos if len(combo) > 1]
 
     return index_combos
+def person_calc(combos,sizes):
+    pers_out=[]
+    for elem in combos:
+        each=[]
+        for i in elem:
+            each.append(sizes[i-1])
+        pers_out.append(each)
+    return pers_out
+
+def quant(unused_veh):
+    look=list(set(unused_veh))
+    look.sort()
+    paired=[]
+    for elem in look:
+        paired.append([unused_veh.count(elem),elem])
+    return paired
