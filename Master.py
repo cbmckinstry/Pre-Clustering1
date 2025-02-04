@@ -118,9 +118,6 @@ def optimize_combinations(harm_list, combo_indices, allocations, backup_size, re
         max_weight_indices = [i for i, w in enumerate(combo_weights) if w == max_weight]
         target_weight_indices = [i for i, w in enumerate(combo_weights) if w <= target_weight]
 
-        print(f"Max weight: {max_weight}, Target weight: {target_weight}")
-        print(f"Max indices: {[x + 1 for x in max_weight_indices]}, Target indices: {[x + 1 for x in target_weight_indices]}")
-
         if not max_weight_indices or not target_weight_indices:
             max_weight -= 1
             continue
@@ -143,11 +140,6 @@ def optimize_combinations(harm_list, combo_indices, allocations, backup_size, re
                         # Check remaining spaces for feasibility
                         remaining_i = sum(remaining_spaces[x] for x in new_combo_i)
                         remaining_j = sum(remaining_spaces[x] for x in new_combo_j)
-
-                        print(f"Trying swap: {idx1 + 1} <-> {idx2 + 1}")
-                        print(f"New Weights: {new_weight_i}, {new_weight_j}")
-                        print(f"Required allocations: {alloc_i}, {alloc_j}")
-                        print(f"Available spaces: {remaining_i}, {remaining_j}")
 
                         # Ensure new combinations meet allocation requirements
                         if remaining_i >= alloc_i and remaining_j >= alloc_j and max(new_weight_i, new_weight_j) < max_weight:
@@ -173,7 +165,6 @@ def optimize_combinations(harm_list, combo_indices, allocations, backup_size, re
                             new_weight_j = sum(harm_weights[x] for x in new_combo_j)
 
                             if new_weight_j < combo_weights[j]:
-                                print(f"Swapping single element {single_element + 1} with {idx + 1}")
                                 combo_indices[i] = list(new_combo_i)
                                 combo_indices[j] = list(new_combo_j)
                                 combo_weights[i] = new_weight_i
