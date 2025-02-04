@@ -106,12 +106,17 @@ def optimize_combinations(harm_list, combo_indices, allocations, backup_size, re
     max_weight = max(combo_weights)
 
     while max_weight >= 0:
-        target_weight = max_weight - 2
-        if target_weight<0:
+        for i in range(len(combo_indices)):
+            if len(combo_indices[i]) == 1:
+                target_weight = max_weight - 1
+            else:
+                target_weight = max_weight - 2
+
+        if target_weight < 0:
             break
 
         max_weight_indices = [i for i, w in enumerate(combo_weights) if w == max_weight]
-        target_weight_indices = [i for i, w in enumerate(combo_weights) if w == target_weight]
+        target_weight_indices = [i for i, w in enumerate(combo_weights) if w <= target_weight]
 
         print(f"Max weight: {max_weight}, Target weight: {target_weight}")
         print(f"Max indices: {[x + 1 for x in max_weight_indices]}, Target indices: {[x + 1 for x in target_weight_indices]}")
@@ -154,9 +159,33 @@ def optimize_combinations(harm_list, combo_indices, allocations, backup_size, re
 
                             return optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces)
 
+        # Additional check for single-element swaps
+        for i in range(len(combo_indices)):
+            if len(combo_indices[i]) == 1:
+                single_element = combo_indices[i][0]
+                for j in range(len(combo_indices)):
+                    if i != j and len(combo_indices[j]) > 1:
+                        for idx in combo_indices[j]:
+                            new_combo_i = {idx}
+                            new_combo_j = set(combo_indices[j]) - {idx} | {single_element}
+
+                            new_weight_i = sum(harm_weights[x] for x in new_combo_i)
+                            new_weight_j = sum(harm_weights[x] for x in new_combo_j)
+
+                            if new_weight_j < combo_weights[j]:
+                                print(f"Swapping single element {single_element + 1} with {idx + 1}")
+                                combo_indices[i] = list(new_combo_i)
+                                combo_indices[j] = list(new_combo_j)
+                                combo_weights[i] = new_weight_i
+                                combo_weights[j] = new_weight_j
+
+                                return optimize_combinations(harm_list, combo_indices, allocations, backup_size, remaining_spaces)
+
         max_weight -= 1
 
     adjusted_combos = [[index + 1 for index in combo] for combo in combo_indices]
     return adjusted_combos
+
+
 
 

@@ -79,9 +79,19 @@ def index():
                 for i in elem:
                    combos2.append(i-1)
                 combos1.append(combos2)
+            rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+            listing1=listing.copy()
+            vem1=[]
+            for elem in rem_vehs1:
+                vem1.append([elem-1])
+                listing1.append([0,0])
             if combos1:
-                combos=optimize_combinations(sorted_allocations.copy(),combos1,listing,backupsize,sorted_spaces)
-
+                combos=optimize_combinations(sorted_allocations.copy(),combos1+vem1,listing.copy()+listing1,backupsize,sorted_spaces)
+            combos2=[]
+            for item in combos:
+                if len(item)!=1:
+                    combos2.append(item)
+            combos=combos2.copy()
             damage=harm(combos,sorted_allocations.copy())
             alllist=alltogether(combos,listing,damage)
             rem_vehs=unused(sorted_allocations.copy(),combos.copy())
