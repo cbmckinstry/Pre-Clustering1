@@ -1,5 +1,6 @@
 from Fives import*
 from CombosFlipped import *
+import numba
 
 
 def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups, seven_person_groups):
@@ -106,7 +107,7 @@ def unused1(sizes,combos):
     for item in usable:
         sizes.remove(item)
     return sizes
-
+@numba.jit
 def optimize_combinations(sorted_allocations, allocations, backupsize, out_combos, spaces):
     combos=[]
     for item in out_combos:
