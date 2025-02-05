@@ -1,3 +1,5 @@
+import numba
+@numba.jit
 def combine(allocations, space, shortfall, backup_size=5, used=None, boundlst=None):
     if used is None:
         used = set()
