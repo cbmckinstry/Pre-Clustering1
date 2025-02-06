@@ -113,7 +113,7 @@ def index():
         except Exception as e:
             return render_template(
                 "index.html",
-                error_message="An error occurred",
+                error_message=f"An error occurred: {str(e)}",
                 vehlist=vehlist_input,
                 pers5=pers5_input,
                 pers6=pers6_input,
@@ -178,7 +178,7 @@ def matrices():
     except Exception as e:
         return render_template(
             "index.html",
-            error_message="An error occurred while running matrices",
+            error_message=f"An error occurred: {str(e)}",
             vehlist=",".join(map(str, session.get("vehlist", []))),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
@@ -238,7 +238,7 @@ def ranges():
     except Exception as e:
         return render_template(
             "index.html",
-            error_message="An error occurred while running ranges",
+            error_message=f"An error occurred: {str(e)}",
             vehlist=",".join(map(str, session.get("vehlist", []))),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
