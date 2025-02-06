@@ -1,7 +1,7 @@
 from py4j.java_gateway import JavaGateway, java_import
 
 def call_combine(allocations, spaces, shortfall, backupsize, used, bound_list):
-    gateway = JavaGateway()
+    gateway = JavaGateway(debug=False)
 
     java_import(gateway.jvm, 'java.util.ArrayList')
     java_import(gateway.jvm, 'java.util.HashSet')
@@ -42,7 +42,7 @@ def call_combine(allocations, spaces, shortfall, backupsize, used, bound_list):
 
 
 def call_threes(allocations, spaces, shortfall, backup_size, used, bound_list):
-    gateway = JavaGateway()
+    gateway = JavaGateway(debug=False)
 
     java_import(gateway.jvm, 'java.util.ArrayList')
     java_import(gateway.jvm, 'java.util.HashSet')
@@ -84,7 +84,7 @@ def call_threes(allocations, spaces, shortfall, backup_size, used, bound_list):
     return python_result
 
 def call_combineFlipped(allocations, spaces, shortfall, backupsize, used, bound_list):
-    gateway = JavaGateway()
+    gateway = JavaGateway(debug=False)
 
     java_import(gateway.jvm, 'java.util.ArrayList')
     java_import(gateway.jvm, 'java.util.HashSet')
@@ -125,7 +125,7 @@ def call_combineFlipped(allocations, spaces, shortfall, backupsize, used, bound_
 
 def call_threesFlipped(allocations, spaces, shortfall, backup_size, used, bound_list):
 
-    gateway = JavaGateway()
+    gateway = JavaGateway(debug=False)
 
     java_import(gateway.jvm, 'java.util.ArrayList')
     java_import(gateway.jvm, 'java.util.HashSet')
@@ -167,7 +167,7 @@ def call_threesFlipped(allocations, spaces, shortfall, backup_size, used, bound_
     return python_result
 
 def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spaces):
-    gateway = JavaGateway()
+    gateway = JavaGateway(debug=False)
 
     java_import(gateway.jvm, 'java.util.ArrayList')
     java_import(gateway.jvm, 'java.util.HashSet')
