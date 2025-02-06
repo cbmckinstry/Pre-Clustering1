@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Set writable directory for Java
+# Ensure Java is installed and available
 export JAVA_HOME=/tmp/java
 export PATH=$JAVA_HOME/bin:$PATH
 
-# Install Java (if not already installed)
-if [ ! -d "$JAVA_HOME" ]; then
+if ! command -v java &> /dev/null; then
+    echo "Installing Java..."
     curl -L https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz -o java.tar.gz
     mkdir -p /tmp/java
     tar -xzf java.tar.gz -C /tmp/java --strip-components=1
@@ -14,17 +14,24 @@ fi
 # Verify Java installation
 java -version || echo "Java installation failed."
 
-# Compile Java file
+# Compile Java files (Combine.java contains all needed methods)
 javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
 
-# Start Java Gateway in the background
+# Start Java Gateway Server in the background
 nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 
 # Allow Java some time to start
 sleep 5
 
-# Install Python dependencies
-pip install --no-cache-dir -r requirements.txt || echo "Failed to install dependencies."
+# Install Python dependencies (including Redis for session storage)
+pip install --no-cache-dir -r requirements.txt redis || echo "Failed to install dependencies."
 
-# Start Python web app with Gunicorn (5 workers, 5 min timeout)
-gunicorn -t 300 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
+# Ensure Redis is running
+if ! nc -z localhost 6379; then
+    echo "Starting Redis server..."
+    redis-server --daemonize yes
+    sleep 2  # Allow Redis time to start
+fi
+
+# Start Gunicorn with a single worker (since Render has only 0.1 vCPU)
+gunicorn -w 1 -t 300 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
