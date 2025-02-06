@@ -14,7 +14,7 @@ fi
 # Verify Java installation
 java -version || echo "Java installation failed."
 
-# Compile Java files (Combine.java contains all needed methods)
+# Compile Java files
 javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
 
 # Start Java Gateway Server in the background
@@ -23,15 +23,8 @@ nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 # Allow Java some time to start
 sleep 5
 
-# Install Python dependencies (including Redis for session storage)
+# Install Python dependencies (including Redis client)
 pip install --no-cache-dir -r requirements.txt redis || echo "Failed to install dependencies."
 
-# Ensure Redis is running
-if ! nc -z localhost 6379; then
-    echo "Starting Redis server..."
-    redis-server --daemonize yes
-    sleep 2  # Allow Redis time to start
-fi
-
-# Start Gunicorn with a single worker (since Render has only 0.1 vCPU)
+# Start Gunicorn with a single worker (Render has only 0.1 vCPU)
 gunicorn -w 1 -t 300 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
