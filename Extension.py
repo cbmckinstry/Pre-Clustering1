@@ -77,7 +77,7 @@ def call_threes(allocations, spaces, shortfall, backup_size, used, bound_list):
 
     return python_result
 
-def call_combineFlipped(allocations, spaces, shortfall, backupsize, used, bound_list):
+'''def call_combineFlipped(allocations, spaces, shortfall, backupsize, used, bound_list):
 
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
@@ -149,7 +149,7 @@ def call_threesFlipped(allocations, spaces, shortfall, backup_size, used, bound_
 
     python_result = [java_list_to_python(sublist) for sublist in java_result]
 
-    return python_result
+    return python_result '''
 
 def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spaces):
 
@@ -206,3 +206,4 @@ bound_list = [0, 3]
 #result = call_optimize(sorted_allocations,allocations,5, combos, spaces)
 
 #print(result)
+
