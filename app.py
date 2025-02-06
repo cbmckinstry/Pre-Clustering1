@@ -1,7 +1,5 @@
 from flask import Flask, render_template, request, session
-import logging
 from flask_session import Session
-import traceback
 from Master import *
 
 
@@ -98,11 +96,9 @@ def index():
             session["results"] = results
 
         except Exception as e:
-            logging.error(f"Exception occurred: {e}")
-            logging.error(traceback.format_exc())
             return render_template(
                 "index.html",
-                error_message=f"An error occurred: {e}",
+                error_message="An error occurred",
                 vehlist=vehlist_input,
                 pers5=pers5_input,
                 pers6=pers6_input,
@@ -163,11 +159,9 @@ def matrices():
         session["crews"] = crews
 
     except Exception as e:
-        logging.error(f"Exception occurred while running matrices: {e}")
-        logging.error(traceback.format_exc())
         return render_template(
             "index.html",
-            error_message=f"An error occurred while running matrices: {e}",
+            error_message="An error occurred while running matrices",
             vehlist=",".join(map(str, session.get("vehlist", []))),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
@@ -223,11 +217,9 @@ def ranges():
         session["total_people"] = total_people
 
     except Exception as e:
-        logging.error(f"Exception occurred while running ranges: {e}")
-        logging.error(traceback.format_exc())
         return render_template(
             "index.html",
-            error_message=f"An error occurred while running ranges: {e}",
+            error_message="An error occurred while running ranges",
             vehlist=",".join(map(str, session.get("vehlist", []))),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
