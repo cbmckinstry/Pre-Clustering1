@@ -10,7 +10,6 @@ app.config["SESSION_TYPE"] = "filesystem"
 app.config["SECRET_KEY"] = "supersecretkey"
 Session(app)
 
-logging.basicConfig(level=logging.DEBUG)
 
 @app.route("/", methods=["GET", "POST"])
 def index():
