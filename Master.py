@@ -1,5 +1,6 @@
 from Extension import *
 from Allocations import *
+from collections import defaultdict, deque
 
 def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups, seven_person_groups):
     if not all(isinstance(cap, int) and cap >= 0 for cap in vehicle_capacities):
@@ -199,3 +200,17 @@ def quant(unused_veh):
     for elem in look:
         paired.append([unused_veh.count(elem),elem])
     return paired
+
+def restore_order(original, shuffled, list_of_lists, list_of_ints):
+
+    index_map = defaultdict(deque)
+    for i, value in enumerate(shuffled):
+        index_map[value].append(i)
+
+    sorted_indices = [index_map[value].popleft() for value in original]
+
+    restored_shuffled = [shuffled[i] for i in sorted_indices]
+    restored_list_of_lists = [list_of_lists[i] for i in sorted_indices]
+    restored_list_of_ints = [list_of_ints[i] for i in sorted_indices]
+
+    return restored_shuffled, restored_list_of_lists, restored_list_of_ints

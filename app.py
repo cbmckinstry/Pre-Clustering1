@@ -63,7 +63,7 @@ def index():
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
 
-            sorted_allocations, sorted_spaces, sorted_sizes = sort_closestalg_output1(results, backupsize)
+            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             if allocations_only==0:
                 boundlst=sort_by_sum(sorted_allocations.copy())
@@ -90,12 +90,10 @@ def index():
                 alllist=[[],[]]
                 rem_vehs=[]
 
+            restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:],sorted_sizes,sorted_allocations,sorted_spaces)
 
-            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
-
-            # Combine the sorted data for the template
             combined_sorted_data = [
-                [sorted_sizes[i], sorted_allocations[i], sorted_spaces[i], number[i]]
+                [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]
                 for i in range(len(sorted_sizes))
             ]
 
