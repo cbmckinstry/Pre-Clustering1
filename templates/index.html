@@ -311,7 +311,7 @@
                                     {{ veh[0] }}  {{ veh[1] }}-person{% if not loop.last %}, {% endif %}
                                 {% endfor %}
                             </p>
-                        {% elif not rem_vehs and toggle_button==0%}
+                        {% elif not rem_vehs and allocations_only==0%}
                             <p><strong>Remaining Vehicles:</strong> None</p>
                         {% endif %}
                     {% endif %}
