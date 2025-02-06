@@ -190,6 +190,7 @@
             {% if error_message and request.path == '/' %}
                 <div class="error-message">{{ error_message }}</div>
             {% endif %}
+
             <label for="vehlist">Enter Vehicle Capacities (comma-separated):</label>
             <textarea id="vehlist" name="vehlist" rows="4" required>{{ vehlist }}</textarea>
 
@@ -202,9 +203,30 @@
             <label for="pers7">Enter Number of 7-person Groups:</label>
             <input type="number" id="pers7" name="pers7" required value="{{ pers7 }}">
 
-            <button type="submit">Submit</button>
+            <!-- Checkbox for "Allocations Only" -->
+            <label for="allocations_only">
+                <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
+                        {% if allocations_only == 1 %} checked {% endif %}>
+                Allocations Only
+            </label>
 
-            <!-- Vehicle Capacities Results -->
+            <button type="submit">Submit</button>
+        </form>
+
+        <script>
+            // Ensure unchecked checkbox sends "0"
+            document.querySelector("form").addEventListener("submit", function() {
+                let checkbox = document.getElementById("allocations_only");
+                if (!checkbox.checked) {
+                    let hiddenInput = document.createElement("input");
+                    hiddenInput.type = "hidden";
+                    hiddenInput.name = "allocations_only";
+                    hiddenInput.value = "0";
+                    this.appendChild(hiddenInput);
+                }
+            });
+        </script>
+        <!-- Vehicle Capacities Results -->
             {% if results %}
                 <div class="results-section">
                     <h3>Vehicle Capacities Results</h3>
@@ -259,7 +281,7 @@
                                     {{ veh[0] }}  {{ veh[1] }}-person{% if not loop.last %}, {% endif %}
                                 {% endfor %}
                             </p>
-                        {% elif not rem_vehs %}
+                        {% elif not rem_vehs and toggle_button==0%}
                             <p><strong>Remaining Vehicles:</strong> None</p>
                         {% endif %}
                     {% endif %}

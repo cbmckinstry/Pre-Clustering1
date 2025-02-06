@@ -27,11 +27,13 @@ def index():
             pers5_input = request.form.get("pers5", "").strip()
             pers6_input = request.form.get("pers6", "").strip()
             pers7_input = request.form.get("pers7", "").strip()
+            allocations_only = int(request.form.get("allocations_only", 0))
 
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
             pers5 = int(pers5_input) if pers5_input else 0
             pers6 = int(pers6_input) if pers6_input else 0
             pers7 = int(pers7_input) if pers7_input else 0
+
 
             # Validate inputs
             validate_inputs(vehlist, pers5, pers6, pers7)
@@ -63,26 +65,31 @@ def index():
 
             sorted_allocations, sorted_spaces, sorted_sizes = sort_closestalg_output1(results, backupsize)
 
-            boundlst=sort_by_sum(sorted_allocations.copy())
-            if len(sorted_allocations)>=3:
-                combos,listing=call_threes(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
-                if not combos:
-                    combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
-            else:
-                combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
-            rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
-            for elem in rem_vehs1:
-                combos.append([elem])
-                listing.append([0,0])
-            if combos:
-                combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
+            if allocations_only==0:
+                boundlst=sort_by_sum(sorted_allocations.copy())
+                if len(sorted_allocations)>=3:
+                    combos,listing=call_threes(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                    if not combos:
+                        combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                else:
+                    combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+                for elem in rem_vehs1:
+                    combos.append([elem])
+                    listing.append([0,0])
+                if combos:
+                    combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
 
-            damage=harm(combos.copy(),sorted_allocations.copy())
-            combos1=combos.copy()
-            combos=person_calc(combos1.copy(),sorted_sizes.copy())
-            alllist=alltogether(combos,listing,damage)
-            rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())
-            rem_vehs=quant(rem_vehs2)
+                damage=harm(combos.copy(),sorted_allocations.copy())
+                combos1=combos.copy()
+                combos=person_calc(combos1.copy(),sorted_sizes.copy())
+                alllist=alltogether(combos,listing,damage)
+                rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())
+                rem_vehs=quant(rem_vehs2)
+            else:
+                alllist=[[],[]]
+                rem_vehs=[]
+
 
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
@@ -92,9 +99,10 @@ def index():
                 for i in range(len(sorted_sizes))
             ]
 
+
             # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
-
+            session["allocations_only"] = allocations_only
             session["alllist"]=alllist
             session["backupsize"]=backupsize
             session["vehlist"] = vehlist
@@ -118,6 +126,7 @@ def index():
                 alllist=None,
                 backupsize=None,
                 matrices_result=session.get("matrices_result"),
+                allocations_only=int(request.form.get("allocations_only", 0)),
                 ranges_result=session.get("ranges_result"),
                 total_people=session.get("total_people", ""),
                 people=session.get("people", ""),
@@ -136,6 +145,7 @@ def index():
         results=session.get("results"),
         sorted_allocations=session.get("sorted_allocations"),
         rem_vehs=session.get("rem_vehs"),
+        allocations_only=session.get("allocations_only", 0),
         error_message=None,
         backupsize=session.get("backupsize"),
         alllist=session.get("alllist"),
@@ -180,6 +190,7 @@ def matrices():
             alllist=session.get("alllist"),
             rem_vehs=session.get("rem_vehs"),
             backupsize=session.get("backupsize"),
+            allocations_only=int(request.form.get("allocations_only", 0)),
             matrices_result=None,
             ranges_result=session.get("ranges_result"),
             total_people=session.get("total_people", ""),
@@ -201,6 +212,7 @@ def matrices():
         alllist=session.get("alllist"),
         rem_vehs=session.get("rem_vehs"),
         backupsize=session.get("backupsize"),
+        allocations_only=int(request.form.get("allocations_only", 0)),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
         total_people=session.get("total_people", ""),
@@ -238,6 +250,7 @@ def ranges():
             backupsize=session.get("backupsize"),
             alllist=session.get("alllist"),
             rem_vehs=session.get("rem_vehs"),
+            allocations_only=int(request.form.get("allocations_only", 0)),
             matrices_result=session.get("matrices_result"),
             ranges_result=None,
             total_people=total_people_input,
@@ -258,6 +271,7 @@ def ranges():
         sorted_allocations=session.get("sorted_allocations"),
         backupsize=session.get("backupsize"),
         alllist=session.get("alllist"),
+        allocations_only=int(request.form.get("allocations_only", 0)),
         rem_vehs=session.get("rem_vehs"),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
