@@ -93,8 +93,6 @@
                 padding: 6px; /* Reduce padding for better spacing */
             }
         }
-
-
     </style>
 </head>
 <body>
@@ -185,6 +183,7 @@
     <!-- Right Column -->
     <div class="right-column">
         <!-- Vehicle Capacities Form -->
+        <!-- Vehicle Capacities Form -->
         <form method="POST" action="/">
             <h2>Vehicle Capacities</h2>
             {% if error_message and request.path == '/' %}
@@ -203,30 +202,58 @@
             <label for="pers7">Enter Number of 7-person Groups:</label>
             <input type="number" id="pers7" name="pers7" required value="{{ pers7 }}">
 
-            <!-- Checkbox for "Allocations Only" -->
-            <label for="allocations_only">
-                <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
-                        {% if allocations_only == 1 %} checked {% endif %}>
-                Allocations Only
-            </label>
+            <!-- Wrapper for checkbox and submit button -->
+            <div class="checkbox-submit-container">
+                <label class="checkbox-label">
+                    <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
+                            {% if allocations_only == 1 %} checked {% endif %}>
+                    Allocations Only
+                </label>
 
-            <button type="submit">Submit</button>
-        </form>
+                <button type="submit">Submit</button>
+            </div>
 
-        <script>
-            // Ensure unchecked checkbox sends "0"
-            document.querySelector("form").addEventListener("submit", function() {
-                let checkbox = document.getElementById("allocations_only");
-                if (!checkbox.checked) {
-                    let hiddenInput = document.createElement("input");
-                    hiddenInput.type = "hidden";
-                    hiddenInput.name = "allocations_only";
-                    hiddenInput.value = "0";
-                    this.appendChild(hiddenInput);
-                }
-            });
-        </script>
-        <!-- Vehicle Capacities Results -->
+        <style>
+            /* Align checkbox and submit button inline */
+            .checkbox-submit-container {
+                display: flex;
+                align-items: center;
+                gap: 20px; /* Adds space between checkbox and button */
+                margin-top: 10px;
+            }
+
+            /* Make checkbox larger */
+            .checkbox-label input[type="checkbox"] {
+                width: 22px;
+                height: 22px;
+                cursor: pointer;
+                margin-right: 8px;
+            }
+
+            /* Style label text */
+            .checkbox-label {
+                font-size: 18px;
+                font-weight: bold;
+                display: flex;
+                align-items: center;
+                cursor: pointer;
+            }
+
+            /* Ensure button and checkbox align */
+            button {
+                padding: 12px 24px;
+                font-size: 16px;
+                border-radius: 5px;
+                background-color: #007BFF;
+                color: white;
+                border: none;
+                cursor: pointer;
+            }
+
+            button:hover {
+                background-color: #0056b3;
+            }
+        </style>
             {% if results %}
                 <div class="results-section">
                     <h3>Vehicle Capacities Results</h3>
