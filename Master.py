@@ -1,6 +1,5 @@
-from Fives import*
-from CombosFlipped import *
 from Extension import *
+from Allocations import *
 
 def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups, seven_person_groups):
     if not all(isinstance(cap, int) and cap >= 0 for cap in vehicle_capacities):
