@@ -30,6 +30,7 @@ numpy==2.0.2
 packaging==24.2
 pandas==2.2.3
 pillow==10.4.0
+py4j==0.10.9.9
 pyparsing==3.1.4
 python-dateutil==2.9.0.post0
 pytz==2024.2

@@ -1,5 +1,6 @@
 from Fives import*
 from CombosFlipped import *
+from Extension import *
 
 def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups, seven_person_groups):
     if not all(isinstance(cap, int) and cap >= 0 for cap in vehicle_capacities):
@@ -68,14 +69,14 @@ def compute_matrices(people,crews):
 
 def sort_by_sum(lst):
     x=sorted(lst, key=lambda sublist: sum(sublist), reverse=True)
-    twoup=twolow=threeup=threelow=0
+    twolow=threeup=0
     if len(lst)>=2:
         twoup=sum(x[1])+sum(x[0])+1
         twolow=sum(x[-1])+sum(x[-2])
+        threeup=twoup
     if len(lst)>=3:
         threeup=sum(x[1])+sum(x[2])+sum(x[0])+1
-        threelow=sum(x[-1])+sum(x[-2])+sum(x[-3])
-    return [[twolow,twoup],[threelow,threeup]]
+    return [twolow,threeup]
 def harm(combos,allocations):
     out=[]
     for combo in combos:

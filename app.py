@@ -60,17 +60,17 @@ def index():
 
             boundlst=sort_by_sum(sorted_allocations.copy())
             if len(sorted_allocations)>=3:
-                combos,listing=threes(results[1].copy(),sorted_allocations,sorted_spaces,backupsize,None,boundlst)
+                combos,listing=call_threes(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
                 if not combos:
-                    combos,listing=combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                    combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
             else:
-                combos,listing=combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
             rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
             for elem in rem_vehs1:
                 combos.append([elem])
                 listing.append([0,0])
             if combos:
-                combos=optimize_combinations(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
+                combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
 
             damage=harm(combos.copy(),sorted_allocations.copy())
             combos1=combos.copy()
