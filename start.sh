@@ -27,4 +27,4 @@ sleep 5
 pip install --no-cache-dir -r requirements.txt || echo "Failed to install dependencies."
 
 # Start Python web app with Gunicorn (5 workers, 5 min timeout)
-gunicorn -w 5 -t 300 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
+gunicorn -t 300 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
