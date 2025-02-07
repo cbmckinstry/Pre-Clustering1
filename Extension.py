@@ -63,9 +63,11 @@ def call_threes(allocations, spaces, shortfall, backup_size, used, bound_list):
         for index in used:
             java_used.add(index)
 
-    java_bound_list = gateway.new_array(gateway.jvm.int, 2)
+    java_bound_list = gateway.new_array(gateway.jvm.int, 4)
     java_bound_list[0] = bound_list[0]
     java_bound_list[1] = bound_list[1]
+    java_bound_list[2] = bound_list[2]
+    java_bound_list[3] = bound_list[3]
 
     backup_size = int(backup_size)
 

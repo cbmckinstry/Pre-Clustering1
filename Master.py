@@ -69,14 +69,17 @@ def compute_matrices(people,crews):
 
 def sort_by_sum(lst):
     x=sorted(lst, key=lambda sublist: sum(sublist), reverse=True)
-    twolow=threeup=0
+    twolow=threelow=twoup=threeup=0
     if len(lst)>=2:
-        twoup=sum(x[1])+sum(x[0])+1
+        twoup=sum(x[1])+sum(x[0])
         twolow=sum(x[-1])+sum(x[-2])
         threeup=twoup
+        threelow=twolow
     if len(lst)>=3:
-        threeup=sum(x[1])+sum(x[2])+sum(x[0])+1
-    return [twolow,threeup]
+        threeup=sum(x[1])+sum(x[2])+sum(x[0])
+        threelow=sum(x[-1])+sum(x[-2])+sum(x[-3])
+    return [twolow,twoup,threelow,threeup]
+
 def harm(combos,allocations):
     out=[]
     for combo in combos:

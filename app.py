@@ -74,7 +74,7 @@ def index():
                    # if not combos:
                       #  combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
                 else:
-                    combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                    combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,[boundlst[1],boundlst[1]])
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
                 for elem in rem_vehs1:
                     combos.append([elem])

@@ -32,7 +32,7 @@ public class Combine {
         List<int[]> init = new ArrayList<>();
 
         if (backupSize == 7) {
-            for (int bound = lower; bound < upper; bound++) {
+            for (int bound = lower; bound <= upper; bound++) {
                 if (backup4 == 0) break;
                 used4 = new HashSet<>(used);
                 backup4 = backup;
@@ -63,7 +63,7 @@ public class Combine {
             List<int[]> combos5 = new ArrayList<>(combos4);
             Set<Integer> used5 = new HashSet<>(used4);
             List<int[]> init1 = new ArrayList<>(init);
-            for (int bound = lower; bound < upper; bound++) {
+            for (int bound = lower; bound <= upper; bound++) {
                 if (six4 == 0) break;
                 used5 = new HashSet<>(used4);
                 six4 = six;
@@ -91,7 +91,7 @@ public class Combine {
                 return Arrays.asList(combos5, init1);
             }
         } else {
-            for (int bound = lower; bound < upper; bound++) {
+            for (int bound = lower; bound <= upper; bound++) {
                 if (six4 == 0) break;
                 used4 = new HashSet<>(used);
                 six4 = six;
@@ -121,7 +121,7 @@ public class Combine {
             List<int[]> combos5 = new ArrayList<>(combos4);
             Set<Integer> used5 = new HashSet<>(used4);
             List<int[]> init1 = new ArrayList<>(init);
-            for (int bound = lower; bound < upper; bound++) {
+            for (int bound = lower; bound <= upper; bound++) {
                 if (backup4 == 0) break;
                 used5 = new HashSet<>(used4);
                 backup4 = backup;
@@ -172,8 +172,8 @@ public class Combine {
         List<int[]> filteredAllocations = new ArrayList<>();
         List<Integer> filteredSpaces = new ArrayList<>();
 
-        int lower = boundlst[0];
-        int upperBound = boundlst[1];
+        int lower = boundlst[2];
+        int upperBound = boundlst[3];
 
         for (int i = 0; i < spaces.size(); i++) {
             if (spaces.get(i) != 0) {
@@ -188,17 +188,17 @@ public class Combine {
         Set<Integer> used6 = new HashSet<>(used5);
         List<int[]> init = new ArrayList<>();
 
-        for (int m = lower; m < upperBound; m++) {
+        List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{lower, lower});
+        if (!((List<?>) trial.get(1)).isEmpty()) {
+            return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
+        }
+
+        for (int m = lower; m <= upperBound; m++) {
             six6 = shortfall[1];
             backup6 = shortfall[0];
             used6 = new HashSet<>(used5);
             threes6.clear();
             init.clear();
-
-            List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{lower, upperBound});
-            if (!((List<?>) trial.get(1)).isEmpty()) {
-                return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
-            }
 
             for (int i = filteredSpaces.size() - 3; i >=0; i--) {
                 if (six6 == 0 && backup6 == 0) break;
@@ -235,7 +235,7 @@ public class Combine {
                                 return Arrays.asList(threes6, init);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{lower, upperBound});
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m, m});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
                             }
@@ -254,17 +254,13 @@ public class Combine {
         Set<Integer> used7 = new HashSet<>(used6);
         List<int[]> init1 = new ArrayList<>(init);
 
-        for (int m = lower; m < upperBound; m++) {
+        for (int m = lower; m <= upperBound; m++) {
             six7 = six6;
             backup7 = backup6;
             used7 = new HashSet<>(used6);
             threes7= new ArrayList<>(threes6);
             init1= new ArrayList<>(init);
 
-            List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{lower, upperBound});
-            if (!((List<?>) trial.get(1)).isEmpty()) {
-                return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes7), mergeLists((List<int[]>) trial.get(1), init1));
-            }
 
             for (int i = filteredSpaces.size() - 3; i >=0; i--) {
                 if (six7 == 0 && backup7 == 0) break;
@@ -294,7 +290,8 @@ public class Combine {
                                 return Arrays.asList(threes7, init1);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{lower, upperBound});
+
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m, m});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes7), mergeLists((List<int[]>) trial.get(1), init1));
                             }
@@ -313,17 +310,13 @@ public class Combine {
         Set<Integer> used8 = new HashSet<>(used7);
         List<int[]> init2 = new ArrayList<>(init1);
 
-        for (int m = lower; m < upperBound; m++) {
+        for (int m = lower; m <= upperBound; m++) {
             six8 = six7;
             backup8 = backup7;
             used8 = new HashSet<>(used7);
             threes8 = new ArrayList<>(threes7);
             init2 = new ArrayList<>(init1);
 
-            List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{lower, upperBound});
-            if (!((List<?>) trial.get(1)).isEmpty()) {
-                return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes8), mergeLists((List<int[]>) trial.get(1), init2));
-            }
 
             for (int i = filteredSpaces.size() - 3; i >=0; i--) {
                 if (six8 == 0 && backup8 == 0) break;
@@ -360,7 +353,8 @@ public class Combine {
                                 return Arrays.asList(threes8, init2);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{lower, upperBound});
+
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m, m});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes8), mergeLists((List<int[]>) trial.get(1), init2));
                             }
@@ -379,17 +373,12 @@ public class Combine {
         Set<Integer> used9 = new HashSet<>(used8);
         List<int[]> init3 = new ArrayList<>(init2);
 
-        for (int m = lower; m < upperBound; m++) {
+        for (int m = lower; m <= upperBound; m++) {
             six9 = six8;
             backup9 = backup8;
             used9 = new HashSet<>(used8);
             threes9 = new ArrayList<>(threes8);
             init3 = new ArrayList<>(init2);
-
-            List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[]{lower, upperBound});
-            if (!((List<?>) trial.get(1)).isEmpty()) {
-                return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes9), mergeLists((List<int[]>) trial.get(1), init3));
-            }
 
             for (int i = filteredSpaces.size() - 3; i >=0; i--) {
                 if (six9 == 0 && backup9 == 0) break;
@@ -425,7 +414,8 @@ public class Combine {
                             if (six9 == 0 && backup9 == 0) {
                                 return Arrays.asList(threes9, init3);
                             }
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[] {lower, upperBound});
+
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[] {m, m});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes9), mergeLists((List<int[]>) trial.get(1), init3));
                             }
@@ -444,17 +434,12 @@ public class Combine {
         Set<Integer> used10 = new HashSet<>(used9);
         List<int[]> init4 = new ArrayList<>(init3);
 
-        for (int m = lower; m < upperBound; m++) {
+        for (int m = lower; m <= upperBound; m++) {
             six10 = six9;
             backup10 = backup9;
             used10 = new HashSet<>(used9);
             threes10 = new ArrayList<>(threes9);
             init4 = new ArrayList<>(init3);
-
-            List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{lower, upperBound});
-            if (!((List<?>) trial.get(1)).isEmpty()) {
-                return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes10), mergeLists((List<int[]>) trial.get(1), init4));
-            }
 
             for (int i = filteredSpaces.size() - 3; i >=0; i--) {
                 if (six10 == 0 && backup10 == 0) break;
@@ -492,7 +477,7 @@ public class Combine {
                                 return Arrays.asList(threes10, init4);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{lower, upperBound});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{m, m});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes10), mergeLists((List<int[]>) trial.get(1), init4));
                             }
