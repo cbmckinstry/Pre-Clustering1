@@ -435,9 +435,9 @@ public class Combine {
                             }
 
                             trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[] {boundlst[1],boundlst[1]});
-                            if (!((List<?>) trial.get(1)).isEmpty()) {
+                           // if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes9), mergeLists((List<int[]>) trial.get(1), init3));
-                            }
+                           // }
                         }
                     }
                 }
