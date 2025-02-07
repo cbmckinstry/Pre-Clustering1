@@ -79,7 +79,6 @@ def index():
                     listing.append([0,0])
                 if combos:
                     combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
-
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()
                 combos=person_calc(combos1.copy(),sorted_sizes.copy())
@@ -90,7 +89,7 @@ def index():
                 alllist=[[],[]]
                 rem_vehs=[]
 
-            restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:],sorted_sizes,sorted_allocations,sorted_spaces)
+            restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
 
             combined_sorted_data = [
                 [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]

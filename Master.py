@@ -98,8 +98,8 @@ def unused(allocations,combos):
             unused.append(elem+1)
     return unused
 
-def unused1(sizes,combos):
-    usable=[]
+def unused1(sizes, combos):
+    usable = []
     for elem in combos:
         for i in elem:
             usable.append(i)

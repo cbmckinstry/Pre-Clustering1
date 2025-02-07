@@ -204,7 +204,7 @@ public class Combine {
                 if (six6 == 0 && backup6 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six6 == 0 && backup6 == 0) break;
-                    for (int k = filteredSpaces.size() - 1; k > i; k--) {
+                    for (int k = filteredSpaces.size() - 1; k > j; k--) {
                         if (six6 == 0 && backup6 == 0) break;
 
                         if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) &&
@@ -270,7 +270,7 @@ public class Combine {
                 if (six7 == 0 && backup7 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six7 == 0 && backup7 == 0) break;
-                    for (int k = filteredSpaces.size() - 1; k > i; k--) {
+                    for (int k = filteredSpaces.size() - 1; k > j; k--) {
                         if (six7 == 0 && backup7 == 0) break;
 
                         if (!used7.contains(i) && !used7.contains(j) && !used7.contains(k) &&
@@ -329,7 +329,7 @@ public class Combine {
                 if (six8 == 0 && backup8 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six8 == 0 && backup8 == 0) break;
-                    for (int k = filteredSpaces.size() - 1; k > i; k--) {
+                    for (int k = filteredSpaces.size() - 1; k > j; k--) {
                         if (six8 == 0 && backup8 == 0) break;
 
                         if (!used8.contains(i) && !used8.contains(j) && !used8.contains(k) &&
@@ -395,7 +395,7 @@ public class Combine {
                 if (six9 == 0 && backup9 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six9 == 0 && backup9 == 0) break;
-                    for (int k = filteredSpaces.size() - 1; k > i; k--) {
+                    for (int k = filteredSpaces.size() - 1; k > j; k--) {
                         if (six9 == 0 && backup9 == 0) break;
 
                         if (!used9.contains(i) && !used9.contains(j) && !used9.contains(k) &&
@@ -460,7 +460,7 @@ public class Combine {
                 if (six10 == 0 && backup10 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six10 == 0 && backup10 == 0) break;
-                    for (int k = filteredSpaces.size() - 1; k > i; k--) {
+                    for (int k = filteredSpaces.size() - 1; k > j; k--) {
                         if (six10 == 0 && backup10 == 0) break;
 
                         if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
