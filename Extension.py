@@ -1,7 +1,9 @@
 from py4j.java_gateway import JavaGateway, java_import
 gateway = JavaGateway()
+
 java_import(gateway.jvm, 'java.util.ArrayList')
 java_import(gateway.jvm, 'java.util.HashSet')
+
 def call_combine(allocations, spaces, shortfall, backupsize, used, bound_list):
 
     java_allocations = gateway.jvm.ArrayList()

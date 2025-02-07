@@ -3,8 +3,11 @@ from flask_session import Session
 from Master import *
 import os
 import redis
+from py4j.java_gateway import JavaGateway
 
 app = Flask(__name__)
+
+gateway = JavaGateway()
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "supersecretkey")
 
