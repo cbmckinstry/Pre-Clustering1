@@ -385,7 +385,6 @@ public class Combine {
         if (six8==0 && backup8==0){
             return Arrays.asList(threes8, init2);
         }
-
         int six9 = six8;
         int backup9 = backup8;
         List<int[]> threes9 = new ArrayList<>(threes8);
