@@ -39,7 +39,7 @@ public class Combine {
                 combos4.clear();
                 init.clear();
 
-                for (int m=space0.size()-2; m >=0; m--) {
+                for (int m=0; m <space0.size()-1; m++) {
                     if (backup4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (backup4 == 0) break;
@@ -70,7 +70,7 @@ public class Combine {
                 combos5= new ArrayList<>(combos4);
                 init1= new ArrayList<>(init);
 
-                for (int m=space0.size()-2; m >=0; m--) {
+                for (int m=0; m <space0.size()-1; m++) {
                     if (six4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (six4 == 0) break;
@@ -98,7 +98,7 @@ public class Combine {
                 combos4.clear();
                 init.clear();
 
-                for (int m=space0.size()-2; m >=0; m--) {
+                for (int m=0; m <space0.size()-1; m++) {
                     if (six4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (six4 == 0) break;
@@ -128,7 +128,7 @@ public class Combine {
                 combos5= new ArrayList<>(combos4);
                 init1= new ArrayList<>(init);
 
-                for (int m=space0.size()-2; m >=0; m--) {
+                for (int m=0; m <space0.size()-1; m++) {
                     if (backup4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (backup4 == 0) break;
@@ -174,6 +174,7 @@ public class Combine {
 
         int lower = boundlst[2];
         int upperBound = boundlst[3];
+        int sendBound= boundlst[0];
 
         for (int i = 0; i < spaces.size(); i++) {
             if (spaces.get(i) != 0) {
@@ -188,7 +189,7 @@ public class Combine {
         Set<Integer> used6 = new HashSet<>(used5);
         List<int[]> init = new ArrayList<>();
 
-        List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{lower, lower});
+        List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{sendBound, lower});
         if (!((List<?>) trial.get(1)).isEmpty()) {
             return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
         }
