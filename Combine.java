@@ -189,7 +189,7 @@ public class Combine {
         Set<Integer> used6 = new HashSet<>(used5);
         List<int[]> init = new ArrayList<>();
 
-        List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{sendBound, lower});
+        List<Object> trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{sendBound, lower+1});
         if (!((List<?>) trial.get(1)).isEmpty()) {
             return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
         }
@@ -236,7 +236,7 @@ public class Combine {
                                 return Arrays.asList(threes6, init);
                             }
 
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m, m});
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
                             }
@@ -292,7 +292,7 @@ public class Combine {
                             }
 
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes7), mergeLists((List<int[]>) trial.get(1), init1));
                             }
@@ -355,7 +355,7 @@ public class Combine {
                             }
 
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes8), mergeLists((List<int[]>) trial.get(1), init2));
                             }
