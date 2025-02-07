@@ -214,8 +214,8 @@ public class Combine {
                                 filteredSpaces.get(i) + filteredSpaces.get(j) < (2 * Math.max(backupSize, 6)) &&
                                 (six6 > 1 || backup6 > 1) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
-                            if(m<=boundlst[1]) {
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m, m});
+                            if(m+1<=boundlst[1]) {
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m+1, m+1});
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
                                 }
@@ -240,7 +240,7 @@ public class Combine {
                                 return Arrays.asList(threes6, init);
                             }
 
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m, m});
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes6), mergeLists((List<int[]>) trial.get(1), init));
                             }
@@ -282,8 +282,8 @@ public class Combine {
                                 (six7 > 0 && backup7 > 0) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
-                            if(m<=boundlst[1]) {
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m, m});
+                            if(m+1<=boundlst[1]) {
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m+1, m+1});
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes7), mergeLists((List<int[]>) trial.get(1), init1));
                                 }
@@ -303,7 +303,7 @@ public class Combine {
                             }
 
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes7), mergeLists((List<int[]>) trial.get(1), init1));
                             }
@@ -345,8 +345,8 @@ public class Combine {
                                 (six8 > 1 || backup8 > 1) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
-                            if(m<=boundlst[1]) {
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m, m});
+                            if(m+1<=boundlst[1]) {
+                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m+1, m+1});
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes8), mergeLists((List<int[]>) trial.get(1), init2));
                                 }
@@ -373,7 +373,7 @@ public class Combine {
                             }
 
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8, new int[]{m+1, m+1});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes8), mergeLists((List<int[]>) trial.get(1), init2));
                             }
@@ -413,12 +413,6 @@ public class Combine {
                                 (six9 > 0 || backup9 > 0) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
-                            if (m<=boundlst[1]) {
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[]{m, m});
-                                if (!((List<?>) trial.get(1)).isEmpty()) {
-                                    return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes9), mergeLists((List<int[]>) trial.get(1), init3));
-                                }
-                            }
 
                             if (backupSize==7 && backup9 >= 1){
                                 backup9 -= 1;
@@ -440,7 +434,7 @@ public class Combine {
                                 return Arrays.asList(threes9, init3);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[] {m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9, new int[] {boundlst[1],boundlst[1]});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes9), mergeLists((List<int[]>) trial.get(1), init3));
                             }
@@ -481,12 +475,6 @@ public class Combine {
                                 (six10 > 0 || backup10 > 0) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
-                            if (m<=boundlst[1]) {
-                                trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{m, m});
-                                if (!((List<?>) trial.get(1)).isEmpty()) {
-                                    return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes10), mergeLists((List<int[]>) trial.get(1), init4));
-                                }
-                            }
 
                             if (backupSize==7 && six10 >= 1){
                                 six10 -= 1;
@@ -508,7 +496,7 @@ public class Combine {
                                 return Arrays.asList(threes10, init4);
                             }
 
-                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{m, m});
+                            trial = combine(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10, new int[]{boundlst[1], boundlst[1]});
                             if (!((List<?>) trial.get(1)).isEmpty()) {
                                 return Arrays.asList(mergeLists((List<int[]>) trial.get(0), threes10), mergeLists((List<int[]>) trial.get(1), init4));
                             }
