@@ -3,11 +3,20 @@ from flask_session import Session
 from Master import *
 import os
 import redis
-from py4j.java_gateway import JavaGateway
+import subprocess
+import time
+from py4j.java_gateway import JavaGateway, GatewayParameters
+
+subprocess.run(["javac", "Combine.java"], check=True)
+
+java_process = subprocess.Popen(["java", "Combine"])
+
+time.sleep(5)
+
+gateway = JavaGateway(gateway_parameters=GatewayParameters(auto_convert=True))
 
 app = Flask(__name__)
 
-gateway = JavaGateway()
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "supersecretkey")
 
