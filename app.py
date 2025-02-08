@@ -73,8 +73,8 @@ def index():
                 boundlst=sort_by_sum(sorted_allocations.copy())
                 if len(sorted_allocations)>=3:
                     combos,listing=call_threes(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
-                   # if not combos:
-                      #  combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                    if not combos:
+                        combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
                 else:
                     combos,listing=call_combine(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,[boundlst[1],boundlst[1]])
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
