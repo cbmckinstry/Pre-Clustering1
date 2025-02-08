@@ -36,7 +36,7 @@ def index():
             pers6 = int(pers6_input) if pers6_input else 0
             pers7 = int(pers7_input) if pers7_input else 0
 
-            veh2=vehlist
+            veh2=vehlist.copy()
             veh2.sort(reverse=True)
 
             # Validate inputs
