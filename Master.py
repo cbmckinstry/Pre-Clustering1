@@ -173,7 +173,7 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         if len(sorted_combos[elem])==3:
             other_combos.append(sorted_combos[elem])
             other_listings.append(sorted_listings[elem])
-    print(combos,allocations,listings)
+
     to_skip = set()
 
     for elem in range(len(combos)):
@@ -186,8 +186,6 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
                 if sum(allocations[combos[elem][item]]) == 0 and remainders[elem][item] + sum(remainders[other]) >= backup_size * (listings[elem][0] + listings[other][0]) + 6 * (listings[elem][1] + listings[other][1]):
                     value = combos[elem].pop(item)
                     combos[other].append(value)
-                    print(combos)
-
 
                     listings[other][0] += listings[elem][0]
                     listings[other][1] += listings[elem][1]
@@ -207,7 +205,7 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         if len(sorted_combos[piece])!=1:
             out_combos.append(combos[piece])
             out_listings.append(listings[piece])
-    print(5)
+
     out1=out_combos+other_combos
     out2=out_listings+other_listings
     out3=[]
@@ -216,6 +214,5 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         for j in i:
             run.append(j+1)
         out3.append(run)
-    print(out3,out2)
 
     return out3,out2
