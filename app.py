@@ -79,9 +79,11 @@ def index():
                 if combos:
                     combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
                     combos,listing=replacing_twos(combos,listing,sorted_sizes.copy(),sorted_allocations.copy(),backupsize)
+
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()
                 combos=person_calc(combos1.copy(),sorted_sizes.copy())
+
                 alllist=alltogether(combos,listing,damage)
                 rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())
                 rem_vehs=quant(rem_vehs2)
