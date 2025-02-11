@@ -217,3 +217,62 @@ def restore_order(original, shuffled, list_of_lists, list_of_ints):
     restored_list_of_ints = [list_of_ints[i] for i in sorted_indices]
 
     return restored_shuffled, restored_list_of_lists, restored_list_of_ints
+
+def sort_by_sum_w2(list1, list2, list3):
+    sorted_pairs = sorted(zip(list1, list2,list3), key=lambda pair: sum(pair[0]))
+    sorted_list1, sorted_list2, sorted_list3= zip(*sorted_pairs)
+
+    return list(sorted_list1), list(sorted_list2), list(sorted_list3)
+def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
+    indeces_combos=[]
+    for x in indeces1_combos:
+        runner=[]
+        for y in x:
+            runner.append(y-1)
+        indeces_combos.append(runner)
+    remainders=[]
+    for elem in range(len(indeces_combos)):
+        tobe=[]
+        for item in range(len(indeces_combos[elem])):
+            tobe.append(sizes[indeces_combos[elem][item]]-backup_size*allocations[indeces_combos[elem][item]][0]-6*allocations[indeces_combos[elem][item]][1])
+        remainders.append(tobe)
+    sorted_remainders, sorted_combos,sorted_listings=sort_by_sum_w2(remainders,indeces_combos,all_listings)
+    combos=[]
+    listings=[]
+    other_combos=[]
+    other_listings=[]
+    for elem in range(len(sorted_combos)):
+        if len(sorted_combos[elem])==2:
+            combos.append(sorted_combos[elem])
+            listings.append(sorted_listings[elem])
+        if len(sorted_combos[elem])==3:
+            other_combos.append(sorted_combos[elem])
+            other_listings.append(sorted_listings[elem])
+
+    for elem in range(len(sorted_combos)):
+        for other in range(len(sorted_combos)):
+            if elem==other or len(sorted_combos[elem])!=2 or len(sorted_combos[other])!=2:
+                continue
+            for item in [0,1]:
+                if sum(allocations[sorted_combos[elem][item]])==0 and sorted_remainders[elem][item]+sum(sorted_remainders[other])>=backup_size*(sorted_listings[elem][0]+sorted_listings[other][0])+6*(sorted_listings[elem][1]+sorted_listings[other][1]):
+                    value=sorted_combos[elem].pop(item)
+                    sorted_combos[other].append(value)
+                    sorted_listings[other]=[sorted_listings[elem][0]+sorted_listings[other][0],sorted_listings[elem][1]+sorted_listings[other][1]]
+                    sorted_listings[elem]=[0,0]
+                    continue
+
+    out_combos=[]
+    out_listings=[]
+    for piece in range(len(sorted_combos)):
+        if len(sorted_combos[piece])!=1:
+            out_combos.append(sorted_combos[piece])
+            out_listings.append(sorted_listings[piece])
+    out1=out_combos+other_combos
+    out2=out_listings+other_listings
+    out3=[]
+    for i in out1:
+        run=[]
+        for j in i:
+            run.append(j+1)
+        out3.append(run)
+    return out3,out2
