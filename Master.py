@@ -148,6 +148,7 @@ def sort_by_sum_w2(list1, list2, list3):
     return list(sorted_list1), list(sorted_list2), list(sorted_list3)
 def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
     indeces_combos=[]
+
     for x in indeces1_combos:
         runner=[]
         for y in x:
@@ -164,6 +165,7 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
     listings=[]
     other_combos=[]
     other_listings=[]
+
     for elem in range(len(sorted_combos)):
         if len(sorted_combos[elem])==2:
             combos.append(sorted_combos[elem])
@@ -171,18 +173,33 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         if len(sorted_combos[elem])==3:
             other_combos.append(sorted_combos[elem])
             other_listings.append(sorted_listings[elem])
+    print(combos,allocations,listings)
+    to_skip = set()
 
     for elem in range(len(combos)):
+        if elem in to_skip:
+            continue
         for other in range(len(combos)):
-            if elem==other or len(combos[elem])!=2 or len(combos[other])!=2:
+            if elem == other or len(combos[elem]) != 2 or len(combos[other]) != 2:
                 continue
-            for item in [0,1]:
-                if sum(allocations[combos[elem][item]])==0 and remainders[elem][item]+sum(remainders[other])>=backup_size*(listings[elem][0]+listings[other][0])+6*(listings[elem][1]+listings[other][1]):
-                    value=combos[elem].pop(item)
+            for item in [0, 1]:
+                if sum(allocations[combos[elem][item]]) == 0 and remainders[elem][item] + sum(remainders[other]) >= backup_size * (listings[elem][0] + listings[other][0]) + 6 * (listings[elem][1] + listings[other][1]):
+                    value = combos[elem].pop(item)
                     combos[other].append(value)
-                    listings[other]=[listings[elem][0]+listings[other][0],listings[elem][1]+listings[other][1]]
-                    listings[elem]=[0,0]
-                    continue
+                    print(combos)
+
+
+                    listings[other][0] += listings[elem][0]
+                    listings[other][1] += listings[elem][1]
+                    listings[elem][0] = 0
+                    listings[elem][1] = 0
+
+
+                    to_skip.add(elem)
+                    to_skip.add(other)
+
+                    break
+            break
 
     out_combos=[]
     out_listings=[]
@@ -190,6 +207,7 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         if len(sorted_combos[piece])!=1:
             out_combos.append(combos[piece])
             out_listings.append(listings[piece])
+    print(5)
     out1=out_combos+other_combos
     out2=out_listings+other_listings
     out3=[]
@@ -198,5 +216,6 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         for j in i:
             run.append(j+1)
         out3.append(run)
+    print(out3,out2)
 
     return out3,out2
