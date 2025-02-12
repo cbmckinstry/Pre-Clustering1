@@ -78,7 +78,7 @@ def sort_by_sum(lst):
     if len(lst)>=3:
         threeup=sum(x[1])+sum(x[2])+sum(x[0])
         threelow=sum(x[-1])+sum(x[-2])+sum(x[-3])
-    return [twolow,twoup,threelow,threeup]
+    return threeup
 
 def harm(combos,allocations):
     out=[]
@@ -146,35 +146,37 @@ def sort_by_sum_w2(list1, list2, list3):
     sorted_list1, sorted_list2, sorted_list3= zip(*sorted_pairs)
 
     return list(sorted_list1), list(sorted_list2), list(sorted_list3)
-def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
-    indeces_combos=[]
+def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_size):
+    # Convert 1-based indices to 0-based
+    indeces_combos = [[y - 1 for y in x] for x in indeces1_combos]
 
-    for x in indeces1_combos:
-        runner=[]
-        for y in x:
-            runner.append(y-1)
-        indeces_combos.append(runner)
-    remainders=[]
-    for elem in range(len(indeces_combos)):
-        tobe=[]
-        for item in range(len(indeces_combos[elem])):
-            tobe.append(sizes[indeces_combos[elem][item]]-backup_size*allocations[indeces_combos[elem][item]][0]-6*allocations[indeces_combos[elem][item]][1])
-        remainders.append(tobe)
-    sorted_remainders, sorted_combos,sorted_listings=sort_by_sum_w2(remainders,indeces_combos,all_listings)
-    combos=[]
-    listings=[]
-    other_combos=[]
-    other_listings=[]
+    # Compute remainders based on sizes and allocations
+    remainders = [
+        [sizes[ind] - backup_size * allocations[ind][0] - 6 * allocations[ind][1] for ind in sublist]
+        for sublist in indeces_combos
+    ]
 
-    for elem in range(len(sorted_combos)):
-        if len(sorted_combos[elem])==2:
-            combos.append(sorted_combos[elem])
-            listings.append(sorted_listings[elem])
-        if len(sorted_combos[elem])==3:
-            other_combos.append(sorted_combos[elem])
-            other_listings.append(sorted_listings[elem])
+    # Sort by sum of remainders
+    sorted_remainders, sorted_combos, sorted_listings = sort_by_sum_w2(remainders, indeces_combos, all_listings)
 
+    # Separate 2-element and 3-element combos
+    combos = []
+    listings = []
+    other_combos = []
+    other_listings = []
+
+    for i in range(len(sorted_combos)):
+        if len(sorted_combos[i]) == 2:
+            combos.append(sorted_combos[i])
+            listings.append(sorted_listings[i])
+        elif len(sorted_combos[i]) == 3:
+            other_combos.append(sorted_combos[i])
+            other_listings.append(sorted_listings[i])
+
+    # Track modified elements to avoid re-processing
     to_skip = set()
+    new_combos = []  # Store newly formed groups
+    new_listings = []
 
     for elem in range(len(combos)):
         if elem in to_skip:
@@ -182,37 +184,49 @@ def replacing_twos(indeces1_combos,all_listings,sizes,allocations,backup_size):
         for other in range(len(combos)):
             if elem == other or len(combos[elem]) != 2 or len(combos[other]) != 2:
                 continue
-            for item in [0, 1]:
-                if sum(allocations[combos[elem][item]]) == 0 and remainders[elem][item] + sum(remainders[other]) >= backup_size * (listings[elem][0] + listings[other][0]) + 6 * (listings[elem][1] + listings[other][1]):
-                    value = combos[elem].pop(item)
-                    combos[other].append(value)
 
-                    listings[other][0] += listings[elem][0]
-                    listings[other][1] += listings[elem][1]
-                    listings[elem][0] = 0
-                    listings[elem][1] = 0
+            # Get all elements involved
+            all_elements = combos[elem] + combos[other]
+            zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) == 0]
+            non_zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) > 0]
 
 
+            if len(zero_allocs) == 3 and len(non_zero_allocs) == 1:
+                # Calculate the total remainder only for the zero-allocation elements
+                total_remainder = sum(remainders[elem][combos[elem].index(idx)] for idx in zero_allocs if idx in combos[elem]) + \
+                                  sum(remainders[other][combos[other].index(idx)] for idx in zero_allocs if idx in combos[other])
+
+                # Compute the required space for merging
+                required_space = backup_size * (listings[elem][0] + listings[other][0]) + 6 * (listings[elem][1] + listings[other][1])
+
+                # Only merge if there's enough space
+                if total_remainder >= required_space:
+                    # Create a new group with the 3 zero-allocation elements
+                    new_combos.append(sorted(zero_allocs))
+
+                    # Compute the new listing for the merged group
+                    new_listings.append([
+                        allocations[elem][0] + allocations[other][0],
+                        allocations[elem][1] + allocations[other][1]
+                    ])
+
+                    # Keep the remaining non-zero element in its original group
+                    non_zero_element = non_zero_allocs[0]
+                    combos[elem] = [non_zero_element] if non_zero_element in combos[elem] else []
+                    combos[other] = [non_zero_element] if non_zero_element in combos[other] else []
+
+                    # Mark as processed
                     to_skip.add(elem)
                     to_skip.add(other)
 
-                    break
-            break
+                    break  # Stop after a valid move
 
-    out_combos=[]
-    out_listings=[]
-    for piece in range(len(combos)):
-        if len(sorted_combos[piece])!=1:
-            out_combos.append(combos[piece])
-            out_listings.append(listings[piece])
+    # Remove empty groups
+    out_combos = [c for c in combos if c] + new_combos + other_combos
+    out_listings = [l for c, l in zip(combos, listings) if c] + new_listings + other_listings
 
-    out1=out_combos+other_combos
-    out2=out_listings+other_listings
-    out3=[]
-    for i in out1:
-        run=[]
-        for j in i:
-            run.append(j+1)
-        out3.append(run)
+    # Convert indices back to 1-based
+    out1 = [[j + 1 for j in i] for i in out_combos]
+    out2 = out_listings
+    return out1, out2
 
-    return out3,out2

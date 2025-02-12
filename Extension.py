@@ -26,12 +26,9 @@ def call_combine(allocations, spaces, shortfall, backupsize, used, bound_list):
         for index in used:
             java_used.add(index)
 
-    java_bound_list = gateway.new_array(gateway.jvm.int, 2)
-    java_bound_list[0] = bound_list[0]
-    java_bound_list[1] = bound_list[1]
 
     combine = gateway.entry_point
-    java_result = combine.combine(java_allocations, java_spaces, java_shortfall, int(backupsize), java_used, java_bound_list)
+    java_result = combine.combine(java_allocations, java_spaces, java_shortfall, int(backupsize), java_used, int(bound_list))
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
@@ -63,16 +60,11 @@ def call_threes(allocations, spaces, shortfall, backup_size, used, bound_list):
         for index in used:
             java_used.add(index)
 
-    java_bound_list = gateway.new_array(gateway.jvm.int, 4)
-    java_bound_list[0] = bound_list[0]
-    java_bound_list[1] = bound_list[1]
-    java_bound_list[2] = bound_list[2]
-    java_bound_list[3] = bound_list[3]
 
     backup_size = int(backup_size)
 
     combine = gateway.entry_point
-    java_result = combine.threes(java_shortfall, java_allocations, java_spaces, backup_size, java_used, java_bound_list)
+    java_result = combine.threes(java_shortfall, java_allocations, java_spaces, backup_size, java_used, int(bound_list))
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
@@ -103,15 +95,9 @@ def call_combineFlipped(allocations, spaces, shortfall, backupsize, used, bound_
         for index in used:
             java_used.add(index)
 
-    java_bound_list = gateway.new_array(gateway.jvm.int, 4)
-    java_bound_list[0] = bound_list[0]
-    java_bound_list[1] = bound_list[1]
-    java_bound_list[2] = bound_list[2]
-    java_bound_list[3] = bound_list[3]
-
 
     combine = gateway.entry_point
-    java_result = combine.combineFlipped(java_allocations, java_spaces, java_shortfall, int(backupsize), java_used, java_bound_list)
+    java_result = combine.combineFlipped(java_allocations, java_spaces, java_shortfall, int(backupsize), java_used, int(bound_list))
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
@@ -142,14 +128,11 @@ def call_threesFlipped(allocations, spaces, shortfall, backup_size, used, bound_
         for index in used:
             java_used.add(index)
 
-    java_bound_list = gateway.new_array(gateway.jvm.int, 2)
-    java_bound_list[0] = bound_list[0]
-    java_bound_list[1] = bound_list[1]
 
     backup_size = int(backup_size)
 
     combine = gateway.entry_point
-    java_result = combine.threesFlipped(java_shortfall, java_allocations, java_spaces, backup_size, java_used, java_bound_list)
+    java_result = combine.threesFlipped(java_shortfall, java_allocations, java_spaces, backup_size, java_used, int(bound_list))
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
