@@ -411,7 +411,6 @@ public class Combine {
 
                     }
                 }
-
                 for (int m = space0.size()-2; m >= 0; m--) {
                     if (six4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
