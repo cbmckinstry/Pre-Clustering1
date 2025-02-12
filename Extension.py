@@ -188,7 +188,6 @@ allocations=[[0, 1], [0,2],[0,0]]
 spaces = [5,2,5,5,5,2]
 combos=[[1,3],[1,4,5],[6]]
 
-
 shortfall = [0, 3]
 used = {}
 bound_list = [0, 3]
