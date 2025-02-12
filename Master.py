@@ -190,7 +190,6 @@ def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_siz
             zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) == 0]
             non_zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) > 0]
 
-
             if len(zero_allocs) == 3 and len(non_zero_allocs) == 1:
                 # Calculate the total remainder only for the zero-allocation elements
                 total_remainder = sum(remainders[elem][combos[elem].index(idx)] for idx in zero_allocs if idx in combos[elem]) + \
