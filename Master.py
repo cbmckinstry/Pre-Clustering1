@@ -148,55 +148,60 @@ def sort_by_sum_w2(list1, list2, list3):
     return list(sorted_list1), list(sorted_list2), list(sorted_list3)
 def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_size):
     # Convert 1-based indices to 0-based
+
     indeces_combos = [[y - 1 for y in x] for x in indeces1_combos]
 
     # Compute remainders based on sizes and allocations
-    remainders = [
-        [sizes[ind] - backup_size * allocations[ind][0] - 6 * allocations[ind][1] for ind in sublist]
-        for sublist in indeces_combos
-    ]
+    remainders_all = [sizes[ind] - backup_size * allocations[ind][0] - 6 * allocations[ind][1] for ind in range(len(sizes))]
+    remainders=[]
 
-    # Sort by sum of remainders
-    sorted_remainders, sorted_combos, sorted_listings = sort_by_sum_w2(remainders, indeces_combos, all_listings)
-
-    # Separate 2-element and 3-element combos
     combos = []
     listings = []
     other_combos = []
     other_listings = []
 
-    for i in range(len(sorted_combos)):
-        if len(sorted_combos[i]) == 2:
-            combos.append(sorted_combos[i])
-            listings.append(sorted_listings[i])
-        elif len(sorted_combos[i]) == 3:
-            other_combos.append(sorted_combos[i])
-            other_listings.append(sorted_listings[i])
+    for i in range(len(indeces_combos)):
+        if len(indeces_combos[i]) == 2:
+            combos.append(indeces_combos[i])
+            listings.append(all_listings[i])
+            run=[]
+            for x in indeces_combos[i]:
+                run.append(remainders_all[x])
+            remainders.append(run)
+        elif len(indeces_combos[i]) == 3:
+            other_combos.append(indeces_combos[i])
+            other_listings.append(all_listings[i])
+
+    sorted_remainders, sorted_combos, sorted_listings = sort_by_sum_w2(remainders, combos, listings)
+
+
 
     # Track modified elements to avoid re-processing
     to_skip = set()
     new_combos = []  # Store newly formed groups
     new_listings = []
 
-    for elem in range(len(combos)):
+    for elem in range(len(sorted_combos)):
         if elem in to_skip:
             continue
-        for other in range(len(combos)):
-            if elem == other or len(combos[elem]) != 2 or len(combos[other]) != 2:
+        for other in range(len(sorted_combos)):
+            if elem == other or len(sorted_combos[elem]) != 2 or len(sorted_combos[other]) != 2:
                 continue
 
-            # Get all elements involved
-            all_elements = combos[elem] + combos[other]
+
+            all_elements = sorted_combos[elem] + sorted_combos[other]
             zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) == 0]
             non_zero_allocs = [idx for idx in all_elements if sum(allocations[idx]) > 0]
 
             if len(zero_allocs) == 3 and len(non_zero_allocs) == 1:
                 # Calculate the total remainder only for the zero-allocation elements
-                total_remainder = sum(remainders[elem][combos[elem].index(idx)] for idx in zero_allocs if idx in combos[elem]) + \
-                                  sum(remainders[other][combos[other].index(idx)] for idx in zero_allocs if idx in combos[other])
+                total_remainder=0
+                for z in zero_allocs:
+                    total_remainder+=remainders_all[z]
 
-                # Compute the required space for merging
-                required_space = backup_size * (listings[elem][0] + listings[other][0]) + 6 * (listings[elem][1] + listings[other][1])
+
+                required_space = backup_size * (sorted_listings[elem][0] + sorted_listings[other][0]) + 6 * (sorted_listings[elem][1] + sorted_listings[other][1])
+
 
                 # Only merge if there's enough space
                 if total_remainder >= required_space:
@@ -205,16 +210,16 @@ def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_siz
 
 
                     new_listings.append([
-                        listings[elem][0] + listings[other][0],
-                        listings[elem][1] + listings[other][1]
+                        sorted_listings[elem][0] + sorted_listings[other][0],
+                        sorted_listings[elem][1] + sorted_listings[other][1]
                     ])
-                    listings[elem]=[0,0]
-                    listings[other]=[0,0]
+                    sorted_listings[elem]=[0,0]
+                    sorted_listings[other]=[0,0]
 
                     # Keep the remaining non-zero element in its original group
                     non_zero_element = non_zero_allocs[0]
-                    combos[elem] = [non_zero_element] if non_zero_element in combos[elem] else []
-                    combos[other] = [non_zero_element] if non_zero_element in combos[other] else []
+                    sorted_combos[elem] = [non_zero_element] if non_zero_element in sorted_combos[elem] else []
+                    sorted_combos[other] = [non_zero_element] if non_zero_element in sorted_combos[other] else []
 
                     # Mark as processed
                     to_skip.add(elem)
@@ -223,12 +228,12 @@ def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_siz
                     break  # Stop after a valid move
 
     # Remove empty groups
-    out_combos = [c for c in combos if c] + new_combos + other_combos
-    out_listings = [l for c, l in zip(combos, listings) if c and l!=[0,0]] + new_listings + other_listings
+    out_combos = [c for c in sorted_combos if c] + new_combos + other_combos
+    out_listings = [l for c, l in zip(sorted_combos, sorted_listings) if c and l!=[0,0]] + new_listings + other_listings
 
 
     # Convert indices back to 1-based
     out1 = [[j + 1 for j in i] for i in out_combos if len(i)>1]
     out2 = out_listings
-    return out1, out2
 
+    return out1, out2
