@@ -71,6 +71,7 @@ def index():
             if allocations_only==0:
                 boundlst=sort_by_sum(sorted_allocations.copy())
                 combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+         
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
                 for elem in rem_vehs1:
                     combos.append([elem])
@@ -79,6 +80,7 @@ def index():
                     combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
                     if combos and listing:
                         combos,listing=replacing_twos(combos,listing,sorted_sizes.copy(),sorted_allocations.copy(),backupsize)
+
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()
                 combos=person_calc(combos1.copy(),sorted_sizes.copy())

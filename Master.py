@@ -203,12 +203,14 @@ def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_siz
                     # Create a new group with the 3 zero-allocation elements
                     new_combos.append(sorted(zero_allocs))
 
-                    # Compute the new listing for the merged group
+                    print(new_combos)
                     new_listings.append([
-                        allocations[elem][0] + allocations[other][0],
-                        allocations[elem][1] + allocations[other][1]
+                        listings[elem][0] + listings[other][0],
+                        listings[elem][1] + listings[other][1]
                     ])
-
+                    listings[elem]=[0,0]
+                    listings[other]=[0,0]
+                    print(new_listings)
                     # Keep the remaining non-zero element in its original group
                     non_zero_element = non_zero_allocs[0]
                     combos[elem] = [non_zero_element] if non_zero_element in combos[elem] else []
@@ -222,10 +224,11 @@ def replacing_twos(indeces1_combos, all_listings, sizes, allocations, backup_siz
 
     # Remove empty groups
     out_combos = [c for c in combos if c] + new_combos + other_combos
-    out_listings = [l for c, l in zip(combos, listings) if c] + new_listings + other_listings
+    out_listings = [l for c, l in zip(combos, listings) if c and l!=[0,0]] + new_listings + other_listings
+    print(out_listings)
 
     # Convert indices back to 1-based
-    out1 = [[j + 1 for j in i] for i in out_combos]
+    out1 = [[j + 1 for j in i] for i in out_combos if len(i)>1]
     out2 = out_listings
     return out1, out2
 
