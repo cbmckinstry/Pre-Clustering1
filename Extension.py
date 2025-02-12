@@ -182,7 +182,6 @@ def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spac
 
     return python_result
 
-
 sorted_allocations = [[0, 0], [0,1], [0,1], [0,1],[0,0],[0,0]]
 allocations=[[0, 1], [0,2],[0,0]]
 spaces = [5,2,5,5,5,2]
