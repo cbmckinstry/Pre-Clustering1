@@ -4,7 +4,6 @@ from Master import *
 import os
 import redis
 
-
 app = Flask(__name__)
 
 
