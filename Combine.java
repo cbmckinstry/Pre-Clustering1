@@ -3,7 +3,7 @@ import py4j.GatewayServer;
 
 public class Combine {
 
-    public static List<Object> threesFlipped( List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5, int boundlst) {
+    public static List<Object> threesFlipped(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5, int boundlst) {
         if (used5 == null) {
             used5 = new HashSet<>();
         }
@@ -33,7 +33,7 @@ public class Combine {
             threes6.clear();
             init.clear();
 
-            for (int i = filteredSpaces.size() - 3; i >=0; i--) {
+            for (int i = filteredSpaces.size() - 3; i >= 0; i--) {
                 if (six6 == 0 && backup6 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six6 == 0 && backup6 == 0) break;
@@ -73,7 +73,7 @@ public class Combine {
                 }
             }
         }
-        if (six6==0 && backup6==0){
+        if (six6 == 0 && backup6 == 0) {
             return Arrays.asList(threes6, init);
         }
 
@@ -87,10 +87,10 @@ public class Combine {
             six7 = six6;
             backup7 = backup6;
             used7 = new HashSet<>(used6);
-            threes7= new ArrayList<>(threes6);
-            init1= new ArrayList<>(init);
+            threes7 = new ArrayList<>(threes6);
+            init1 = new ArrayList<>(init);
 
-            for (int i = filteredSpaces.size() - 3; i >=0; i--) {
+            for (int i = filteredSpaces.size() - 3; i >= 0; i--) {
                 if (six7 == 0 && backup7 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six7 == 0 && backup7 == 0) break;
@@ -98,17 +98,17 @@ public class Combine {
                         if (six7 == 0 && backup7 == 0) break;
 
                         if (!used7.contains(i) && !used7.contains(j) && !used7.contains(k) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) >= ( Math.max(backupSize, 6)+Math.min(backupSize,6)) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(k) < ( Math.max(backupSize, 6)+Math.min(backupSize,6)) &&
-                                filteredSpaces.get(k) + filteredSpaces.get(j) < ( Math.max(backupSize, 6)+Math.min(backupSize,6)) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(j) < ( Math.max(backupSize, 6)+Math.min(backupSize,6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) >= (Math.max(backupSize, 6) + Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(k) < (Math.max(backupSize, 6) + Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(k) + filteredSpaces.get(j) < (Math.max(backupSize, 6) + Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(j) < (Math.max(backupSize, 6) + Math.min(backupSize, 6)) &&
                                 (six7 > 0 && backup7 > 0) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
 
                             if (backup7 >= 1 && six7 >= 1) {
                                 backup7 -= 1;
-                                six7-=1;
+                                six7 -= 1;
                                 used7.add(i);
                                 used7.add(j);
                                 used7.add(k);
@@ -124,7 +124,7 @@ public class Combine {
                 }
             }
         }
-        if (six7==0 && backup7==0){
+        if (six7 == 0 && backup7 == 0) {
             return Arrays.asList(threes7, init1);
         }
 
@@ -141,7 +141,7 @@ public class Combine {
             threes8 = new ArrayList<>(threes7);
             init2 = new ArrayList<>(init1);
 
-            for (int i = filteredSpaces.size() - 3; i >=0; i--) {
+            for (int i = filteredSpaces.size() - 3; i >= 0; i--) {
                 if (six8 == 0 && backup8 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six8 == 0 && backup8 == 0) break;
@@ -149,23 +149,22 @@ public class Combine {
                         if (six8 == 0 && backup8 == 0) break;
 
                         if (!used8.contains(i) && !used8.contains(j) && !used8.contains(k) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) >= (2* Math.min(backupSize, 6)) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(k) < (2*Math.min(backupSize, 6)) &&
-                                filteredSpaces.get(k) + filteredSpaces.get(j) < (2*Math.min(backupSize, 6)) &&
-                                filteredSpaces.get(i) + filteredSpaces.get(j) < (2*Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) >= (2 * Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(k) < (2 * Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(k) + filteredSpaces.get(j) < (2 * Math.min(backupSize, 6)) &&
+                                filteredSpaces.get(i) + filteredSpaces.get(j) < (2 * Math.min(backupSize, 6)) &&
                                 (six8 > 1 || backup8 > 1) &&
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
 
-                            if (backupSize==7 &&  six8 >= 2){
+                            if (backupSize == 7 && six8 >= 2) {
                                 six8 -= 2;
                                 used8.add(i);
                                 used8.add(j);
                                 used8.add(k);
                                 threes8.add(new int[]{i + 1, k + 1, j + 1});
                                 init2.add(new int[]{0, 2});
-                            }
-                            else if (backupSize==5 &&  backup8 >= 2){
+                            } else if (backupSize == 5 && backup8 >= 2) {
                                 backup8 -= 2;
                                 used8.add(i);
                                 used8.add(j);
@@ -182,7 +181,7 @@ public class Combine {
                 }
             }
         }
-        if (six8==0 && backup8==0){
+        if (six8 == 0 && backup8 == 0) {
             return Arrays.asList(threes8, init2);
         }
 
@@ -199,7 +198,7 @@ public class Combine {
             threes9 = new ArrayList<>(threes8);
             init3 = new ArrayList<>(init2);
 
-            for (int i = filteredSpaces.size() - 3; i >=0; i--) {
+            for (int i = filteredSpaces.size() - 3; i >= 0; i--) {
                 if (six9 == 0 && backup9 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six9 == 0 && backup9 == 0) break;
@@ -215,15 +214,14 @@ public class Combine {
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
 
-                            if (backupSize==7 && backup9 >= 1){
+                            if (backupSize == 7 && backup9 >= 1) {
                                 backup9 -= 1;
                                 used9.add(i);
                                 used9.add(j);
                                 used9.add(k);
                                 threes9.add(new int[]{i + 1, k + 1, j + 1});
                                 init3.add(new int[]{1, 0});
-                            }
-                            else if (backupSize==5 && six9 >= 1){
+                            } else if (backupSize == 5 && six9 >= 1) {
                                 six9 -= 1;
                                 used9.add(i);
                                 used9.add(j);
@@ -240,7 +238,7 @@ public class Combine {
                 }
             }
         }
-        if (six9==0 && backup9==0){
+        if (six9 == 0 && backup9 == 0) {
             return Arrays.asList(threes9, init3);
         }
 
@@ -257,7 +255,7 @@ public class Combine {
             threes10 = new ArrayList<>(threes9);
             init4 = new ArrayList<>(init3);
 
-            for (int i = filteredSpaces.size() - 3; i >=0; i--) {
+            for (int i = filteredSpaces.size() - 3; i >= 0; i--) {
                 if (six10 == 0 && backup10 == 0) break;
                 for (int j = filteredSpaces.size() - 2; j > i; j--) {
                     if (six10 == 0 && backup10 == 0) break;
@@ -273,15 +271,14 @@ public class Combine {
                                 (sum(filteredAllocations.get(i)) + sum(filteredAllocations.get(j)) + sum(filteredAllocations.get(k))) <= m) {
 
 
-                            if (backupSize==7 && six10 >= 1){
+                            if (backupSize == 7 && six10 >= 1) {
                                 six10 -= 1;
                                 used10.add(i);
                                 used10.add(j);
                                 used10.add(k);
                                 threes10.add(new int[]{i + 1, k + 1, j + 1});
                                 init4.add(new int[]{0, 1});
-                            }
-                            else if (backupSize==5 && backup10 >= 1){
+                            } else if (backupSize == 5 && backup10 >= 1) {
                                 backup10 -= 1;
                                 used10.add(i);
                                 used10.add(j);
@@ -298,7 +295,7 @@ public class Combine {
                 }
             }
         }
-        if (six10==0 && backup10==0){
+        if (six10 == 0 && backup10 == 0) {
             return Arrays.asList(threes10, init4);
         }
 
@@ -310,12 +307,11 @@ public class Combine {
             used = new HashSet<>();
         }
 
-
         List<int[]> allocations0 = new ArrayList<>();
         List<Integer> space0 = new ArrayList<>();
 
 
-        if (allocations.size()<2){
+        if (allocations.size() < 2) {
             return Arrays.asList(new ArrayList<>(), new ArrayList<>());
         }
 
@@ -330,25 +326,26 @@ public class Combine {
         List<int[]> combosFirst = (List<int[]>) firstThrough.get(0);
         List<int[]> listingsFirst = (List<int[]>) firstThrough.get(1);
         Set<Integer> usedFirst = (Set<Integer>) firstThrough.get(2);
-        int[] shortfallFirst= (int[]) firstThrough.get(3);
+        int[] shortfallFirst = (int[]) firstThrough.get(3);
 
-        int six=shortfallFirst[1];
-        int backup=shortfallFirst[0];
+        int six = shortfallFirst[1];
+        int backup = shortfallFirst[0];
 
-        List<int[]> finalCombos = new ArrayList<>(combosFirst);
-        List<int[]> finalInit = new ArrayList<>(listingsFirst);
 
-        List<int[]> finalCombos1=new ArrayList<>(finalCombos);
-        List<int[]> finalInit1=new ArrayList<>(finalInit);
+
+        List<int[]> finalCombos = new ArrayList<>();
+        List<int[]> finalInit = new ArrayList<>();
+
+        List<int[]> finalCombos1 = new ArrayList<>();
+        List<int[]> finalInit1 = new ArrayList<>();
 
         int lower = boundlst;
         int upper = boundlst;
         int six4 = six;
         Set<Integer> used4 = new HashSet<>(usedFirst);
-        List<int[]> combos4 = new ArrayList<>(combosFirst);
+        List<int[]> combos4 = new ArrayList<>();
         int backup4 = backup;
-        List<int[]> init = new ArrayList<>(listingsFirst);
-
+        List<int[]> init = new ArrayList<>();
 
 
         if (backupSize == 7) {
@@ -356,10 +353,10 @@ public class Combine {
                 if (backup4 == 0) break;
                 used4 = new HashSet<>(usedFirst);
                 backup4 = backup;
-                combos4 = new ArrayList<>(combosFirst);
-                init = new ArrayList<>(listingsFirst);
+                combos4 = new ArrayList<>();
+                init = new ArrayList<>();
 
-                if (space0.size()>=3) {
+                if (space0.size() >= 3) {
                     List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
                     if (!((List<?>) trial.get(1)).isEmpty()) {
                         finalCombos = mergeLists((List<int[]>) trial.get(0), combos4);
@@ -367,7 +364,7 @@ public class Combine {
                     }
                 }
 
-                for (int m = space0.size()-2; m >= 0; m--) {
+                for (int m = space0.size() - 2; m >= 0; m--) {
                     if (backup4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (backup4 == 0) break;
@@ -378,10 +375,13 @@ public class Combine {
                             backup4--;
                             init.add(new int[]{1, 0});
                             if (backup4 == 0 && six4 == 0) {
-                                return Arrays.asList(combos4, init);
+
+                                List<int[]> combosHere=mergeLists(combosFirst,combos4);
+                                List<int[]> initHere=mergeLists(listingsFirst,init);
+                                return Arrays.asList(combosHere, initHere);
                             }
-                            if (space0.size()>=3) {
-                                List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound );
+                            if (space0.size() >= 3) {
+                                List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     finalCombos = mergeLists((List<int[]>) trial.get(0), combos4);
                                     finalInit = mergeLists((List<int[]>) trial.get(1), init);
@@ -394,31 +394,37 @@ public class Combine {
 
             }
 
+            if ((backup4==0 && six4 == 0)|| !finalCombos.isEmpty()) {
+                List<int[]> combosOut=mergeLists(finalCombos,combosFirst);
+                List<int[]> initOut=mergeLists(finalInit,listingsFirst);
+                return Arrays.asList(combosOut, initOut);
+            }
+
             List<int[]> combos5 = new ArrayList<>(combos4);
             Set<Integer> used5 = new HashSet<>(used4);
             List<int[]> init1 = new ArrayList<>(init);
 
-            finalCombos1=new ArrayList<>(finalCombos);
-            finalInit1=new ArrayList<>(finalInit);
+            finalCombos1 = new ArrayList<>(finalCombos);
+            finalInit1 = new ArrayList<>(finalInit);
 
             for (int bound = lower; bound <= upper; bound++) {
                 if (six4 == 0) break;
                 used5 = new HashSet<>(used4);
                 six4 = six;
-                combos5= new ArrayList<>(combos4);
-                init1= new ArrayList<>(init);
-                finalCombos1=new ArrayList<>(finalCombos);
-                finalInit1=new ArrayList<>(finalInit);
+                combos5 = new ArrayList<>(combos4);
+                init1 = new ArrayList<>(init);
+                finalCombos1 = new ArrayList<>(finalCombos);
+                finalInit1 = new ArrayList<>(finalInit);
 
-                if (space0.size()>=3) {
-                    List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound );
+                if (space0.size() >= 3) {
+                    List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound);
                     if (!((List<?>) trial.get(1)).isEmpty()) {
                         finalCombos1 = mergeLists((List<int[]>) trial.get(0), combos5);
                         finalInit1 = mergeLists((List<int[]>) trial.get(1), init1);
 
                     }
                 }
-                for (int m = space0.size()-2; m >= 0; m--) {
+                for (int m = space0.size() - 2; m >= 0; m--) {
                     if (six4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (six4 == 0) break;
@@ -429,10 +435,13 @@ public class Combine {
                             six4--;
                             init1.add(new int[]{0, 1});
                             if (backup4 == 0 && six4 == 0) {
-                                return Arrays.asList(combos5, init1);
+
+                                List<int[]> combosHere=mergeLists(combosFirst,combos5);
+                                List<int[]> initHere=mergeLists(listingsFirst,init1);
+                                return Arrays.asList(combosHere, initHere);
                             }
 
-                            if (space0.size()>=3) {
+                            if (space0.size() >= 3) {
                                 List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound);
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     finalCombos1 = mergeLists((List<int[]>) trial.get(0), combos5);
@@ -445,26 +454,31 @@ public class Combine {
                 }
 
             }
-            if (backup4 == 0 && six4 == 0){
-                return Arrays.asList(finalCombos1, finalInit1);
+            if ((backup4==0 && six4 == 0)|| !finalCombos1.isEmpty()) {
+                List<int[]> combosOut=mergeLists(finalCombos1,combosFirst);
+                List<int[]> initOut=mergeLists(finalInit1,listingsFirst);
+                return Arrays.asList(combosOut, initOut);
             }
         } else {
+
             for (int bound = lower; bound <= upper; bound++) {
                 if (six4 == 0) break;
                 used4 = new HashSet<>(usedFirst);
-                six4=six;
-                combos4 = new ArrayList<>(combosFirst);
-                init = new ArrayList<>(listingsFirst);
+                six4 = six;
+                combos4 = new ArrayList<>();
+                init = new ArrayList<>();
 
-                if (space0.size()>=3) {
+                if (space0.size() >= 3) {
+
                     List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
                     if (!((List<?>) trial.get(1)).isEmpty()) {
                         finalCombos = mergeLists((List<int[]>) trial.get(0), combos4);
                         finalInit = mergeLists((List<int[]>) trial.get(1), init);
+
                     }
                 }
 
-                for (int m = space0.size()-2; m >= 0; m--) {
+                for (int m = space0.size() - 2; m >= 0; m--) {
                     if (six4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (six4 == 0) break;
@@ -475,15 +489,21 @@ public class Combine {
                             six4--;
                             init.add(new int[]{0, 1});
 
+
                             if (backup4 == 0 && six4 == 0) {
-                                return Arrays.asList(combos4, init);
+
+                                List<int[]> combosHere=mergeLists(combosFirst,combos4);
+                                List<int[]> initHere=mergeLists(listingsFirst,init);
+                                return Arrays.asList(combosHere, initHere);
                             }
 
-                            if (space0.size()>=3) {
+                            if (space0.size() >= 3) {
+
                                 List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     finalCombos = mergeLists((List<int[]>) trial.get(0), combos4);
                                     finalInit = mergeLists((List<int[]>) trial.get(1), init);
+
 
                                 }
                             }
@@ -492,52 +512,66 @@ public class Combine {
                     }
                 }
 
+            }
+
+            if ((backup4==0 && six4 == 0)|| !finalCombos.isEmpty()) {
+                List<int[]> combosOut=mergeLists(finalCombos,combosFirst);
+                List<int[]> initOut=mergeLists(finalInit,listingsFirst);
+                return Arrays.asList(combosOut, initOut);
             }
 
             List<int[]> combos5 = new ArrayList<>(combos4);
             Set<Integer> used5 = new HashSet<>(used4);
             List<int[]> init1 = new ArrayList<>(init);
 
-            finalCombos1=new ArrayList<>(finalCombos);
-            finalInit1=new ArrayList<>(finalInit);
+            finalCombos1 = new ArrayList<>(finalCombos);
+            finalInit1 = new ArrayList<>(finalInit);
             for (int bound = lower; bound <= upper; bound++) {
 
                 if (backup4 == 0) break;
                 used5 = new HashSet<>(used4);
                 backup4 = backup;
-                combos5= new ArrayList<>(combos4);
-                init1= new ArrayList<>(init);
-                finalCombos1=new ArrayList<>(finalCombos);
-                finalInit1=new ArrayList<>(finalInit);
+                combos5 = new ArrayList<>(combos4);
+                init1 = new ArrayList<>(init);
+                finalCombos1 = new ArrayList<>(finalCombos);
+                finalInit1 = new ArrayList<>(finalInit);
 
-                if (space0.size()>=3) {
-                    List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound );
+                if (space0.size() >= 3) {
+
+                    List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound);
                     if (!((List<?>) trial.get(1)).isEmpty()) {
                         finalCombos1 = mergeLists((List<int[]>) trial.get(0), combos5);
                         finalInit1 = mergeLists((List<int[]>) trial.get(1), init1);
 
+
                     }
                 }
 
-                for (int m = space0.size()-2; m >= 0; m--) {
+                for (int m = space0.size() - 2; m >= 0; m--) {
                     if (backup4 == 0) break;
                     for (int n = space0.size() - 1; n > m; n--) {
                         if (backup4 == 0) break;
                         if ((space0.get(m) + space0.get(n) >= 5) && !used5.contains(m) && !used5.contains(n) && sum(allocations0.get(m)) + sum(allocations0.get(n)) <= bound) {
+
                             used5.add(m);
                             used5.add(n);
                             combos5.add(new int[]{m + 1, n + 1});
-                            backup4-=1;
+                            backup4 -= 1;
                             init1.add(new int[]{1, 0});
                             if (backup4 == 0 && six4 == 0) {
-                                return Arrays.asList(combos4, init);
+
+                                List<int[]> combosHere=mergeLists(combosFirst,combos5);
+                                List<int[]> initHere=mergeLists(listingsFirst,init1);
+                                return Arrays.asList(combosHere, initHere);
                             }
 
-                            if (space0.size()>=3) {
+                            if (space0.size() >= 3) {
+
                                 List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used5, bound);
                                 if (!((List<?>) trial.get(1)).isEmpty()) {
                                     finalCombos1 = mergeLists((List<int[]>) trial.get(0), combos5);
                                     finalInit1 = mergeLists((List<int[]>) trial.get(1), init1);
+
 
                                 }
                             }
@@ -545,8 +579,11 @@ public class Combine {
                     }
                 }
             }
-            if (backup4 == 0 && six4 == 0) {
-                return Arrays.asList(finalCombos1, finalInit1);
+
+            if ((backup4==0 && six4 == 0)|| !finalCombos1.isEmpty()) {
+                List<int[]> combosOut=mergeLists(finalCombos1,combosFirst);
+                List<int[]> initOut=mergeLists(finalInit1,listingsFirst);
+                return Arrays.asList(combosOut, initOut);
             }
         }
         return Arrays.asList(new ArrayList<>(), new ArrayList<>());
@@ -626,7 +663,7 @@ public class Combine {
                 if (Arrays.stream(shortfall).sum() < 2) break;
                 for (int i = 0; i < j; i++) {
                     if (Arrays.stream(shortfall).sum() < 2) break;
-                    if (sortedSizes.get(i) + sortedSizes.get(j) + sortedSizes.get(k) >=  Math.max(backupSize, 6)+Math.min(backupSize, 6)
+                    if (sortedSizes.get(i) + sortedSizes.get(j) + sortedSizes.get(k) >= Math.max(backupSize, 6) + Math.min(backupSize, 6)
                             && !used.contains(i) && !used.contains(j) && !used.contains(k)) {
                         if (shortfall[1] >= 1 && shortfall[0] >= 1) {
                             used.addAll(Arrays.asList(i, j, k));
@@ -693,8 +730,7 @@ public class Combine {
             if (!found) {
                 finalThrees.add(threes.get(z));
                 finalListings.add(listings.get(z));
-            }
-            else {
+            } else {
                 int[] listing = listings.get(z);
                 shortfall[0] += listing[0];
                 shortfall[1] += listing[1];
@@ -774,19 +810,17 @@ public class Combine {
                                         break;
                                     }
                                 }
-                            }
+                            } else if (combo1.size() == 3 && combo2.size() == 2 &&
+                                    weight1Before > weight2Before &&
+                                    Math.abs(weight1Before - weight2Before) == 1 && // Ensures weight difference of exactly 1
+                                    weight1After < weight1Before && weight2After > weight2Before && // Valid weight redistribution
+                                    space1After >= minSpace1 && space2After >= minSpace2) {
 
-                            else if (combo1.size() == 3 && combo2.size() == 2 && weight2Before > weight1Before) {
-                                if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
-                                        space1After >= minSpace1 && space2After >= minSpace2) {
-                                    indexCombos.set(i, newCombo1);
-                                    indexCombos.set(j, newCombo2);
-                                    progress = true;
-                                    break;
-                                }
-                            }
-
-                            else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
+                                indexCombos.set(i, newCombo1);
+                                indexCombos.set(j, newCombo2);
+                                progress = true;
+                                break;
+                            } else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
                                     space1After >= minSpace1 && space2After >= minSpace2) {
                                 indexCombos.set(i, newCombo1);
                                 indexCombos.set(j, newCombo2);
@@ -817,16 +851,16 @@ public class Combine {
 
 
     private static int totalWeight(List<Integer> combo, List<Integer> weights) {
-            return combo.stream().mapToInt(weights::get).sum();
-        }
+        return combo.stream().mapToInt(weights::get).sum();
+    }
 
-        private static int totalSpace(List<Integer> combo, List<Integer> spaces) {
-            return combo.stream().mapToInt(spaces::get).sum();
-        }
+    private static int totalSpace(List<Integer> combo, List<Integer> spaces) {
+        return combo.stream().mapToInt(spaces::get).sum();
+    }
 
-        private static int totalAllocationThreshold(int idx, List<int[]> allocations, int backupSize) {
-            return allocations.get(idx)[0] * backupSize + allocations.get(idx)[1] * 6;
-        }
+    private static int totalAllocationThreshold(int idx, List<int[]> allocations, int backupSize) {
+        return allocations.get(idx)[0] * backupSize + allocations.get(idx)[1] * 6;
+    }
 
 
     private static int sum(int[] arr) {
@@ -845,8 +879,8 @@ public class Combine {
 
     public static void main(String[] args) {
         Combine app = new Combine();
-         GatewayServer server = new GatewayServer(app);
-       server.start();
+        GatewayServer server = new GatewayServer(app);
+        server.start();
         System.out.println("Gateway Server Started");
 
     }
@@ -867,5 +901,31 @@ public class Combine {
         return "[Combos: " + listToString((List<int[]>) trial.get(0)) + ", Init: " + listToString((List<int[]>) trial.get(1)) + "]";
     }
 
+    private static String formatList(List<int[]> list) {
+        StringBuilder sb = new StringBuilder("[");
+        for (int[] arr : list) {
+            sb.append(Arrays.toString(arr)).append(", ");
+        }
+        if (!list.isEmpty()) sb.setLength(sb.length() - 2); // Remove last comma
+        sb.append("]");
+        return sb.toString();
+    }
 
+    public static boolean isShortfallMet(List<int[]> listings, int[] shortfall) {
+        int sumFirstIndex = 0;
+        int sumSecondIndex = 0;
+
+        // Sum each index from all arrays in listings
+        for (int[] listing : listings) {
+            if (listing.length >= 2) {
+                sumFirstIndex += listing[0];
+                sumSecondIndex += listing[1];
+            }
+        }
+        boolean matches = (sumFirstIndex == shortfall[0] && sumSecondIndex == shortfall[1]);
+
+
+        return matches;
+
+    }
 }
