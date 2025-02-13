@@ -704,68 +704,60 @@ public class Combine {
     }
 
 
-        public static List<List<Integer>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
-            List<List<Integer>> combos = new ArrayList<>();
-            for (List<Integer> item : outCombos) {
-                List<Integer> combos1 = new ArrayList<>();
-                for (Integer elem : item) {
-                    combos1.add(elem - 1);
-                }
-                combos.add(combos1);
+    public static List<List<Integer>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
+        List<List<Integer>> combos = new ArrayList<>();
+        for (List<Integer> item : outCombos) {
+            List<Integer> combos1 = new ArrayList<>();
+            for (Integer elem : item) {
+                combos1.add(elem - 1);
             }
-            List<List<Integer>> indexCombos = new ArrayList<>(combos);
+            combos.add(combos1);
+        }
+        List<List<Integer>> indexCombos = new ArrayList<>(combos);
 
-            List<Integer> weights = new ArrayList<>();
-            for (List<Integer> item : sortedAllocations) {
-                int sum = item.stream().mapToInt(Integer::intValue).sum();
-                weights.add(sum);
-            }
+        List<Integer> weights = new ArrayList<>();
+        for (List<Integer> item : sortedAllocations) {
+            int sum = item.stream().mapToInt(Integer::intValue).sum();
+            weights.add(sum);
+        }
 
-            boolean progress = true;
-            while (progress) {
-                progress = false;
-                for (int i = 0; i < indexCombos.size() - 1; i++) {
-                    for (int j = i + 1; j < indexCombos.size(); j++) {
-                        List<Integer> combo1 = new ArrayList<>(indexCombos.get(i));
-                        List<Integer> combo2 = new ArrayList<>(indexCombos.get(j));
+        boolean progress = true;
+        while (progress) {
+            progress = false;
+            for (int i = 0; i < indexCombos.size() - 1; i++) {
+                for (int j = i + 1; j < indexCombos.size(); j++) {
+                    List<Integer> combo1 = new ArrayList<>(indexCombos.get(i));
+                    List<Integer> combo2 = new ArrayList<>(indexCombos.get(j));
 
-                        if (combo1.size() == 1 && combo2.size() == 1) {
-                            continue;
-                        }
+                    if (combo1.size() == 1 && combo2.size() == 1) {
+                        continue;
+                    }
 
-                        for (Integer idx1 : combo1) {
-                            for (Integer idx2 : combo2) {
-                                int weight1Before = totalWeight(combo1, weights);
-                                int weight2Before = totalWeight(combo2, weights);
+                    int weight1Before = totalWeight(combo1, weights);
+                    int weight2Before = totalWeight(combo2, weights);
 
-                                List<Integer> newCombo1 = new ArrayList<>(combo1);
-                                List<Integer> newCombo2 = new ArrayList<>(combo2);
+                    for (Integer idx1 : combo1) {
+                        for (Integer idx2 : combo2) {
+                            List<Integer> newCombo1 = new ArrayList<>(combo1);
+                            List<Integer> newCombo2 = new ArrayList<>(combo2);
 
-                                newCombo1.set(newCombo1.indexOf(idx1), idx2);
-                                newCombo2.set(newCombo2.indexOf(idx2), idx1);
+                            newCombo1.set(newCombo1.indexOf(idx1), idx2);
+                            newCombo2.set(newCombo2.indexOf(idx2), idx1);
 
-                                int weight1After = totalWeight(newCombo1, weights);
-                                int weight2After = totalWeight(newCombo2, weights);
+                            int weight1After = totalWeight(newCombo1, weights);
+                            int weight2After = totalWeight(newCombo2, weights);
 
-                                int space1After = totalSpace(newCombo1, spaces);
-                                int space2After = totalSpace(newCombo2, spaces);
+                            int space1After = totalSpace(newCombo1, spaces);
+                            int space2After = totalSpace(newCombo2, spaces);
 
-                                int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
-                                int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
+                            int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
+                            int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
 
-                                if (combo1.size() == 1 || combo2.size() == 1) {
-                                    if ((combo1.size() == 1 && weight2After < weight2Before) ||
-                                            (combo2.size() == 1 && weight1After < weight1Before)) {
-                                        if (space1After >= minSpace1 && space2After >= minSpace2) {
-                                            indexCombos.set(i, newCombo1);
-                                            indexCombos.set(j, newCombo2);
-                                            progress = true;
-                                            break;
-                                        }
-                                    }
-                                } else {
-                                    if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
-                                            space1After >= minSpace1 && space2After >= minSpace2) {
+
+                            if (combo1.size() == 1 || combo2.size() == 1) {
+                                if ((combo1.size() == 1 && weight2After < weight2Before) ||
+                                        (combo2.size() == 1 && weight1After < weight1Before)) {
+                                    if (space1After >= minSpace1 && space2After >= minSpace2) {
                                         indexCombos.set(i, newCombo1);
                                         indexCombos.set(j, newCombo2);
                                         progress = true;
@@ -773,28 +765,48 @@ public class Combine {
                                     }
                                 }
                             }
-                            if (progress) break;
+
+                            else if (combo1.size() == 3 && combo2.size() == 2 && weight2Before > weight1Before) {
+                                if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
+                                        space1After >= minSpace1 && space2After >= minSpace2) {
+                                    indexCombos.set(i, newCombo1);
+                                    indexCombos.set(j, newCombo2);
+                                    progress = true;
+                                    break;
+                                }
+                            }
+
+                            else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
+                                    space1After >= minSpace1 && space2After >= minSpace2) {
+                                indexCombos.set(i, newCombo1);
+                                indexCombos.set(j, newCombo2);
+                                progress = true;
+                                break;
+                            }
                         }
                         if (progress) break;
                     }
                     if (progress) break;
                 }
+                if (progress) break;
             }
-
-            List<List<Integer>> result = new ArrayList<>();
-            for (List<Integer> combo : indexCombos) {
-                if (combo.size() > 1) {
-                    List<Integer> adjustedCombo = new ArrayList<>();
-                    for (Integer idx : combo) {
-                        adjustedCombo.add(idx + 1);
-                    }
-                    result.add(adjustedCombo);
-                }
-            }
-            return result;
         }
 
-        private static int totalWeight(List<Integer> combo, List<Integer> weights) {
+        List<List<Integer>> result = new ArrayList<>();
+        for (List<Integer> combo : indexCombos) {
+            if (combo.size() > 1) {
+                List<Integer> adjustedCombo = new ArrayList<>();
+                for (Integer idx : combo) {
+                    adjustedCombo.add(idx + 1);
+                }
+                result.add(adjustedCombo);
+            }
+        }
+        return result;
+    }
+
+
+    private static int totalWeight(List<Integer> combo, List<Integer> weights) {
             return combo.stream().mapToInt(weights::get).sum();
         }
 
