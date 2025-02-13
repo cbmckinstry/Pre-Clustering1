@@ -317,14 +317,9 @@ public class Combine {
         List<int[]> allocations0 = new ArrayList<>();
         List<Integer> space0 = new ArrayList<>();
 
-        List<int[]> finalCombos = new ArrayList<>();
-        List<int[]> finalInit = new ArrayList<>();
-
-        List<int[]> finalCombos1=new ArrayList<>(finalCombos);
-        List<int[]> finalInit1=new ArrayList<>(finalInit);
 
         if (allocations.size()<2){
-            return Arrays.asList(finalCombos1, finalInit1);
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>());
         }
 
         for (int i = 0; i < space.size(); i++) {
@@ -334,13 +329,24 @@ public class Combine {
             }
         }
 
+        List<Object> firstThrough = prePlace(space0, allocations0, shortfall, backupSize);
+        List<int[]> combosFirst = (List<int[]>) firstThrough.get(0);
+        List<int[]> listingsFirst = (List<int[]>) firstThrough.get(1);
+        Set<Integer> usedFirst = (Set<Integer>) firstThrough.get(2);
+
+        List<int[]> finalCombos = new ArrayList<>(combosFirst);
+        List<int[]> finalInit = new ArrayList<>(listingsFirst);
+
+        List<int[]> finalCombos1=new ArrayList<>(finalCombos);
+        List<int[]> finalInit1=new ArrayList<>(finalInit);
+
         int lower = boundlst;
         int upper = boundlst;
         int six4 = six;
-        Set<Integer> used4 = new HashSet<>(used);
-        List<int[]> combos4 = new ArrayList<>();
+        Set<Integer> used4 = new HashSet<>(usedFirst);
+        List<int[]> combos4 = new ArrayList<>(combosFirst);
         int backup4 = backup;
-        List<int[]> init = new ArrayList<>();
+        List<int[]> init = new ArrayList<>(listingsFirst);
 
 
 
@@ -542,9 +548,161 @@ public class Combine {
                 return Arrays.asList(finalCombos1, finalInit1);
             }
         }
-
         return Arrays.asList(finalCombos1, finalInit1);
     }
+
+    public static List<Object> prePlace(
+            List<Integer> sizesAll, List<int[]> allocationsAll,
+            int[] shortfall, int backupSize) {
+
+        List<Integer> indicesAll = new ArrayList<>();
+        for (int i = 0; i < sizesAll.size(); i++) {
+            indicesAll.add(i);
+        }
+
+        List<Integer> sizes = new ArrayList<>();
+        List<int[]> allocations = new ArrayList<>();
+        List<Integer> indices = new ArrayList<>();
+
+        for (int i = 0; i < sizesAll.size(); i++) {
+            if (Arrays.stream(allocationsAll.get(i)).sum() == 0) {
+                sizes.add(sizesAll.get(i));
+                allocations.add(Arrays.copyOf(allocationsAll.get(i), allocationsAll.get(i).length));
+                indices.add(indicesAll.get(i));
+            }
+        }
+
+        Set<Integer> used = new HashSet<>();
+
+        List<Map.Entry<Integer, Integer>> sortedPairs = new ArrayList<>();
+        for (int i = 0; i < sizes.size(); i++) {
+            sortedPairs.add(new AbstractMap.SimpleEntry<>(sizes.get(i), indices.get(i)));
+        }
+
+        sortedPairs.sort(Comparator.comparingInt(Map.Entry::getKey));
+
+        List<Integer> sortedSizes = new ArrayList<>();
+        List<Integer> sortedIndices = new ArrayList<>();
+        for (Map.Entry<Integer, Integer> entry : sortedPairs) {
+            sortedSizes.add(entry.getKey());
+            sortedIndices.add(entry.getValue());
+        }
+
+
+        List<int[]> listings = new ArrayList<>();
+        List<int[]> threes = new ArrayList<>();
+
+        if (Arrays.stream(shortfall).sum() < 2 || sizes.size() < 3) {
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new HashSet<>());
+        }
+
+        for (int k = 2; k < sortedSizes.size(); k++) {
+            if (Arrays.stream(shortfall).sum() < 2) break;
+            for (int j = 1; j < k; j++) {
+                if (Arrays.stream(shortfall).sum() < 2) break;
+                for (int i = 0; i < j; i++) {
+                    if (Arrays.stream(shortfall).sum() < 2) break;
+                    if (sortedSizes.get(i) + sortedSizes.get(j) + sortedSizes.get(k) >= 2 * Math.max(backupSize, 6)
+                            && !used.contains(i) && !used.contains(j) && !used.contains(k)) {
+                        if (backupSize == 7 && shortfall[0] >= 2) {
+                            used.addAll(Arrays.asList(i, j, k));
+                            shortfall[0] -= 2;
+                            threes.add(new int[]{sortedIndices.get(i), sortedIndices.get(j), sortedIndices.get(k)});
+                            listings.add(new int[]{2, 0});
+                        } else if (backupSize == 5 && shortfall[1] >= 2) {
+                            used.addAll(Arrays.asList(i, j, k));
+                            shortfall[1] -= 2;
+                            threes.add(new int[]{sortedIndices.get(i), sortedIndices.get(j), sortedIndices.get(k)});
+                            listings.add(new int[]{0, 2});
+                        }
+                    }
+                }
+            }
+        }
+        for (int k = 2; k < sortedSizes.size(); k++) {
+            if (Arrays.stream(shortfall).sum() < 2) break;
+            for (int j = 1; j < k; j++) {
+                if (Arrays.stream(shortfall).sum() < 2) break;
+                for (int i = 0; i < j; i++) {
+                    if (Arrays.stream(shortfall).sum() < 2) break;
+                    if (sortedSizes.get(i) + sortedSizes.get(j) + sortedSizes.get(k) >=  Math.max(backupSize, 6)+Math.min(backupSize, 6)
+                            && !used.contains(i) && !used.contains(j) && !used.contains(k)) {
+                        if (shortfall[1] >= 1 && shortfall[0] >= 1) {
+                            used.addAll(Arrays.asList(i, j, k));
+                            shortfall[0] -= 1;
+                            shortfall[1] -= 1;
+                            threes.add(new int[]{sortedIndices.get(i), sortedIndices.get(j), sortedIndices.get(k)});
+                            listings.add(new int[]{1, 1});
+                        }
+                    }
+                }
+            }
+        }
+        for (int k = 2; k < sortedSizes.size(); k++) {
+            if (Arrays.stream(shortfall).sum() < 2) break;
+            for (int j = 1; j < k; j++) {
+                if (Arrays.stream(shortfall).sum() < 2) break;
+                for (int i = 0; i < j; i++) {
+                    if (Arrays.stream(shortfall).sum() < 2) break;
+                    if (sortedSizes.get(i) + sortedSizes.get(j) + sortedSizes.get(k) >= 2 * Math.min(backupSize, 6)
+                            && !used.contains(i) && !used.contains(j) && !used.contains(k)) {
+                        if (backupSize == 7 && shortfall[1] >= 2) {
+                            used.addAll(Arrays.asList(i, j, k));
+                            shortfall[1] -= 2;
+                            threes.add(new int[]{sortedIndices.get(i), sortedIndices.get(j), sortedIndices.get(k)});
+                            listings.add(new int[]{0, 2});
+                        } else if (backupSize == 5 && shortfall[0] >= 2) {
+                            used.addAll(Arrays.asList(i, j, k));
+                            shortfall[0] -= 2;
+                            threes.add(new int[]{sortedIndices.get(i), sortedIndices.get(j), sortedIndices.get(k)});
+                            listings.add(new int[]{2, 0});
+                        }
+                    }
+                }
+            }
+        }
+
+        Set<Integer> usedIndices = new HashSet<>();
+        for (int[] item : threes) {
+            for (int elem : item) {
+                usedIndices.add(elem);
+            }
+        }
+
+        Set<Integer> unusedIndices = new HashSet<>(indices);
+        unusedIndices.removeAll(usedIndices);
+
+        List<int[]> finalThrees = new ArrayList<>();
+        List<int[]> finalListings = new ArrayList<>();
+        Set<Integer> newUsed = new HashSet<>();
+
+        for (int z = 0; z < threes.size(); z++) {
+            boolean found = false;
+            for (int y : unusedIndices) {
+                for (int a : threes.get(z)) {
+                    if (sizesAll.get(a) + sizesAll.get(y) >= Math.max(backupSize, 6)
+                            && listings.get(z)[backupSize == 5 ? 1 : 0] >= 1 && !newUsed.contains(y)) {
+                        found = true;
+                        newUsed.add(y);
+                        break;
+                    }
+                }
+                if (found) break;
+            }
+            if (!found) {
+                finalThrees.add(threes.get(z));
+                finalListings.add(listings.get(z));
+            }
+        }
+        Set<Integer> outIndices = new HashSet<>();
+        for (int[] a : finalThrees) {
+            for (int b : a) {
+                outIndices.add(b);
+            }
+        }
+        return Arrays.asList(finalThrees, finalListings, outIndices);
+    }
+
 
         public static List<List<Integer>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
             List<List<Integer>> combos = new ArrayList<>();
