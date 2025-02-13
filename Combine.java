@@ -451,10 +451,10 @@ public class Combine {
         } else {
             for (int bound = lower; bound <= upper; bound++) {
                 if (six4 == 0) break;
-                used4 = new HashSet<>(used);
-                six4 = six;
-                combos4.clear();
-                init.clear();
+                used4 = new HashSet<>(usedFirst);
+                six4=six;
+                combos4 = new ArrayList<>(combosFirst);
+                init = new ArrayList<>(listingsFirst);
 
                 if (space0.size()>=3) {
                     List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
@@ -549,7 +549,7 @@ public class Combine {
                 return Arrays.asList(finalCombos1, finalInit1);
             }
         }
-        return Arrays.asList(finalCombos1, finalInit1);
+        return Arrays.asList(new ArrayList<>(), new ArrayList<>());
     }
 
     public static List<Object> prePlace(
