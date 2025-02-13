@@ -78,8 +78,6 @@ def index():
                     listing.append([0,0])
                 if combos:
                     combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
-                    if combos and listing:
-                        combos,listing=replacing_twos(combos,listing1,sorted_sizes.copy(),sorted_allocations.copy(),backupsize)
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()

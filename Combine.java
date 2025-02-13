@@ -310,9 +310,6 @@ public class Combine {
             used = new HashSet<>();
         }
 
-        int backup = shortfall[0];
-        int six = shortfall[1];
-
 
         List<int[]> allocations0 = new ArrayList<>();
         List<Integer> space0 = new ArrayList<>();
@@ -333,6 +330,10 @@ public class Combine {
         List<int[]> combosFirst = (List<int[]>) firstThrough.get(0);
         List<int[]> listingsFirst = (List<int[]>) firstThrough.get(1);
         Set<Integer> usedFirst = (Set<Integer>) firstThrough.get(2);
+        int[] shortfallFirst= (int[]) firstThrough.get(3);
+
+        int six=shortfallFirst[1];
+        int backup=shortfallFirst[0];
 
         List<int[]> finalCombos = new ArrayList<>(combosFirst);
         List<int[]> finalInit = new ArrayList<>(listingsFirst);
@@ -353,10 +354,10 @@ public class Combine {
         if (backupSize == 7) {
             for (int bound = lower; bound <= upper; bound++) {
                 if (backup4 == 0) break;
-                used4 = new HashSet<>(used);
+                used4 = new HashSet<>(usedFirst);
                 backup4 = backup;
-                combos4.clear();
-                init.clear();
+                combos4 = new ArrayList<>(combosFirst);
+                init = new ArrayList<>(listingsFirst);
 
                 if (space0.size()>=3) {
                     List<Object> trial = threesFlipped(allocations0, space0, new int[]{backup4, six4}, backupSize, used4, bound);
@@ -593,7 +594,7 @@ public class Combine {
         List<int[]> threes = new ArrayList<>();
 
         if (Arrays.stream(shortfall).sum() < 2 || sizes.size() < 3) {
-            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new HashSet<>());
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new HashSet<>(), shortfall);
         }
 
         for (int k = 2; k < sortedSizes.size(); k++) {
@@ -693,6 +694,11 @@ public class Combine {
                 finalThrees.add(threes.get(z));
                 finalListings.add(listings.get(z));
             }
+            else {
+                int[] listing = listings.get(z);
+                shortfall[0] += listing[0];
+                shortfall[1] += listing[1];
+            }
         }
         Set<Integer> outIndices = new HashSet<>();
         for (int[] a : finalThrees) {
@@ -700,7 +706,11 @@ public class Combine {
                 outIndices.add(b);
             }
         }
-        return Arrays.asList(finalThrees, finalListings, outIndices);
+        finalThrees.replaceAll(array -> (int[]) Arrays.stream(array)
+                .map(x -> x + 1)
+                .toArray());
+
+        return Arrays.asList(finalThrees, finalListings, outIndices, shortfall);
     }
 
 
