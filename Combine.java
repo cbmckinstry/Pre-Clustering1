@@ -386,7 +386,7 @@ public class Combine {
 
             }
 
-            if ((backup4==0 && six4 == 0)|| !finalCombos.isEmpty()) {
+            if (backup4==0 && six4 == 0) {
                 return Arrays.asList(finalCombos, finalInit);
             }
 
@@ -441,8 +441,8 @@ public class Combine {
                 }
 
             }
-            if ((backup4==0 && six4 == 0)|| !finalCombos1.isEmpty()) {
-                return Arrays.asList(combos5, init1);
+            if ((backup4==0 && six4 == 0)) {
+                return Arrays.asList(finalCombos1, finalInit1);
             }
         } else {
 
@@ -496,8 +496,8 @@ public class Combine {
 
             }
 
-            if ((backup4==0 && six4 == 0)|| !finalCombos.isEmpty()) {
-                return Arrays.asList(combos4, init);
+            if ((backup4==0 && six4 == 0)) {
+                return Arrays.asList(finalCombos, finalInit);
             }
 
             List<int[]> combos5 = new ArrayList<>(combos4);
@@ -557,8 +557,8 @@ public class Combine {
                 }
             }
 
-            if ((backup4==0 && six4 == 0)|| !finalCombos1.isEmpty()) {
-                return Arrays.asList(combos5, init1);
+            if ((backup4==0 && six4 == 0)) {
+                return Arrays.asList(finalCombos1, finalInit1);
             }
         }
         return Arrays.asList(new ArrayList<>(), new ArrayList<>());
