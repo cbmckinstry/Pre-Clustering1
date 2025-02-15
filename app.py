@@ -72,12 +72,17 @@ def index():
                 boundlst=sort_by_sum(sorted_allocations.copy())
                 combos,listing=call_combineFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
                 listing1=listing.copy()
+                combos1=combos.copy()
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
-                for elem in rem_vehs1:
-                    combos.append([elem])
-                    listing.append([0,0])
                 if combos:
-                    combos=call_optimize(sorted_allocations.copy(),listing,backupsize,combos,sorted_spaces)
+                    for elem in rem_vehs1:
+                        combos1.append([elem])
+                        listing1.append([0,0])
+                    combos2=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
+                    combos3,listing3=call_reassign_vehicles(listing,sorted_allocations.copy(),backupsize,combos2,sorted_spaces)
+                    combos=combos3
+                    listing=listing3
+
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()

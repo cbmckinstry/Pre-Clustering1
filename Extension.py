@@ -182,6 +182,47 @@ def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spac
 
     return python_result
 
+def call_reassign_vehicles(allocations, sorted_allocations, backup_size, out_combos, spaces):
+    java_allocations = gateway.jvm.ArrayList()
+    for allocation in allocations:
+        java_list = gateway.jvm.ArrayList()
+        for val in allocation:
+            java_list.add(val)
+        java_allocations.add(java_list)
+
+    java_sorted_allocations = gateway.jvm.ArrayList()
+    for allocation in sorted_allocations:
+        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        for i, val in enumerate(allocation):
+            java_array[i] = val
+        java_sorted_allocations.add(java_array)
+
+    java_out_combos = gateway.jvm.ArrayList()
+    for combo in out_combos:
+        java_list = gateway.jvm.ArrayList()
+        for val in combo:
+            java_list.add(val)
+        java_out_combos.add(java_list)
+
+    java_spaces = gateway.jvm.ArrayList()
+    for space in spaces:
+        java_spaces.add(space)
+
+    backup_size = int(backup_size)
+
+    combine = gateway.entry_point
+
+    java_result = combine.reassignVehicles(java_allocations, java_sorted_allocations, backup_size, java_out_combos, java_spaces)
+
+    # Convert Java result back to Python
+    def java_list_to_python(java_list):
+        return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
+
+    python_result = [java_list_to_python(sublist) for sublist in java_result]
+
+    return python_result
+
+
 sorted_allocations = [[0, 0], [0,1], [0,1], [0,1],[0,0],[0,0]]
 allocations=[[0, 1], [0,2],[0,0]]
 spaces = [5,2,5,5,5,2]
