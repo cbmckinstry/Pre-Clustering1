@@ -79,10 +79,7 @@ def index():
                         combos1.append([elem])
                         listing1.append([0,0])
                     combos2=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
-                    combos3,listing3=call_reassign_vehicles(listing,sorted_allocations.copy(),backupsize,combos2,sorted_spaces)
-                    combos=combos3
-                    listing=listing3
-
+                    combos=combos2
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 combos1=combos.copy()
