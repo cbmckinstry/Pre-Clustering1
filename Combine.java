@@ -386,7 +386,7 @@ public class Combine {
 
             }
 
-            if (backup4==0 && six4 == 0) {
+            if (!finalCombos.isEmpty()) {
                 return Arrays.asList(finalCombos, finalInit);
             }
 
@@ -441,7 +441,7 @@ public class Combine {
                 }
 
             }
-            if ((backup4==0 && six4 == 0)) {
+            if (!finalCombos1.isEmpty()) {
                 return Arrays.asList(finalCombos1, finalInit1);
             }
         } else {
@@ -496,7 +496,7 @@ public class Combine {
 
             }
 
-            if ((backup4==0 && six4 == 0)) {
+            if (!finalCombos.isEmpty()) {
                 return Arrays.asList(finalCombos, finalInit);
             }
 
@@ -522,6 +522,7 @@ public class Combine {
                     if (!((List<?>) trial.get(1)).isEmpty()) {
                         finalCombos1 = mergeLists((List<int[]>) trial.get(0), combos5);
                         finalInit1 = mergeLists((List<int[]>) trial.get(1), init1);
+
 
 
                     }
@@ -557,7 +558,7 @@ public class Combine {
                 }
             }
 
-            if ((backup4==0 && six4 == 0)) {
+            if (!finalCombos1.isEmpty()) {
                 return Arrays.asList(finalCombos1, finalInit1);
             }
         }
