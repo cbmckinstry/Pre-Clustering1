@@ -82,6 +82,7 @@ def index():
                     combos=combos2
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
+                totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
                 combos1=combos.copy()
                 combos=person_calc(combos1.copy(),sorted_sizes.copy())
 
@@ -91,6 +92,7 @@ def index():
             else:
                 alllist=[[],[]]
                 rem_vehs=[]
+                totalhelp=[[],[]]
 
             restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
 
@@ -102,6 +104,7 @@ def index():
 
             # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
+            session["totalhelp"] = totalhelp
             session["allocations_only"] = allocations_only
             session["alllist"]=alllist
             session["backupsize"]=backupsize
@@ -121,6 +124,7 @@ def index():
                 pers6=pers6_input,
                 pers7=pers7_input,
                 results=None,
+                totalhelp=None,
                 sorted_allocations=None,
                 rem_vehs=None,
                 alllist=None,
@@ -143,6 +147,7 @@ def index():
         pers6=session.get("pers6", ""),
         pers7=session.get("pers7", ""),
         results=session.get("results"),
+        totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
         rem_vehs=session.get("rem_vehs"),
         allocations_only=session.get("allocations_only", 0),
@@ -186,6 +191,7 @@ def matrices():
             pers6=session.get("pers6", ""),
             pers7=session.get("pers7", ""),
             results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
             alllist=session.get("alllist"),
             rem_vehs=session.get("rem_vehs"),
@@ -208,6 +214,7 @@ def matrices():
         pers6=session.get("pers6", ""),
         pers7=session.get("pers7", ""),
         results=session.get("results"),
+        totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
         alllist=session.get("alllist"),
         rem_vehs=session.get("rem_vehs"),
@@ -246,6 +253,7 @@ def ranges():
             pers6=session.get("pers6", ""),
             pers7=session.get("pers7", ""),
             results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
             backupsize=session.get("backupsize"),
             alllist=session.get("alllist"),
@@ -268,6 +276,7 @@ def ranges():
         pers6=session.get("pers6", ""),
         pers7=session.get("pers7", ""),
         results=session.get("results"),
+        totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
         backupsize=session.get("backupsize"),
         alllist=session.get("alllist"),

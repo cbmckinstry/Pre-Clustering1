@@ -215,12 +215,11 @@
 
 
             <style>
-            /* Align checkbox and submit button inline */
-            /* Align checkbox and submit button inline */
+
             .checkbox-submit-container {
                 display: flex;
                 align-items: center;
-                gap: 10px; /* Adjust spacing between elements */
+                gap: 10px;
                 margin-top: 10px;
             }
 
@@ -313,6 +312,11 @@
                             </p>
                         {% elif not rem_vehs and allocations_only==0%}
                             <p><strong>Remaining Vehicles:</strong> None</p>
+                        {% endif %}
+                        {% if backupsize==5 and totalhelp[0] and totalhelp[1]%}
+                            <p><strong>Redo Totals:</strong> {{ totalhelp[0] }} 5-person crews and {{ totalhelp[1] }} 6-person crews</p>
+                        {% elif backupsize==7 and totalhelp[0] and totalhelp[1]%}
+                            <p><strong>Redo Totals:</strong> {{ totalhelp[1] }} 6-person crews and {{ totalhelp[0] }} 7-person crews</p>
                         {% endif %}
                     {% endif %}
 

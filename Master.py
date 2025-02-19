@@ -89,6 +89,14 @@ def harm(combos,allocations):
         out.append(running)
     return out
 
+def combosSum(combos,allocations,shortfall):
+    out=shortfall.copy()
+    for combo in combos:
+        for vehicle in combo:
+            out[0]+=allocations[vehicle-1][0]
+            out[1]+=allocations[vehicle-1][1]
+    return out
+
 def unused(allocations,combos):
     indeces=list(range(len(allocations)))
     unused=[]
