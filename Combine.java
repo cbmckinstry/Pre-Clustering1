@@ -625,16 +625,6 @@ public class Combine {
                                         break;
                                     }
                                 }
-                            } else if (combo1.size() == 3 && combo2.size() == 2 &&
-                                    weight1Before > weight2Before &&
-                                    Math.abs(weight1Before - weight2Before) == 1 && // Ensures weight difference of exactly 1
-                                    weight1After < weight1Before && weight2After > weight2Before && // Valid weight redistribution
-                                    space1After >= minSpace1 && space2After >= minSpace2) {
-
-                                indexCombos.set(i, newCombo1);
-                                indexCombos.set(j, newCombo2);
-                                progress = true;
-                                break;
                             } else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
                                     space1After >= minSpace1 && space2After >= minSpace2) {
                                 indexCombos.set(i, newCombo1);

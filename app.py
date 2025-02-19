@@ -74,6 +74,7 @@ def index():
                 listing1=listing.copy()
                 combos1=combos.copy()
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+                print("No Problem here")
                 if combos:
                     for elem in rem_vehs1:
                         combos1.append([elem])
