@@ -202,7 +202,7 @@
             <label for="pers7">Enter Number of 7-person Groups:</label>
             <input type="number" id="pers7" name="pers7" required value="{{ pers7 }}">
 
-            <!-- Wrapper for checkbox and submit button -->
+
             <div class="checkbox-submit-container">
                 <button type="submit">Submit</button>
 
@@ -210,6 +210,12 @@
                     <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
                             {% if allocations_only == 1 %} checked {% endif %}>
                     Allocations Only
+                </label>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="pull_combinations" name="pull_combinations" value="1"
+                            {% if pull_combinations == 1 %} checked {% endif %}>
+                    Pull Combinations
                 </label>
             </div>
 
@@ -312,11 +318,6 @@
                             </p>
                         {% elif not rem_vehs and allocations_only==0%}
                             <p><strong>Remaining Vehicles:</strong> None</p>
-                        {% endif %}
-                        {% if backupsize==5 and totalhelp%}
-                            <p><strong>Redo Totals:</strong> {{ totalhelp[0] }} 5-person crews and {{ totalhelp[1] }} 6-person crews</p>
-                        {% elif backupsize==7 and totalhelp%}
-                            <p><strong>Redo Totals:</strong> {{ totalhelp[1] }} 6-person crews and {{ totalhelp[0] }} 7-person crews</p>
                         {% endif %}
                     {% endif %}
 

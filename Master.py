@@ -117,7 +117,12 @@ def unused1(sizes, combos):
     for item in usable:
         sizes.remove(item)
     return sizes
-
+def allone(combos):
+    out=[]
+    for elem in combos:
+        for item in elem:
+            out.append(item)
+    return out
 def person_calc(combos,sizes):
     pers_out=[]
     for elem in combos:

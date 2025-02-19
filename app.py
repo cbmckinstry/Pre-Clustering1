@@ -29,6 +29,7 @@ def index():
             pers6_input = request.form.get("pers6", "").strip()
             pers7_input = request.form.get("pers7", "").strip()
             allocations_only = int(request.form.get("allocations_only", 0))
+            pull_combinations = int(request.form.get("pull_combinations", 0))
 
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
             pers5 = int(pers5_input) if pers5_input else 0
@@ -108,11 +109,21 @@ def index():
             session["allocations_only"] = allocations_only
             session["alllist"]=alllist
             session["backupsize"]=backupsize
-            session["vehlist"] = vehlist
+            if pull_combinations==0:
+                session["vehlist"] = vehlist
+                session["pers5"] = pers5
+                session["pers6"] = pers6
+                session["pers7"] = pers7
+            elif pull_combinations!=0 and allocations_only==0:
+                session["vehlist"] = allone(combos.copy())
+                session["pers6"] = totalhelp[1]
+                if backupsize==5:
+                    session["pers5"] = totalhelp[0]
+                    session["pers7"] = pers7
+                else:
+                    session["pers5"] = pers5
+                    session["pers7"] = totalhelp[0]
             session["rem_vehs"]=rem_vehs
-            session["pers5"] = pers5
-            session["pers6"] = pers6
-            session["pers7"] = pers7
             session["results"] = results
 
         except Exception as e:
@@ -151,6 +162,7 @@ def index():
         sorted_allocations=session.get("sorted_allocations"),
         rem_vehs=session.get("rem_vehs"),
         allocations_only=session.get("allocations_only", 0),
+        pull_combinations=session.get("pull_combinations", 0),
         error_message=None,
         backupsize=session.get("backupsize"),
         alllist=session.get("alllist"),
@@ -197,6 +209,7 @@ def matrices():
             rem_vehs=session.get("rem_vehs"),
             backupsize=session.get("backupsize"),
             allocations_only=int(request.form.get("allocations_only", 0)),
+            pull_combinations=session.get("pull_combinations", 0),
             matrices_result=None,
             ranges_result=session.get("ranges_result"),
             total_people=session.get("total_people", ""),
@@ -220,6 +233,7 @@ def matrices():
         rem_vehs=session.get("rem_vehs"),
         backupsize=session.get("backupsize"),
         allocations_only=int(request.form.get("allocations_only", 0)),
+        pull_combinations=session.get("pull_combinations", 0),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
         total_people=session.get("total_people", ""),
@@ -259,6 +273,7 @@ def ranges():
             alllist=session.get("alllist"),
             rem_vehs=session.get("rem_vehs"),
             allocations_only=int(request.form.get("allocations_only", 0)),
+            pull_combinations=session.get("pull_combinations", 0),
             matrices_result=session.get("matrices_result"),
             ranges_result=None,
             total_people=total_people_input,
@@ -281,6 +296,7 @@ def ranges():
         backupsize=session.get("backupsize"),
         alllist=session.get("alllist"),
         allocations_only=int(request.form.get("allocations_only", 0)),
+        pull_combinations=session.get("pull_combinations", 0),
         rem_vehs=session.get("rem_vehs"),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
