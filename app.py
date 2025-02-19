@@ -92,7 +92,7 @@ def index():
             else:
                 alllist=[[],[]]
                 rem_vehs=[]
-                totalhelp=[[],[]]
+                totalhelp=[]
 
             restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
 
