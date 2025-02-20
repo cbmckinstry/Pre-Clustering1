@@ -625,6 +625,7 @@ public class Combine {
                                         break;
                                     }
                                 }
+
                             } else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
                                     space1After >= minSpace1 && space2After >= minSpace2) {
                                 indexCombos.set(i, newCombo1);
@@ -641,6 +642,82 @@ public class Combine {
             }
         }
 
+        boolean secondaryProgress = true;
+        while (secondaryProgress) {
+            secondaryProgress = false;
+            for (int i = 0; i < indexCombos.size(); i++) {
+                for (int j = 0; j < indexCombos.size(); j++) {
+                    if (i == j) continue;
+                    List<Integer> combo1 = indexCombos.get(i);
+                    List<Integer> combo2 = indexCombos.get(j);
+
+                    if (combo1.size() == 3 && combo2.size() == 2) {
+                        int weight1 = totalWeight(combo1, weights);
+                        int weight2 = totalWeight(combo2, weights);
+
+                        if (weight1 == weight2 + 1) {
+                            for (Integer idx1 : combo1) {
+                                for (Integer idx2 : combo2) {
+                                    List<Integer> newCombo1 = new ArrayList<>(combo1);
+                                    List<Integer> newCombo2 = new ArrayList<>(combo2);
+
+                                    newCombo1.set(newCombo1.indexOf(idx1), idx2);
+                                    newCombo2.set(newCombo2.indexOf(idx2), idx1);
+
+                                    int newWeight1 = totalWeight(newCombo1, weights);
+                                    int newWeight2 = totalWeight(newCombo2, weights);
+
+                                    int space1After = totalSpace(newCombo1, spaces);
+                                    int space2After = totalSpace(newCombo2, spaces);
+
+                                    int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
+                                    int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
+
+                                    if (newWeight2 == newWeight1 + 1 && space1After >= minSpace1 && space2After >= minSpace2) {
+                                        indexCombos.set(i, newCombo1);
+                                        indexCombos.set(j, newCombo2);
+                                        secondaryProgress = true;
+                                        break;
+                                    }
+                                }
+                                if (secondaryProgress) break;
+                            }
+                        }
+                    }
+                    else if (combo1.size() == 1 && combo2.size() > 1) {
+                        int singleIdx = combo1.get(0);
+
+                        for (Integer idx2 : combo2) {
+                            if (Objects.equals(sortedAllocations.get(singleIdx).get(0), sortedAllocations.get(idx2).get(0)) &&
+                                    Objects.equals(sortedAllocations.get(singleIdx).get(1), sortedAllocations.get(idx2).get(1)) &&
+                                    spaces.get(singleIdx) > spaces.get(idx2)) {
+
+                                List<Integer> newCombo1 = new ArrayList<>();
+                                newCombo1.add(idx2);
+
+                                List<Integer> newCombo2 = new ArrayList<>(combo2);
+                                newCombo2.set(newCombo2.indexOf(idx2), singleIdx);
+
+                                int space1After = totalSpace(newCombo1, spaces);
+                                int space2After = totalSpace(newCombo2, spaces);
+
+                                int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
+                                int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
+
+                                if (space1After >= minSpace1 && space2After >= minSpace2) {
+                                    indexCombos.set(i, newCombo1);
+                                    indexCombos.set(j, newCombo2);
+                                    secondaryProgress = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (secondaryProgress) break;
+                    }
+                }
+                if (secondaryProgress) break;
+            }
+        }
         List<List<Integer>> result = new ArrayList<>();
         for (List<Integer> combo : indexCombos) {
             if (combo.size() > 1) {
