@@ -654,8 +654,9 @@ public class Combine {
                     if (combo1.size() == 3 && combo2.size() == 2) {
                         int weight1 = totalWeight(combo1, weights);
                         int weight2 = totalWeight(combo2, weights);
+                        int weightDiff= weight1 - weight2;
 
-                        if (weight1 == weight2 + 1) {
+                        if (weight1 > weight2) {
                             for (Integer idx1 : combo1) {
                                 for (Integer idx2 : combo2) {
                                     List<Integer> newCombo1 = new ArrayList<>(combo1);
@@ -673,7 +674,7 @@ public class Combine {
                                     int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
                                     int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
 
-                                    if (newWeight2 == newWeight1 + 1 && space1After >= minSpace1 && space2After >= minSpace2) {
+                                    if (newWeight2 == newWeight1 + weightDiff && space1After >= minSpace1 && space2After >= minSpace2) {
                                         indexCombos.set(i, newCombo1);
                                         indexCombos.set(j, newCombo2);
                                         secondaryProgress = true;
