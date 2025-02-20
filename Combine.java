@@ -689,8 +689,7 @@ public class Combine {
                         int singleIdx = combo1.get(0);
 
                         for (Integer idx2 : combo2) {
-                            if (Objects.equals(sortedAllocations.get(singleIdx).get(0), sortedAllocations.get(idx2).get(0)) &&
-                                    Objects.equals(sortedAllocations.get(singleIdx).get(1), sortedAllocations.get(idx2).get(1)) &&
+                            if (Objects.equals(weights.get(singleIdx), weights.get(idx2)) &&
                                     spaces.get(singleIdx) > spaces.get(idx2)) {
 
                                 List<Integer> newCombo1 = new ArrayList<>();
