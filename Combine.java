@@ -552,7 +552,7 @@ public class Combine {
                     List<Integer> combo1 = indexCombos.get(i);
                     List<Integer> combo2 = indexCombos.get(j);
 
-                    if (combo1.size() == 3 && combo2.size() == 2) {
+                    if (combo1.size() >=3 && combo2.size() < combo1.size() && combo2.size()>1) {
                         int weight1 = totalWeight(combo1, weights);
                         int weight2 = totalWeight(combo2, weights);
                         int weightDiff= weight1 - weight2;
