@@ -813,8 +813,8 @@ public class Combine {
                                 }
                                 List<Object> trial1 = foursFlipped(filteredAllocations, filteredSpaces, new int[]{backup6, six6}, backupSize, used6);
                                 if (!((List<?>) trial1.get(1)).isEmpty()) {
-                                    finalCombos = (List<int[]>) trial1.get(0);
-                                    finalInit = (List<int[]>) trial1.get(1);
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0),fives6);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1),init);
                                     return Arrays.asList(finalCombos, finalInit);
                                 }
                             }
@@ -867,8 +867,8 @@ public class Combine {
                                     }
                                     List<Object> trial2 = foursFlipped(filteredAllocations, filteredSpaces, new int[]{backup7, six7}, backupSize, used7);
                                     if (!((List<?>) trial2.get(1)).isEmpty()) {
-                                        finalCombos = (List<int[]>) trial2.get(0);
-                                        finalInit = (List<int[]>) trial2.get(1);
+                                        finalCombos = mergeLists((List<int[]>) trial2.get(0),fives7);
+                                        finalInit = mergeLists((List<int[]>) trial2.get(1),init1);
                                         return Arrays.asList(finalCombos, finalInit);
                                     }
                                 }
@@ -931,8 +931,8 @@ public class Combine {
                                 }
                                 List<Object> trial3 = foursFlipped(filteredAllocations, filteredSpaces, new int[]{backup8, six8}, backupSize, used8);
                                 if (!((List<?>) trial3.get(1)).isEmpty()) {
-                                    finalCombos = (List<int[]>) trial3.get(0);
-                                    finalInit = (List<int[]>) trial3.get(1);
+                                    finalCombos = mergeLists((List<int[]>) trial3.get(0),fives8);
+                                    finalInit = mergeLists((List<int[]>) trial3.get(1),init2);
                                     return Arrays.asList(finalCombos, finalInit);
                                 }
                             }
@@ -995,8 +995,8 @@ public class Combine {
                                 }
                                 List<Object> trial4 = foursFlipped(filteredAllocations, filteredSpaces, new int[]{backup9, six9}, backupSize, used9);
                                 if (!((List<?>) trial4.get(1)).isEmpty()) {
-                                    finalCombos = (List<int[]>) trial4.get(0);
-                                    finalInit = (List<int[]>) trial4.get(1);
+                                    finalCombos = mergeLists((List<int[]>) trial4.get(0),fives9);
+                                    finalInit = mergeLists((List<int[]>) trial4.get(1),init3);
                                     return Arrays.asList(finalCombos, finalInit);
                                 }
                             }
@@ -1059,8 +1059,8 @@ public class Combine {
                                 }
                                 List<Object> trial5 = foursFlipped(filteredAllocations, filteredSpaces, new int[]{backup10, six10}, backupSize, used10);
                                 if (!((List<?>) trial5.get(1)).isEmpty()) {
-                                    finalCombos = (List<int[]>) trial5.get(0);
-                                    finalInit = (List<int[]>) trial5.get(1);
+                                    finalCombos = mergeLists((List<int[]>) trial5.get(0),fives10);
+                                    finalInit = mergeLists((List<int[]>) trial5.get(1),init4);
                                     return Arrays.asList(finalCombos, finalInit);
                                 }
                             }
