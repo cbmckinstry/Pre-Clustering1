@@ -70,8 +70,7 @@ def index():
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             if allocations_only==0:
-                boundlst=sort_by_sum(sorted_allocations.copy())
-                combos,listing=call_threesFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None,boundlst)
+                combos,listing=call_fivesFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
                 listing1=listing.copy()
                 combos1=combos.copy()
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
@@ -86,7 +85,6 @@ def index():
                 totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
                 combos1=combos.copy()
                 combos=person_calc(combos1.copy(),sorted_sizes.copy())
-
                 alllist=alltogether(combos,listing,damage)
 
                 rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())

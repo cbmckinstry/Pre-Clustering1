@@ -21,12 +21,24 @@ def alltogether(combos,allist,damage):
         out.append(elem[1])
     twos=[]
     threes=[]
+    fours=[]
+    fives=[]
+    sixes=[]
+    sevens=[]
     for item in out:
         if len(item[0])==2:
             twos.append(item)
         if len(item[0])==3:
             threes.append(item)
-    return twos,threes
+        if len(item[0])==4:
+            fours.append(item)
+        if len(item[0])==5:
+            fives.append(item)
+        if len(item[0])==6:
+            sixes.append(item)
+        if len(item[0])==7:
+            sevens.append(item)
+    return twos,threes,fours,fives,sixes,sevens
 
 def compute_ranges(people):
     final=[]
@@ -66,19 +78,6 @@ def compute_matrices(people,crews):
     if pers7>=0 and pers6n>=0 and isinstance(pers7,int) and isinstance(pers6n,int):
         return 0,pers6n,pers7
     return []
-
-def sort_by_sum(lst):
-    x=sorted(lst, key=lambda sublist: sum(sublist), reverse=True)
-    twolow=threelow=twoup=threeup=0
-    if len(lst)>=2:
-        twoup=sum(x[1])+sum(x[0])
-        twolow=sum(x[-1])+sum(x[-2])
-        threeup=twoup
-        threelow=twolow
-    if len(lst)>=3:
-        threeup=sum(x[1])+sum(x[2])+sum(x[0])
-        threelow=sum(x[-1])+sum(x[-2])+sum(x[-3])
-    return threeup
 
 def harm(combos,allocations):
     out=[]
