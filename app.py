@@ -70,16 +70,16 @@ def index():
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             if allocations_only==0:
-                combos,listing=call_fivesFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
-                #listing1=listing.copy()
-                #combos1=combos.copy()
-                #rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
-                #if combos:
-                #  for elem in rem_vehs1:
-                #        combos1.append([elem])
-                #        listing1.append([0,0])
-                #    combos2=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
-                #    combos=combos2
+                combos,listing=call_foursFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
+                listing1=listing.copy()
+                combos1=combos.copy()
+                rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+                if combos:
+                    for elem in rem_vehs1:
+                        combos1.append([elem])
+                        listing1.append([0,0])
+                    combos2=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
+                    combos=combos2
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
