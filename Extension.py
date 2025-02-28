@@ -8,7 +8,7 @@ def call_threesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
-        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        java_array = gateway.new_array(gateway.jvm.java.lang.Integer, len(allocation))
         for i, val in enumerate(allocation):
             java_array[i] = val
         java_allocations.add(java_array)
@@ -42,7 +42,7 @@ def call_foursFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
-        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        java_array = gateway.new_array(gateway.jvm.java.lang.Integer, len(allocation))
         for i, val in enumerate(allocation):
             java_array[i] = val
         java_allocations.add(java_array)
@@ -77,7 +77,7 @@ def call_fivesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
-        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        java_array = gateway.new_array(gateway.jvm.java.lang.Integer, len(allocation))
         for i, val in enumerate(allocation):
             java_array[i] = val
         java_allocations.add(java_array)
@@ -112,7 +112,7 @@ def call_sixesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
-        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        java_array = gateway.new_array(gateway.jvm.java.lang.Integer, len(allocation))
         for i, val in enumerate(allocation):
             java_array[i] = val
         java_allocations.add(java_array)
@@ -146,7 +146,7 @@ def call_sixesFlipped(allocations, spaces, shortfall, backup_size, used):
 def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
     java_allocations = gateway.jvm.ArrayList()
     for allocation in allocations:
-        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+        java_array = gateway.new_array(gateway.jvm.java.lang.Integer, len(allocation))
         for i, val in enumerate(allocation):
             java_array[i] = val
         java_allocations.add(java_array)
