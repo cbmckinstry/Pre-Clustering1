@@ -70,7 +70,7 @@ def index():
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             if allocations_only==0:
-                combos,listing=call_foursFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
+                combos,listing=call_fivesFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
                 listing1=listing.copy()
                 combos1=combos.copy()
                 rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
