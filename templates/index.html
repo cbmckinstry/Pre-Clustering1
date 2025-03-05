@@ -1,6 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const allocationsOnly = document.getElementById("allocations_only");
+            const pullCombinations = document.getElementById("pull_combinations");
+
+            function handleCheckboxChange(event) {
+                if (event.target.checked) {
+                    if (event.target === allocationsOnly) {
+                        pullCombinations.checked = false;
+                    } else {
+                        allocationsOnly.checked = false;
+                    }
+                }
+            }
+            allocationsOnly.addEventListener("change", handleCheckboxChange);
+            pullCombinations.addEventListener("change", handleCheckboxChange);
+        });
+    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Clustering Tool</title>
