@@ -9,4 +9,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send a request to keep Render alive
-        run: curl -s -o /dev/null https://https://gmtvehicles-089y.onrender.com/
+        run: curl -s -o /dev/null https://gmtvehicles-089y.onrender.com/
