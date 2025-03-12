@@ -1607,12 +1607,22 @@ public class Combine {
                                     }
                                 }
 
-                            } else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) &&
-                                    space1After >= minSpace1 && space2After >= minSpace2) {
-                                indexCombos.set(i, newCombo1);
-                                indexCombos.set(j, newCombo2);
-                                progress = true;
-                                break;
+                            } else if (Math.max(weight1After, weight2After) < Math.max(weight1Before, weight2Before) && space2After+space1After>=minSpace2+minSpace1) {
+
+                                int[] totalCrewNeed = {allocations.get(i)[0] + allocations.get(j)[0], allocations.get(i)[1] + allocations.get(j)[1]};
+                                List<int[]> unique = uniquePairs(allocations.get(i)[0] + allocations.get(i)[1], totalCrewNeed);
+
+                                for (int[] item : unique) {
+                                    int[] otherSide={totalCrewNeed[0]-item[0], totalCrewNeed[1]-item[1]};
+                                    if (item[0]*backupSize + item[1]*6>=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
+                                        allocations.set(i,item);
+                                        allocations.set(j,otherSide);
+                                        indexCombos.set(i, newCombo1);
+                                        indexCombos.set(j, newCombo2);
+                                        progress = true;
+                                        break;
+                                    }
+                                }
                             }
                         }
                         if (progress) break;
@@ -1655,11 +1665,21 @@ public class Combine {
                                     int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
                                     int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
 
-                                    if (newWeight2 == newWeight1 + weightDiff && space1After >= minSpace1 && space2After >= minSpace2) {
-                                        indexCombos.set(i, newCombo1);
-                                        indexCombos.set(j, newCombo2);
-                                        secondaryProgress = true;
-                                        break;
+                                    if (newWeight2 == newWeight1 + weightDiff && space1After+space2After>=minSpace2+minSpace1) {
+                                        int[] totalCrewNeed= {allocations.get(i)[0]+allocations.get(j)[0],allocations.get(i)[1]+allocations.get(j)[1]};
+                                        List<int[]> unique=uniquePairs(allocations.get(i)[0]+allocations.get(i)[1],totalCrewNeed);
+
+                                        for (int[] item : unique) {
+                                            int[] otherSide={totalCrewNeed[0]-item[0], totalCrewNeed[1]-item[1]};
+                                            if (item[0]*backupSize + item[1]*6>=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
+                                                allocations.set(i,item);
+                                                allocations.set(j,otherSide);
+                                                indexCombos.set(i, newCombo1);
+                                                indexCombos.set(j, newCombo2);
+                                                secondaryProgress = true;
+                                                break;
+                                            }
+                                        }
                                     }
                                 }
                                 if (secondaryProgress) break;
@@ -1679,22 +1699,17 @@ public class Combine {
                                 List<Integer> newCombo2 = new ArrayList<>(combo2);
                                 newCombo2.set(newCombo2.indexOf(idx2), singleIdx);
 
-                                int space1After = totalSpace(newCombo1, spaces);
-                                int space2After = totalSpace(newCombo2, spaces);
+                                indexCombos.set(i, newCombo1);
+                                indexCombos.set(j, newCombo2);
+                                secondaryProgress = true;
 
-                                int minSpace1 = totalAllocationThreshold(i, allocations, backupSize);
-                                int minSpace2 = totalAllocationThreshold(j, allocations, backupSize);
+                                break;
 
-                                if (space1After >= minSpace1 && space2After >= minSpace2) {
-                                    indexCombos.set(i, newCombo1);
-                                    indexCombos.set(j, newCombo2);
-                                    secondaryProgress = true;
-                                    break;
-                                }
                             }
                         }
-                        if (secondaryProgress) break;
+
                     }
+                    if (secondaryProgress) break;
                 }
                 if (secondaryProgress) break;
             }
@@ -1712,6 +1727,17 @@ public class Combine {
         return result;
     }
 
+    public static List<int[]> uniquePairs(int sumTotal, int[] maxVals) {
+            List<int[]> result = new ArrayList<>();
+            for (int a = 0; a <= maxVals[0] && a <= sumTotal; a++) {
+                int b = sumTotal - a;
+                if (b <= maxVals[1]) {
+                    result.add(new int[]{a, b});
+                }
+            }
+            return result;
+        }
+
     private static int totalWeight(List<Integer> combo, List<Integer> weights) {
         return combo.stream().mapToInt(weights::get).sum();
     }
@@ -1723,7 +1749,6 @@ public class Combine {
     private static int totalAllocationThreshold(int idx, List<int[]> allocations, int backupSize) {
         return allocations.get(idx)[0] * backupSize + allocations.get(idx)[1] * 6;
     }
-
 
     private static int sum(int[] arr) {
         int sum = 0;
@@ -1755,7 +1780,6 @@ public class Combine {
         System.out.println("Gateway Server Started");
 
     }
-
 
     private static String listToString(List<int[]> list) {
         StringBuilder sb = new StringBuilder("[");
