@@ -78,8 +78,9 @@ def index():
                     for elem in rem_vehs1:
                         combos1.append([elem])
                         listing1.append([0,0])
-                    combos2=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
+                    combos2,newalloc=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
                     combos=combos2
+                    listing=newalloc
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())

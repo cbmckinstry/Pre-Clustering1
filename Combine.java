@@ -1546,7 +1546,7 @@ public class Combine {
     }
 
 
-    public static List<List<Integer>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
+    public static List<List<Object>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
         List<List<Integer>> combos = new ArrayList<>();
         for (List<Integer> item : outCombos) {
             List<Integer> combos1 = new ArrayList<>();
@@ -1614,7 +1614,7 @@ public class Combine {
 
                                 for (int[] item : unique) {
                                     int[] otherSide={totalCrewNeed[0]-item[0], totalCrewNeed[1]-item[1]};
-                                    if (item[0]*backupSize + item[1]*6>=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
+                                    if (item[0]*backupSize + item[1]*6 >=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
                                         allocations.set(i,item);
                                         allocations.set(j,otherSide);
                                         indexCombos.set(i, newCombo1);
@@ -1724,7 +1724,20 @@ public class Combine {
                 result.add(adjustedCombo);
             }
         }
-        return result;
+        List<List<Integer>> allocationsList = new ArrayList<>();
+        for (int[] alloc : allocations) {
+            List<Integer> allocList = new ArrayList<>();
+            for (int val : alloc) {
+                allocList.add(val);
+            }
+            allocationsList.add(allocList);
+        }
+
+        List<List<Object>> combinedResult = new ArrayList<>();
+        combinedResult.add((List<Object>) (List<?>) result);  // Cast required for Java generics
+        combinedResult.add((List<Object>) (List<?>) allocationsList);
+
+        return combinedResult;
     }
 
     public static List<int[]> uniquePairs(int sumTotal, int[] maxVals) {
