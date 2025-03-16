@@ -116,6 +116,16 @@ def unused1(sizes, combos):
     for item in usable:
         sizes.remove(item)
     return sizes
+
+def nonzero(remainders,vehicles):
+    rem_af=[]
+    veh_af=[]
+    for elem in range(len(remainders)):
+        if remainders[elem]!=0:
+            rem_af.append(remainders[elem])
+            veh_af.append(vehicles[elem])
+    return rem_af, veh_af
+
 def allone(combos):
     out=[]
     for elem in combos:

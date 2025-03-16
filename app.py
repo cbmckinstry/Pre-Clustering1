@@ -84,11 +84,14 @@ def index():
 
                 damage=harm(combos.copy(),sorted_allocations.copy())
                 totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
-                combos1=combos.copy()
-                combos=person_calc(combos1.copy(),sorted_sizes.copy())
+
+                combos=person_calc(combos.copy(),sorted_sizes.copy())
                 alllist=alltogether(combos,listing,damage)
 
-                rem_vehs2=unused1(sorted_sizes.copy(),combos.copy())
+                less=nonzero(sorted_spaces,sorted_sizes)
+
+                rem_vehs2=unused1(less[1],combos.copy())
+
                 rem_vehs=quant(rem_vehs2)
             else:
                 alllist=[[],[]]
