@@ -1614,7 +1614,8 @@ public class Combine {
 
                                 for (int[] item : unique) {
                                     int[] otherSide={totalCrewNeed[0]-item[0], totalCrewNeed[1]-item[1]};
-                                    if (item[0]*backupSize + item[1]*6 >=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
+
+                                    if ((item[0]*backupSize + item[1]*6 <=space1After) && (backupSize*otherSide[0] + 6*otherSide[1]<=space2After)) {
                                         allocations.set(i,item);
                                         allocations.set(j,otherSide);
                                         indexCombos.set(i, newCombo1);
@@ -1624,6 +1625,7 @@ public class Combine {
                                     }
                                 }
                             }
+                            if (progress) break;
                         }
                         if (progress) break;
                     }
@@ -1671,7 +1673,7 @@ public class Combine {
 
                                         for (int[] item : unique) {
                                             int[] otherSide={totalCrewNeed[0]-item[0], totalCrewNeed[1]-item[1]};
-                                            if (item[0]*backupSize + item[1]*6>=space1After && backupSize*otherSide[0] + 6*otherSide[1]>=space2After) {
+                                            if (item[0]*backupSize + item[1]*6<=space1After && backupSize*otherSide[0] + 6*otherSide[1]<=space2After) {
                                                 allocations.set(i,item);
                                                 allocations.set(j,otherSide);
                                                 indexCombos.set(i, newCombo1);
@@ -1681,6 +1683,7 @@ public class Combine {
                                             }
                                         }
                                     }
+                                    if (secondaryProgress) break;
                                 }
                                 if (secondaryProgress) break;
                             }
@@ -1816,6 +1819,19 @@ public class Combine {
         }
         if (!list.isEmpty()) sb.setLength(sb.length() - 2); // Remove last comma
         sb.append("]");
+        return sb.toString();
+    }
+
+    public static String formatNestedList(List<List<Integer>> nestedList) {
+        StringBuilder sb = new StringBuilder();
+        sb.append("[\n");
+        for (List<Integer> innerList : nestedList) {
+            sb.append("  ").append(innerList.toString()).append(",\n");
+        }
+        if (!nestedList.isEmpty()) {
+            sb.setLength(sb.length() - 2); // Remove last comma and newline
+        }
+        sb.append("\n]");
         return sb.toString();
     }
 
