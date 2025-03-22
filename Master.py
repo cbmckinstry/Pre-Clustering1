@@ -136,6 +136,16 @@ def oppallone(allone,vehlist):
     for x in allone:
         vehlist.remove(x)
     return vehlist
+def sumAll(combos,vehlist):
+    summ=0
+    for x in combos:
+        summ=0
+        for m in x:
+            summ+=m
+            vehlist.remove(m)
+        if summ!=0:
+            vehlist.append(summ)
+    return vehlist
 def person_calc(combos,sizes):
     pers_out=[]
     for elem in combos:

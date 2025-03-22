@@ -5,17 +5,17 @@
         document.addEventListener("DOMContentLoaded", function () {
             const allocationsOnly = document.getElementById("allocations_only");
             const pullCombinations = document.getElementById("pull_combinations");
-            const removeCombinations = document.getElementById("remove_combinations");
+            const useCombinations = document.getElementById("use_combinations");
 
             function handleCheckboxChange(event) {
                 if (event.target.checked) {
                     if (event.target === allocationsOnly) {
                         pullCombinations.checked = false;
-                        removeCombinations.checked = false;
+                        useCombinations.checked = false;
                     } else if (event.target === pullCombinations) {
                         allocationsOnly.checked = false;
-                        removeCombinations.checked = false;
-                    } else if (event.target === removeCombinations) {
+                        useCombinations.checked = false;
+                    } else if (event.target === useCombinations) {
                         allocationsOnly.checked = false;
                         pullCombinations.checked = false;
                     }
@@ -24,7 +24,7 @@
 
             allocationsOnly.addEventListener("change", handleCheckboxChange);
             pullCombinations.addEventListener("change", handleCheckboxChange);
-            removeCombinations.addEventListener("change", handleCheckboxChange);
+            useCombinations.addEventListener("change", handleCheckboxChange);
         });
     </script>
     <meta charset="UTF-8">
@@ -253,9 +253,9 @@
                 </label>
 
                 <label class="checkbox-label">
-                    <input type="checkbox" id="remove_combinations" name="remove_combinations" value="1"
-                            {% if remove_combinations == 1 %} checked {% endif %}>
-                    Remove Combos
+                    <input type="checkbox" id="use_combinations" name="use_combinations" value="1"
+                            {% if use_combinations == 1 %} checked {% endif %}>
+                    Use Combos
                 </label>
             </div>
 
@@ -276,7 +276,7 @@
                 .checkbox-label {
                     display: flex;
                     align-items: center;
-                    font-size: 15px;
+                    font-size: 16px;
                     cursor: pointer;
                     white-space: nowrap;
                     height: 38px;
