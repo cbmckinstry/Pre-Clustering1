@@ -5,18 +5,26 @@
         document.addEventListener("DOMContentLoaded", function () {
             const allocationsOnly = document.getElementById("allocations_only");
             const pullCombinations = document.getElementById("pull_combinations");
+            const removeCombinations = document.getElementById("remove_combinations");
 
             function handleCheckboxChange(event) {
                 if (event.target.checked) {
                     if (event.target === allocationsOnly) {
                         pullCombinations.checked = false;
-                    } else {
+                        removeCombinations.checked = false;
+                    } else if (event.target === pullCombinations) {
                         allocationsOnly.checked = false;
+                        removeCombinations.checked = false;
+                    } else if (event.target === removeCombinations) {
+                        allocationsOnly.checked = false;
+                        pullCombinations.checked = false;
                     }
                 }
             }
+
             allocationsOnly.addEventListener("change", handleCheckboxChange);
             pullCombinations.addEventListener("change", handleCheckboxChange);
+            removeCombinations.addEventListener("change", handleCheckboxChange);
         });
     </script>
     <meta charset="UTF-8">
@@ -105,6 +113,7 @@
                 width: 100%;
             }
         }
+
         @media (max-width: 600px) {
             .checkbox-submit-container {
                 flex-direction: column;
@@ -231,56 +240,55 @@
             <div class="checkbox-submit-container">
                 <button type="submit" class="submit-button">Submit</button>
 
-                <div class="checkbox-group">
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
-                                {% if allocations_only == 1 %} checked {% endif %}>
-                        Allocations Only
-                    </label>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
+                            {% if allocations_only == 1 %} checked {% endif %}>
+                    Allocations Only
+                </label>
 
-                    <label class="checkbox-label">
-                        <input type="checkbox" id="pull_combinations" name="pull_combinations" value="1"
-                                {% if pull_combinations == 1 %} checked {% endif %}>
-                        Pull Combinations
-                    </label>
-                </div>
+                <label class="checkbox-label">
+                    <input type="checkbox" id="pull_combinations" name="pull_combinations" value="1"
+                            {% if pull_combinations == 1 %} checked {% endif %}>
+                    Pull Combos
+                </label>
+
+                <label class="checkbox-label">
+                    <input type="checkbox" id="remove_combinations" name="remove_combinations" value="1"
+                            {% if remove_combinations == 1 %} checked {% endif %}>
+                    Remove Combos
+                </label>
             </div>
 
             <style>
-                .checkbox-submit-container {
-                    display: flex;
-                    align-items: center;
-                    justify-content: flex-start;
-                    gap: 40px;
-                    flex-wrap: wrap;
-                    width: 100%;
-                }
 
                 .submit-button {
                     flex-shrink: 0;
                 }
 
-                .checkbox-group {
+                .checkbox-submit-container {
                     display: flex;
-                    gap: 40px;
+                    align-items: center; /* aligns vertically */
+                    gap: 25px;
+                    margin-top: 15px;
                     flex-wrap: wrap;
                 }
 
                 .checkbox-label {
                     display: flex;
                     align-items: center;
-                    font-size: 17px;
+                    font-size: 15px;
                     cursor: pointer;
                     white-space: nowrap;
-                    line-height: 1;
+                    height: 38px;
+                    padding-top: 2px;
                 }
 
                 .checkbox-label input[type="checkbox"] {
-                    width: 18px;
-                    height: 18px;
-                    margin-right: 8px;
+                    width: 19px;
+                    height: 19px;
+                    margin: 0 6px 0 0;
+                    transform: translateY(-1px); /* keeps checkbox vertically aligned */
                     cursor: pointer;
-                    vertical-align: middle;
                 }
 
                 /* Mobile-friendly adjustments */
@@ -291,10 +299,6 @@
                         gap: 10px;
                     }
 
-                    .checkbox-group {
-                        justify-content: flex-start;
-                        width: auto;
-                    }
                 }
 
                 button {

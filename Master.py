@@ -132,6 +132,10 @@ def allone(combos):
         for item in elem:
             out.append(item)
     return out
+def oppallone(allone,vehlist):
+    for x in allone:
+        vehlist.remove(x)
+    return vehlist
 def person_calc(combos,sizes):
     pers_out=[]
     for elem in combos:

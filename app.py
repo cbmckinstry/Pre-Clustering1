@@ -30,6 +30,7 @@ def index():
             pers7_input = request.form.get("pers7", "").strip()
             allocations_only = int(request.form.get("allocations_only", 0))
             pull_combinations = int(request.form.get("pull_combinations", 0))
+            remove_combinations=int(request.form.get("remove_combinations", 0))
 
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
             pers5 = int(pers5_input) if pers5_input else 0
@@ -112,12 +113,12 @@ def index():
             session["allocations_only"] = allocations_only
             session["alllist"]=alllist
             session["backupsize"]=backupsize
-            if pull_combinations==0:
+            if pull_combinations==0 and remove_combinations==0:
                 session["vehlist"] = vehlist
                 session["pers5"] = pers5
                 session["pers6"] = pers6
                 session["pers7"] = pers7
-            elif pull_combinations!=0 and allocations_only==0:
+            elif pull_combinations!=0:
                 session["vehlist"] = allone(combos.copy())
                 session["pers6"] = totalhelp[1]
                 if backupsize==5:
@@ -126,6 +127,15 @@ def index():
                 else:
                     session["pers5"] = pers5
                     session["pers7"] = totalhelp[0]
+            elif remove_combinations!=0:
+                session["vehlist"]=oppallone(allone(combos.copy()),vehlist)
+                session["pers6"] = pers6-totalhelp[1]
+                if backupsize==5:
+                    session["pers5"] = pers5-totalhelp[0]
+                    session["pers7"] = pers7
+                else:
+                    session["pers5"] = pers5
+                    session["pers7"] = pers7-totalhelp[0]
             session["rem_vehs"]=rem_vehs
             session["results"] = results
 
