@@ -3,26 +3,20 @@
 <head>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const allocationsOnly = document.getElementById("allocations_only");
             const pullCombinations = document.getElementById("pull_combinations");
             const useCombinations = document.getElementById("use_combinations");
 
             function handleCheckboxChange(event) {
                 if (event.target.checked) {
-                    if (event.target === allocationsOnly) {
-                        pullCombinations.checked = false;
-                        useCombinations.checked = false;
-                    } else if (event.target === pullCombinations) {
-                        allocationsOnly.checked = false;
+
+                     if (event.target === pullCombinations) {
                         useCombinations.checked = false;
                     } else if (event.target === useCombinations) {
-                        allocationsOnly.checked = false;
                         pullCombinations.checked = false;
                     }
                 }
             }
 
-            allocationsOnly.addEventListener("change", handleCheckboxChange);
             pullCombinations.addEventListener("change", handleCheckboxChange);
             useCombinations.addEventListener("change", handleCheckboxChange);
         });
@@ -241,12 +235,6 @@
                 <button type="submit" class="submit-button">Submit</button>
 
                 <label class="checkbox-label">
-                    <input type="checkbox" id="allocations_only" name="allocations_only" value="1"
-                            {% if allocations_only == 1 %} checked {% endif %}>
-                    Allocations Only
-                </label>
-
-                <label class="checkbox-label">
                     <input type="checkbox" id="pull_combinations" name="pull_combinations" value="1"
                             {% if pull_combinations == 1 %} checked {% endif %}>
                     Pull Combos
@@ -268,7 +256,7 @@
                 .checkbox-submit-container {
                     display: flex;
                     align-items: center; /* aligns vertically */
-                    gap: 25px;
+                    gap: 40px;
                     margin-top: 15px;
                     flex-wrap: wrap;
                 }
@@ -276,7 +264,7 @@
                 .checkbox-label {
                     display: flex;
                     align-items: center;
-                    font-size: 16px;
+                    font-size: 17px;
                     cursor: pointer;
                     white-space: nowrap;
                     height: 38px;
@@ -284,9 +272,9 @@
                 }
 
                 .checkbox-label input[type="checkbox"] {
-                    width: 19px;
-                    height: 19px;
-                    margin: 0 6px 0 0;
+                    width: 22px;
+                    height: 22px;
+                    margin: 0 7px 0 0;
                     transform: translateY(-1px); /* keeps checkbox vertically aligned */
                     cursor: pointer;
                 }

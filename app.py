@@ -28,7 +28,6 @@ def index():
             pers5_input = request.form.get("pers5", "").strip()
             pers6_input = request.form.get("pers6", "").strip()
             pers7_input = request.form.get("pers7", "").strip()
-            allocations_only = int(request.form.get("allocations_only", 0))
             pull_combinations = int(request.form.get("pull_combinations", 0))
             use_combinations=int(request.form.get("use_combinations", 0))
 
@@ -70,34 +69,31 @@ def index():
 
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
-            if allocations_only==0:
-                combos,listing=call_sevensFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
-                listing1=listing.copy()
-                combos1=combos.copy()
-                rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
-                if combos:
-                    for elem in rem_vehs1:
-                        combos1.append([elem])
-                        listing1.append([0,0])
-                    combos2,newalloc=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
-                    combos=combos2
-                    listing=newalloc
 
-                damage=harm(combos.copy(),sorted_allocations.copy())
-                totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
+            combos,listing=call_sevensFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
+            listing1=listing.copy()
+            combos1=combos.copy()
+            rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
+            if combos:
+                for elem in rem_vehs1:
+                    combos1.append([elem])
+                    listing1.append([0,0])
+                combos2,newalloc=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
+                combos=combos2
+                listing=newalloc
 
-                combos=person_calc(combos.copy(),sorted_sizes.copy())
-                alllist=alltogether(combos,listing,damage)
+            damage=harm(combos.copy(),sorted_allocations.copy())
+            totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
 
-                less=nonzero(sorted_spaces,sorted_sizes)
+            combos=person_calc(combos.copy(),sorted_sizes.copy())
+            alllist=alltogether(combos,listing,damage)
 
-                rem_vehs2=unused1(less[1],combos.copy())
+            less=nonzero(sorted_spaces,sorted_sizes)
 
-                rem_vehs=quant(rem_vehs2)
-            else:
-                alllist=[[],[]]
-                rem_vehs=[]
-                totalhelp=[]
+            rem_vehs2=unused1(less[1],combos.copy())
+
+            rem_vehs=quant(rem_vehs2)
+
 
             restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
 
@@ -110,9 +106,11 @@ def index():
             # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
             session["totalhelp"] = totalhelp
-            session["allocations_only"] = allocations_only
+            session["pull_combinations"]=pull_combinations
+            session["use_combinations"]=use_combinations
             session["alllist"]=alllist
             session["backupsize"]=backupsize
+
             if pull_combinations==0 and use_combinations==0:
                 session["vehlist"] = vehlist
                 session["pers5"] = pers5
