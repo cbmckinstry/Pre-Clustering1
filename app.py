@@ -106,8 +106,7 @@ def index():
             # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
             session["totalhelp"] = totalhelp
-            session["pull_combinations"]=pull_combinations
-            session["use_combinations"]=use_combinations
+
             session["alllist"]=alllist
             session["backupsize"]=backupsize
 
