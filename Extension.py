@@ -1,8 +1,13 @@
-from py4j.java_gateway import JavaGateway, java_import
+from py4j.java_gateway import JavaGateway
+
 gateway = JavaGateway()
 
-java_import(gateway.jvm, 'java.util.ArrayList')
-java_import(gateway.jvm, 'java.util.HashSet')
+ArrayList = gateway.jvm.java.util.ArrayList
+HashSet = gateway.jvm.java.util.HashSet
+
+java_list = ArrayList()
+java_set = HashSet()
+
 
 def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
 
