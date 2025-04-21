@@ -11,7 +11,7 @@ java_set = HashSet()
 
 def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
 
-    java_allocations = gateway.jvm.java.util.ArrayList()
+    java_allocations = ArrayList()
     for allocation in allocations:
         java_array = gateway.new_array(gateway.jvm.int, len(allocation))
 
@@ -19,7 +19,7 @@ def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
             java_array[i] = val
         java_allocations.add(java_array)
 
-    java_spaces = gateway.jvm.ArrayList()
+    java_spaces = java_spaces = ArrayList()
     for space in spaces:
         java_spaces.add(space)
 
@@ -57,7 +57,7 @@ def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spac
         java_sorted_allocations.add(java_list)
 
     # Convert allocations to Java ArrayList of int arrays
-    java_allocations = gateway.jvm.java.util.ArrayList()
+    java_allocations = java_allocations = ArrayList()
     for allocation in allocations:
         java_array = gateway.new_array(gateway.jvm.int, len(allocation))
         for i, val in enumerate(allocation):
@@ -73,7 +73,7 @@ def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spac
         java_out_combos.add(java_list)
 
     # Convert spaces to Java ArrayList
-    java_spaces = java_util.ArrayList()
+    java_spaces = java_spaces = ArrayList()
     for space in spaces:
         java_spaces.add(space)
 
