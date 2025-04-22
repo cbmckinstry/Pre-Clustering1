@@ -869,7 +869,7 @@ public class Combine {
                                         totalSum >= (7 + 3 * 6) &&
                                         totalSum - Math.min(Math.min(Math.min(Math.min(value1, value2), value3), value4),value5) < (3 * 6 + 7) &&
                                         (six7 > 2 && backup7 > 0)) {
-                                    System.out.println("entered");
+
                                     backup7 -= 1;
                                     six7 -= 3;
                                     used7.add(g);
