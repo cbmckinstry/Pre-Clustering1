@@ -866,18 +866,19 @@ public class Combine {
                                 int totalSum = sum(new int[]{value1, value2, value3, value4, value5});
 
                                 if (!used7.contains(i) && !used7.contains(j) && !used7.contains(k) && !used7.contains(h) && !used7.contains(g) &&
-                                        totalSum >= (3 * 7 + 6) &&
-                                        totalSum - Math.min(Math.min(Math.min(Math.min(value1, value2), value3), value4),value5) < (3 * 7 + 6) &&
-                                        (six7 > 0 && backup7 > 2)) {
-                                    backup7 -= 3;
-                                    six7 -= 1;
+                                        totalSum >= (7 + 3 * 6) &&
+                                        totalSum - Math.min(Math.min(Math.min(Math.min(value1, value2), value3), value4),value5) < (3 * 6 + 7) &&
+                                        (six7 > 2 && backup7 > 0)) {
+                                    System.out.println("entered");
+                                    backup7 -= 1;
+                                    six7 -= 3;
                                     used7.add(g);
                                     used7.add(h);
                                     used7.add(i);
                                     used7.add(j);
                                     used7.add(k);
                                     fives7.add(new int[]{g+1, h + 1, i + 1, k + 1, j + 1});
-                                    init1.add(new int[]{3, 1});
+                                    init1.add(new int[]{1, 3});
 
                                     if (six7==0 && backup7==0){
                                         return Arrays.asList(fives7, init1);
