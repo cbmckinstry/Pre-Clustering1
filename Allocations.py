@@ -276,7 +276,7 @@ def closestalg(required_groups, allocations, backupsize=5):
 
 
     # Optimize allocations before resolving ties
-    optimized_allocations = optimize_allocations(allocations, backupsize)
+    optimized_allocations = optimize_allocations(allocations, min(backupsize,6))
 
     # If there's a tie, sort based on the number of zeros in remaining capacity
     if len(best_indices) > 1:
@@ -291,8 +291,6 @@ def closestalg(required_groups, allocations, backupsize=5):
 
 
 def optimize_allocations(allocations,backupsize):
-    if backupsize==7:
-        backupsize=6
     for m in range(len(allocations)):
         for i in range(len(allocations[m][1])-1,0,-1):
             for j in range(0,i):
