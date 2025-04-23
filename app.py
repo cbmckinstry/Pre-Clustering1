@@ -63,6 +63,7 @@ def index():
                             veh2[:].copy(), backup_group, primary_group, order, opt2, opt1, use_backup
                         ))
 
+
             results = closestalg([backup_group, pers6], allocations,backupsize)
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")

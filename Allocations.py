@@ -274,23 +274,34 @@ def closestalg(required_groups, allocations, backupsize=5):
             best_index_avg.append(allocations[l])
         return [allocations[best_indices[lowest_average(best_index_avg)]],[0,0]]
 
+    optimized_allocations = optimize_allocations(allocations, min(backupsize,6),required_groups)
 
-    # Optimize allocations before resolving ties
-    optimized_allocations = optimize_allocations(allocations, min(backupsize,6))
+    offby = []
+    total_shortfalls = []
 
-    # If there's a tie, sort based on the number of zeros in remaining capacity
+    for allocation in optimized_allocations:
+        shortfall = [
+            max(0, required_groups[0] - allocation[0][0]),  # Shortfall of backup groups
+            max(0, required_groups[1] - allocation[0][1])   # Shortfall of 6-person groups
+        ]
+        offby.append(shortfall)
+        total_shortfalls.append(sum(shortfall))
+
+    min_shortfall = min(total_shortfalls)
+    best_indices = [i for i, total in enumerate(total_shortfalls) if total == min_shortfall]
+
     if len(best_indices) > 1:
         best_indices.sort(key=lambda i: (
             sum(1 for cap in optimized_allocations[i][2] if cap == 0) * -1 ,  # Count of zeros
             -optimized_allocations[i][0][backupsize == 5]  # Number of larger groups
         ))
 
-    # Return the best allocation
     best_index = best_indices[0]
+
     return [optimized_allocations[best_index], offby[best_index]]
 
 
-def optimize_allocations(allocations,backupsize):
+def optimize_allocations(allocations,backupsize,required):
     for m in range(len(allocations)):
         for i in range(len(allocations[m][1])-1,0,-1):
             for j in range(0,i):
@@ -299,6 +310,15 @@ def optimize_allocations(allocations,backupsize):
                     allocations[m][1][j][backupsize==6]+=1
                     allocations[m][2][j]-=6*(backupsize==6)+5*(backupsize==5)
                     allocations[m][2][i]+=6*(backupsize==6)+5*(backupsize==5)
+        for x in range(len(allocations[m][1])):
+            if required[0]-allocations[m][0][0]>0 and backupsize==6 and allocations[m][2][x]>=7:
+                allocations[m][0][0]+=1
+                allocations[m][2][x]-=7
+                allocations[m][1][x][0]+=1
+            elif required[1]-allocations[m][0][1]>0 and backupsize==5 and allocations[m][2][x]>=6:
+                allocations[m][0][1]+=1
+                allocations[m][2][x]-=6
+                allocations[m][1][x][1]+=1
     return allocations
 def lowest_average(allocations):
     averagelist = []
