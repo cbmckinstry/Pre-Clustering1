@@ -211,19 +211,23 @@ def allocate_groups_simultaneous(vehicle_capacities, backup_groups, six_person_g
         else:
             if fill_before_next:
                 for current_vehicle in range(len(vehicle_capacities)):
-                    while vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0:
-                        vehicle_assignments[current_vehicle][1] += 1
-                        totals[1] += 1
-                        vehicle_capacities[current_vehicle] -= 6
-                        six_person_groups -= 1
-                        progress_in_iteration = True
+                    while (vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0) or (vehicle_capacities[current_vehicle] >= backup_size and backup_groups > 0):
+                        six_rem=vehicle_capacities[current_vehicle]%6
+                        backup_rem=vehicle_capacities[current_vehicle]%backup_size
 
-                    while vehicle_capacities[current_vehicle] >= backup_size and backup_groups > 0:
-                        vehicle_assignments[current_vehicle][0] += 1
-                        totals[0] += 1
-                        vehicle_capacities[current_vehicle] -= backup_size
-                        backup_groups -= 1
-                        progress_in_iteration = True
+                        if vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0 and (six_rem<=backup_rem or not (vehicle_capacities[current_vehicle] >= backup_size and backup_groups > 0)):
+                            vehicle_assignments[current_vehicle][1] += 1
+                            totals[1] += 1
+                            vehicle_capacities[current_vehicle] -= 6
+                            six_person_groups -= 1
+                            progress_in_iteration = True
+
+                        else:
+                            vehicle_assignments[current_vehicle][0] += 1
+                            totals[0] += 1
+                            vehicle_capacities[current_vehicle] -= backup_size
+                            backup_groups -= 1
+                            progress_in_iteration = True
             else:
                 for current_vehicle in range(len(vehicle_capacities)):
                     if vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0:
@@ -300,7 +304,6 @@ def closestalg(required_groups, allocations, backupsize=5):
 
     return [optimized_allocations[best_index], offby[best_index]]
 
-
 def optimize_allocations(allocations,backupsize,required):
     for m in range(len(allocations)):
         for i in range(len(allocations[m][1])-1,0,-1):
@@ -357,3 +360,6 @@ def sort_closestalg_output(closestalg_output,backup):
     sorted_remaining_spaces = [entry[2] for entry in combined_data]
     number = list(range(1, len(sorted_sizes) + 1))
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes,number
+x= allocate_groups([11,12,10],2,2,1,"none",True,True)
+y=allocate_groups_simultaneous([10,11,12],2,2,"none",False,False)
+print(y)

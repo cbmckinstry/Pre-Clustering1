@@ -49,14 +49,14 @@ def index():
 
             allocations = []
             for priority in range(2):
-                for order in [None, "asc", "desc"]:
+                for order in ["asc", "desc"]:
                     for opt2 in [False, True]:
                         for opt1 in [False, True]:
                             allocations.append(allocate_groups(
                                 veh2[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
                             ))
 
-            for order in [None, "asc", "desc"]:
+            for order in ["asc", "desc"]:
                 for opt2 in [False, True]:
                     for opt1 in [False, True]:
                         allocations.append(allocate_groups_simultaneous(
