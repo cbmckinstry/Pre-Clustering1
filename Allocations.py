@@ -360,6 +360,3 @@ def sort_closestalg_output(closestalg_output,backup):
     sorted_remaining_spaces = [entry[2] for entry in combined_data]
     number = list(range(1, len(sorted_sizes) + 1))
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes,number
-x= allocate_groups([11,12,10],2,2,1,"none",True,True)
-y=allocate_groups_simultaneous([10,11,12],2,2,"none",False,False)
-print(y)
