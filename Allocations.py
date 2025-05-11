@@ -168,10 +168,10 @@ def allocate_groups_simultaneous(vehicle_capacities, backup_groups, six_person_g
                 best_vehicle_6 = find_best_vehicle(6) if six_person_groups > 0 else None
                 best_vehicle_backup = find_best_vehicle(backup_size) if backup_groups > 0 else None
 
-                if best_vehicle_6 is not None and (best_vehicle_backup is None or vehicle_capacities[best_vehicle_6] % 6 <= vehicle_capacities[best_vehicle_backup] % backup_size):
+                if best_vehicle_6 is not None and (best_vehicle_backup is None or vehicle_capacities[best_vehicle_6] % 6 < vehicle_capacities[best_vehicle_backup] % backup_size):
                     best_vehicle = best_vehicle_6
                     group_size = 6
-                elif best_vehicle_backup is not None:
+                elif best_vehicle_backup is not None and (best_vehicle_6 is None or vehicle_capacities[best_vehicle_6] % 6 >= vehicle_capacities[best_vehicle_backup] % backup_size):
                     best_vehicle = best_vehicle_backup
                     group_size = backup_size
                 else:
@@ -215,14 +215,14 @@ def allocate_groups_simultaneous(vehicle_capacities, backup_groups, six_person_g
                         six_rem=vehicle_capacities[current_vehicle]%6
                         backup_rem=vehicle_capacities[current_vehicle]%backup_size
 
-                        if vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0 and (six_rem<=backup_rem or not ( backup_groups > 0)):
+                        if vehicle_capacities[current_vehicle] >= 6 and six_person_groups > 0 and (six_rem<backup_rem or not ( backup_groups > 0)):
                             vehicle_assignments[current_vehicle][1] += 1
                             totals[1] += 1
                             vehicle_capacities[current_vehicle] -= 6
                             six_person_groups -= 1
                             progress_in_iteration = True
 
-                        elif vehicle_capacities[current_vehicle] >= backup_size and backup_groups > 0 and (six_rem>backup_rem or not ( six_person_groups > 0)):
+                        elif vehicle_capacities[current_vehicle] >= backup_size and backup_groups > 0 and (six_rem>=backup_rem or not ( six_person_groups > 0)):
                             vehicle_assignments[current_vehicle][0] += 1
                             totals[0] += 1
                             vehicle_capacities[current_vehicle] -= backup_size
