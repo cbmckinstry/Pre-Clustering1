@@ -41,10 +41,9 @@ def allocate_groups(vehicle_capacities, backup_groups, six_person_groups, vers, 
 
         if minimize_remainder:
             if fill_before_next:
-                # Minimize remainder and fill vehicles
                 best_vehicle_primary = find_best_vehicle(primary_size) if primary_groups > 0 else None
                 best_vehicle_secondary = find_best_vehicle(backup_size) if secondary_groups > 0 else None
-                if best_vehicle_primary is not None and (best_vehicle_secondary is None or vehicle_capacities[best_vehicle_primary] % primary_size <= vehicle_capacities[best_vehicle_secondary] % backup_size):
+                if best_vehicle_primary is not None:
                     best_vehicle = best_vehicle_primary
                     group_size = primary_size
                 elif best_vehicle_secondary is not None:
@@ -63,11 +62,9 @@ def allocate_groups(vehicle_capacities, backup_groups, six_person_groups, vers, 
                         secondary_groups -= 1
                     progress_in_iteration = True
             else:
-
-                # Place one group based on remainder minimization
                 best_vehicle_primary = find_best_vehicle(primary_size) if primary_groups > 0 else None
                 best_vehicle_secondary = find_best_vehicle(backup_size) if secondary_groups > 0 else None
-                if best_vehicle_primary is not None and (best_vehicle_secondary is None or vehicle_capacities[best_vehicle_primary] % primary_size <= vehicle_capacities[best_vehicle_secondary] % backup_size):
+                if best_vehicle_primary is not None:
                     best_vehicle = best_vehicle_primary
                     group_size = primary_size
                 elif best_vehicle_secondary is not None:
@@ -167,17 +164,24 @@ def allocate_groups_simultaneous(vehicle_capacities, backup_groups, six_person_g
             if fill_before_next:
                 best_vehicle_6 = find_best_vehicle(6) if six_person_groups > 0 else None
                 best_vehicle_backup = find_best_vehicle(backup_size) if backup_groups > 0 else None
-
-                if best_vehicle_6 is not None and (best_vehicle_backup is None or vehicle_capacities[best_vehicle_6] % 6 < vehicle_capacities[best_vehicle_backup] % backup_size):
-                    best_vehicle = best_vehicle_6
-                    group_size = 6
-                elif best_vehicle_backup is not None and (best_vehicle_6 is None or vehicle_capacities[best_vehicle_6] % 6 >= vehicle_capacities[best_vehicle_backup] % backup_size):
-                    best_vehicle = best_vehicle_backup
-                    group_size = backup_size
-                else:
+                if best_vehicle_6 is None and best_vehicle_backup is None:
                     break
+                elif best_vehicle_6 is None and best_vehicle_backup is not None:
+                    best_vehicle=best_vehicle_backup
+                elif best_vehicle_6 is not None and best_vehicle_backup is None:
+                    best_vehicle=best_vehicle_6
+                else:
+                    best_6_rem=vehicle_capacities[best_vehicle_6]%6
+                    best_backup_rem=vehicle_capacities[best_vehicle_backup]%backup_size
+                    best_vehicle=best_vehicle_6*(best_6_rem<=best_backup_rem)+best_vehicle_backup*(best_6_rem>best_backup_rem)
 
-                while vehicle_capacities[best_vehicle] >= group_size and (six_person_groups > 0 if group_size == 6 else backup_groups > 0):
+                while (vehicle_capacities[best_vehicle] >= 6 and six_person_groups > 0) or (vehicle_capacities[best_vehicle] >= backup_size and backup_groups > 0):
+                    val_6=vehicle_capacities[best_vehicle]%6
+                    val_backup=vehicle_capacities[best_vehicle]%backup_size
+                    if backup_groups>0 and (val_6>val_backup or six_person_groups==0):
+                        group_size=backup_size
+                    else:
+                        group_size=6
                     vehicle_assignments[best_vehicle][group_size == 6] += 1
                     totals[group_size == 6] += 1
                     vehicle_capacities[best_vehicle] -= group_size
