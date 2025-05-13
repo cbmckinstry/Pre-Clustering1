@@ -56,13 +56,6 @@ def index():
                                 veh2[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
                             ))
 
-            for order in ["asc", "desc"]:
-                for opt2 in [False, True]:
-                    for opt1 in [False, True]:
-                        allocations.append(allocate_groups_simultaneous(
-                            veh2[:].copy(), backup_group, primary_group, order, opt2, opt1, use_backup
-                        ))
-
 
             results = closestalg([backup_group, pers6], allocations,backupsize)
             if not results or not isinstance(results, list) or len(results) < 2:
