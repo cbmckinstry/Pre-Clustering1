@@ -56,7 +56,7 @@ def index():
                                 veh2[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
                             ))
 
-
+            print("Results Made")
             results = closestalg([backup_group, pers6], allocations,backupsize)
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
@@ -65,6 +65,7 @@ def index():
 
 
             combos,listing=call_sevensFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
+            print("Combos Good")
             listing1=listing.copy()
             combos1=combos.copy()
             rem_vehs1=unused(sorted_allocations.copy(),combos.copy())

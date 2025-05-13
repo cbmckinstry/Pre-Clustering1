@@ -65,12 +65,11 @@ def allocate_groups(vehicle_capacities, backup_groups, six_person_groups, vers, 
             vehicle_assignments = [x[1] for x in restored]
             vehicle_capacities = [x[2] for x in restored]
         else:
-            best_vehicle=None
             progress=True
             while secondary_groups>0 and progress:
                 progress=False
                 best_vehicle=find_best_vehicle(primary_size,backup_size)
-                if best_vehicle is not None:
+                if best_vehicle is not None and secondary_groups>0:
                     vehicle_assignments[best_vehicle][backup_size==6]+=1
                     totals[backup_size==6]+=1
                     vehicle_capacities[best_vehicle] -= backup_size
@@ -80,7 +79,7 @@ def allocate_groups(vehicle_capacities, backup_groups, six_person_groups, vers, 
             while primary_groups>0 and placement:
                 placement=False
                 for vehicle in range(len(vehicle_capacities)):
-                    if vehicle_capacities[vehicle]>=primary_size:
+                    if vehicle_capacities[vehicle]>=primary_size and primary_groups>0:
                         vehicle_assignments[vehicle][primary_size == 6] += 1
                         totals[primary_size == 6] += 1
                         vehicle_capacities[vehicle] -= primary_size
@@ -234,3 +233,5 @@ def sort_closestalg_output(closestalg_output,backup):
     sorted_remaining_spaces = [entry[2] for entry in combined_data]
     number = list(range(1, len(sorted_sizes) + 1))
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes,number
+x=allocate_groups([13,5,10,15,10,12,4,11,13,11,5,4,12,10,12,15,10,10,14,11,10,5,12,11,11,12,14,15,13,11,10,5,9,2,11],2,58,0,"desc",True,False)
+print(x)
