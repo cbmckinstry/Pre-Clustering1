@@ -233,5 +233,3 @@ def sort_closestalg_output(closestalg_output,backup):
     sorted_remaining_spaces = [entry[2] for entry in combined_data]
     number = list(range(1, len(sorted_sizes) + 1))
     return sorted_allocations, sorted_remaining_spaces, sorted_sizes,number
-x=allocate_groups([13,5,10,15,10,12,4,11,13,11,5,4,12,10,12,15,10,10,14,11,10,5,12,11,11,12,14,15,13,11,10,5,9,2,11],2,58,0,"desc",True,False)
-print(x)
