@@ -47,28 +47,20 @@ def allocate_groups(vehicle_capacities, backup_groups, six_person_groups, vers, 
             vehicle_capacities = [vehicle_capacities[i] for i in sorted_indices]
             vehicle_assignments = [vehicle_assignments[i] for i in sorted_indices]
 
-            progress = True
-            while secondary_groups > 0 and progress:
-                progress = False
-                best_vehicle = find_best_vehicle(primary_size, backup_size)
-                if best_vehicle is not None:
-                    vehicle_assignments[best_vehicle][backup_size == 6] += 1
-                    totals[backup_size == 6] += 1
-                    vehicle_capacities[best_vehicle] -= backup_size
-                    secondary_groups -= 1
-                    progress = True
+            for current_vehicle in range(len(vehicle_capacities)):
+                while vehicle_capacities[current_vehicle] >= primary_size and primary_groups > 0:
+                    vehicle_assignments[current_vehicle][primary_size == 6] += 1
+                    totals[primary_size == 6] += 1
+                    vehicle_capacities[current_vehicle] -= primary_size
+                    primary_groups -= 1
 
-                # Then place primary groups wherever they fit
-            placement = True
-            while primary_groups > 0 and placement:
-                placement = False
-                for vehicle in range(len(vehicle_capacities)):
-                    if vehicle_capacities[vehicle] >= primary_size:
-                        vehicle_assignments[vehicle][primary_size == 6] += 1
-                        totals[primary_size == 6] += 1
-                        vehicle_capacities[vehicle] -= primary_size
-                        primary_groups -= 1
-                        placement = True
+            for current_vehicle in range(len(vehicle_capacities)):
+                while vehicle_capacities[current_vehicle] >= backup_size and secondary_groups > 0:
+                    vehicle_assignments[current_vehicle][backup_size == 6] += 1
+                    totals[backup_size == 6] += 1
+                    vehicle_capacities[current_vehicle] -= backup_size
+                    secondary_groups -= 1
+
             restored = sorted(zip(sorted_indices, vehicle_assignments, vehicle_capacities), key=lambda x: x[0])
             vehicle_assignments = [x[1] for x in restored]
             vehicle_capacities = [x[2] for x in restored]
