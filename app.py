@@ -45,25 +45,15 @@ def index():
             backup_group = pers7 if pers7 != 0 else pers5
             backupsize = 5 if pers7 == 0 else 7
             primary_group = pers6
-            use_backup = pers7 != 0
 
-            allocations = []
-            for priority in range(2):
-                for order in ["asc", "desc"]:
-                    for opt2 in [False, True]:
-                        for opt1 in [False, True]:
-                            allocations.append(allocate_groups(
-                                veh2[:].copy(), backup_group, primary_group, priority, order, opt2, opt1, use_backup
-                            ))
-
-            results = closestalg([backup_group, pers6], allocations,backupsize)
+            results=optimal_allocation(veh2[:].copy(),primary_group,backup_group,6,backupsize)
+            off=[backup_group-results[0][0],primary_group-results[0][1]]
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
 
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
-
-            combos,listing=call_sevensFlipped(sorted_allocations,sorted_spaces,results[1].copy(),backupsize,None)
+            combos,listing=call_sevensFlipped(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)
             listing1=listing.copy()
             combos1=combos.copy()
             rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
@@ -74,9 +64,8 @@ def index():
                 combos2,newalloc=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
                 combos=combos2
                 listing=newalloc
-
             damage=harm(combos.copy(),sorted_allocations.copy())
-            totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),results[1].copy())
+            totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),off.copy())
 
             combos=person_calc(combos.copy(),sorted_sizes.copy())
             alllist=alltogether(combos,listing,damage)
@@ -86,7 +75,6 @@ def index():
             rem_vehs2=unused1(less[1],combos.copy())
 
             rem_vehs=quant(rem_vehs2)
-
 
             restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
 
@@ -123,7 +111,7 @@ def index():
                 session["pers5"] = pers5
                 session["pers7"] = pers7
             session["rem_vehs"]=rem_vehs
-            session["results"] = results
+            session["results"] = [results[0],off]
 
         except Exception as e:
             return render_template(

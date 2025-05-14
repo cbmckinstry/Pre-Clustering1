@@ -313,11 +313,11 @@
                     {% else %}
                         <p><strong>Totals:</strong>
                             {% if pers7 == 0 %}
-                                Total 5-person groups: {{ results[0][0][0] }},
+                                Total 5-person groups: {{ results[0][0] }},
                             {% else %}
-                                Total 7-person groups: {{ results[0][0][0] }},
+                                Total 7-person groups: {{ results[0][0] }},
                             {% endif %}
-                            Total 6-person groups: {{ results[0][0][1] }}
+                            Total 6-person groups: {{ results[0][1] }}
                         </p>
                         <p><strong>Shortfall:</strong>
                             {% if pers7 == 0 %}
