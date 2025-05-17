@@ -46,7 +46,8 @@ def index():
             backupsize = 5 if pers7 == 0 else 7
             primary_group = pers6
 
-            results=optimal_allocation(veh2[:].copy(),primary_group,backup_group,6,backupsize)
+            results_1=optimal_allocation(veh2[:].copy(),primary_group,backup_group,6,backupsize)
+            results=trickle_down(results_1,backupsize)
             off=[backup_group-results[0][0],primary_group-results[0][1]]
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")

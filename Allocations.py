@@ -68,3 +68,25 @@ def optimal_allocation(capacities, num_primary, num_backup, primary_size=6, back
     ]
 
     return [[used_backup, used_primary], allocations, remaining_spaces]
+
+def trickle_down(allocation_output,backup_size):
+    allocations=allocation_output[1]
+    remaining_space=allocation_output[2]
+    for x in range(len(allocations)-1,0,-1):
+        for y in range(x):
+            if backup_size==5:
+                if allocations[x][0]>=1 and remaining_space[y]>=5:
+                    allocations[x][0]-=1
+                    remaining_space[y]-=5
+                    remaining_space[x]+=5
+                    allocations[y][0]+=1
+                    break
+            else:
+                if allocations[x][1]>=1 and remaining_space[y]>=6:
+                    allocations[x][1]-=1
+                    remaining_space[y]-=6
+                    remaining_space[x]+=6
+                    allocations[y][1]+=1
+                    break
+
+    return [allocation_output[0],allocations,remaining_space]
