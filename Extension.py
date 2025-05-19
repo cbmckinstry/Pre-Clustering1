@@ -9,7 +9,7 @@ java_list = ArrayList()
 java_set = HashSet()
 
 
-def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
+def call_threesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = ArrayList()
     for allocation in allocations:
@@ -36,12 +36,12 @@ def call_sevensFlipped(allocations, spaces, shortfall, backup_size, used):
     backup_size = int(backup_size)
 
     combine = gateway.entry_point
-    java_result = combine.sevensFlipped( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
+    java_result = combine.threesFlipped( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
 
-    python_result = [java_list_to_python(sublist) for sublist in java_result]
+    python_result = [java_list_to_python(sublist) for sublist in java_result[:2]]
 
     return python_result
 
@@ -91,19 +91,3 @@ def call_optimize(sorted_allocations, allocations, backup_size, out_combos, spac
     python_result = [java_list_to_python(sublist) for sublist in java_result]
 
     return python_result
-
-
-
-sorted_allocations = [[0, 0], [0,1], [0,1], [0,1],[0,0],[0,0]]
-allocations=[[0, 1], [0,2],[0,0]]
-spaces = [5,2,5,5,5,2]
-combos=[[1,3],[1,4,5],[6]]
-
-shortfall = [0, 3]
-used = {}
-bound_list = [0, 3]
-
-#result = call_optimize(sorted_allocations,allocations,5, combos, spaces)
-
-#print(result)
-
