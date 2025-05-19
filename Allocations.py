@@ -38,7 +38,6 @@ def optimal_allocation(capacities, num_primary, num_backup, primary_size=6, back
         best_alloc = None
         best_primary_used = 0
         best_backup_used = 0
-
         cap = capacities[i]
 
         max_backup = min(rem_backup, cap // backup_size)

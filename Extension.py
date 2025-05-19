@@ -8,7 +8,6 @@ HashSet = gateway.jvm.java.util.HashSet
 java_list = ArrayList()
 java_set = HashSet()
 
-
 def call_threesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = ArrayList()

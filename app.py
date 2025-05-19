@@ -51,7 +51,6 @@ def index():
             off=[backup_group-results[0][0],primary_group-results[0][1]]
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
-
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             combos,listing=call_threesFlipped(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)

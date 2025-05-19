@@ -183,7 +183,6 @@ public class Combine {
                 }
             }
         }
-
         for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
             if (six6 == 0) break;
             for (int j = i - 1; j>=1; j--) {
