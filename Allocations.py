@@ -53,7 +53,7 @@ def optimal_allocation(capacities, num_primary, num_backup, primary_size=6, back
                     total_groups = use_backup + use_primary + next_groups
                     total_primary = use_primary + used_p_next
                     total_backup = use_backup + used_b_next
-                    if total_groups > best_groups or (total_groups==best_groups and ((total_primary<best_primary_used and backup_size==5) or (total_backup<best_backup_used and backup_size==7))):
+                    if total_groups > best_groups or (total_groups==best_groups and ((total_primary<best_primary_used and backup_size==5) or (total_backup>best_backup_used and backup_size==7))):
                         best_groups = total_groups
                         best_alloc = [[use_backup, use_primary]] + next_alloc
                         best_primary_used = use_primary + used_p_next

@@ -53,7 +53,10 @@ def index():
                 raise ValueError("Invalid results returned from calculations.")
             sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
-            combos,listing=call_threesFlipped(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)
+            if sum(off)<=pers6 and backupsize==5:
+                combos,listing=call_sixesFlipped(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)
+            else:
+                combos,listing=call_combine(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)
             listing1=listing.copy()
             combos1=combos.copy()
             rem_vehs1=unused(sorted_allocations.copy(),combos.copy())

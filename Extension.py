@@ -8,7 +8,7 @@ HashSet = gateway.jvm.java.util.HashSet
 java_list = ArrayList()
 java_set = HashSet()
 
-def call_threesFlipped(allocations, spaces, shortfall, backup_size, used):
+def call_sixesFlipped(allocations, spaces, shortfall, backup_size, used):
 
     java_allocations = ArrayList()
     for allocation in allocations:
@@ -35,7 +35,43 @@ def call_threesFlipped(allocations, spaces, shortfall, backup_size, used):
     backup_size = int(backup_size)
 
     combine = gateway.entry_point
-    java_result = combine.threesFlipped( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
+    java_result = combine.sixesFlipped( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
+
+    def java_list_to_python(java_list):
+        return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
+
+    python_result = [java_list_to_python(sublist) for sublist in java_result[:2]]
+
+    return python_result
+
+def call_combine(allocations, spaces, shortfall, backup_size, used):
+
+    java_allocations = ArrayList()
+    for allocation in allocations:
+        java_array = gateway.new_array(gateway.jvm.int, len(allocation))
+
+        for i, val in enumerate(allocation):
+            java_array[i] = val
+        java_allocations.add(java_array)
+
+    java_spaces = java_spaces = ArrayList()
+    for space in spaces:
+        java_spaces.add(space)
+
+    java_shortfall = gateway.new_array(gateway.jvm.int, 2)
+    java_shortfall[0] = shortfall[0]
+    java_shortfall[1] = shortfall[1]
+
+    java_used = gateway.jvm.java.util.HashSet()
+    if used:
+        for index in used:
+            java_used.add(index)
+
+
+    backup_size = int(backup_size)
+
+    combine = gateway.entry_point
+    java_result = combine.combine( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
