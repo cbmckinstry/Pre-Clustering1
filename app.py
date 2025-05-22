@@ -27,14 +27,13 @@ def index():
             vehlist_input = request.form.get("vehlist", "").strip()
             pers5_input = request.form.get("pers5", "").strip()
             pers6_input = request.form.get("pers6", "").strip()
-            pers7_input = request.form.get("pers7", "").strip()
             pull_combinations = int(request.form.get("pull_combinations", 0))
             use_combinations=int(request.form.get("use_combinations", 0))
 
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
             pers5 = int(pers5_input) if pers5_input else 0
             pers6 = int(pers6_input) if pers6_input else 0
-            pers7 = int(pers7_input) if pers7_input else 0
+            pers7 = 0
 
             veh2=vehlist.copy()
             veh2.sort(reverse=True)
@@ -123,7 +122,7 @@ def index():
                 vehlist=vehlist_input,
                 pers5=pers5_input,
                 pers6=pers6_input,
-                pers7=pers7_input,
+                pers7=0,
                 results=None,
                 totalhelp=None,
                 sorted_allocations=None,
@@ -146,7 +145,7 @@ def index():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        pers7=session.get("pers7", ""),
+        pers7=0,
         results=session.get("results"),
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
@@ -191,7 +190,7 @@ def matrices():
             vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
-            pers7=session.get("pers7", ""),
+            pers7=0,
             results=session.get("results"),
             totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
@@ -215,7 +214,7 @@ def matrices():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        pers7=session.get("pers7", ""),
+        pers7=0,
         results=session.get("results"),
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
@@ -255,7 +254,7 @@ def ranges():
             vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
-            pers7=session.get("pers7", ""),
+            pers7=0,
             results=session.get("results"),
             totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
@@ -279,7 +278,7 @@ def ranges():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        pers7=session.get("pers7", ""),
+        pers7=0,
         results=session.get("results"),
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
