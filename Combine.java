@@ -931,6 +931,1780 @@ public class Combine {
         return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new int[]{0, six6}, used6, false);
     }
 
+    public static List<Object> threes(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5) {
+        if (used5 == null) {
+            used5 = new HashSet<>();
+        }
+
+        if (sum1(spaces) < backupSize * shortfall[0] + 6 * shortfall[1]) {
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used5, false);
+        }
+
+        List<int[]> filteredAllocations = new ArrayList<>();
+        List<Integer> filteredSpaces = new ArrayList<>();
+
+        List<int[]> finalCombos = new ArrayList<>();
+        List<int[]> finalInit = new ArrayList<>();
+        Set<Integer> finalUsed = new HashSet<>();
+
+        for (int i = 0; i < spaces.size(); i++) {
+            if (spaces.get(i) != 0) {
+                filteredAllocations.add(allocations.get(i));
+                filteredSpaces.add(spaces.get(i));
+            }
+        }
+        int six6 = shortfall[1];
+        int five6 = shortfall[0];
+        List<int[]> threes6 = new ArrayList<>();
+        Set<Integer> used6 = new HashSet<>(used5);
+        List<int[]> init = new ArrayList<>();
+
+        List<Object> trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five6, six6}, backupSize, used6);
+        if (((boolean) trial.get(4))) {
+            finalCombos = (List<int[]>) trial.get(0);
+            finalInit = (List<int[]>) trial.get(1);
+            finalUsed = (Set<Integer>) trial.get(3);
+            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+        }
+
+        int six9 = shortfall[1];
+        int five9 = shortfall[0];
+        List<int[]> threes9 = new ArrayList<>();
+        Set<Integer> used9 = new HashSet<>(used5);
+        List<int[]> init3 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six9 == 0) break;
+            if (used9.contains(i)) continue;
+            if (filteredSpaces.get(i) > 2) break;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used9.contains(j)) continue;
+                if (filteredSpaces.get(j) > 2) break;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used9.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 2) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used9.contains(i) && !used9.contains(j) && !used9.contains(k) &&
+                            allSum >= 6 &&
+                            allSum - minElem < 6 &&
+                            (six9 > 0)) {
+
+                        six9 -= 1;
+                        used9.add(i);
+                        used9.add(j);
+                        used9.add(k);
+                        threes9.add(new int[]{i + 1, k + 1, j + 1});
+                        init3.add(new int[]{0, 1});
+
+                        if (six9 == 0 && five9 == 0) {
+                            return Arrays.asList(threes9, init3, new int[]{0, 0}, used9, true);
+                        }
+
+                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five9, six9}, backupSize, used9);
+
+                        if (((boolean) trial.get(4))) {
+                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes9);
+                            finalInit = mergeLists((List<int[]>) trial.get(1), init3);
+                            finalUsed = (Set<Integer>) trial.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+                    }
+
+                }
+
+            }
+        }
+
+        int six10 = shortfall[1];
+        int five10 = shortfall[0];
+        List<int[]> threes10 = new ArrayList<>();
+        Set<Integer> used10 = new HashSet<>(used5);
+        List<int[]> init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six10 == 0 || five10 == 0) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 3) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (11) &&
+                            allSum - minElem < (11) &&
+                            (six10 > 0 && five10 > 0)) {
+
+                        six10 -= 1;
+                        five10 -= 1;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{1, 1});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 <= 1) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) < 4) continue;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) < 4) continue;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 4) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 12 &&
+                                            allSum1 - minElem1 < 12 &&
+                                            (six10 > 1)) {
+
+                                        six10 -= 2;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{0, 2});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six10 <= 1) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 4) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (12) &&
+                            allSum - minElem < (12) &&
+                            (six10 > 1)) {
+
+                        six10 -= 2;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{0, 2});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (five10 <= 1) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) < 2) continue;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) < 3) continue;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 4) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 10 &&
+                                            allSum1 - minElem1 < 10 &&
+                                            (five10 > 1)) {
+
+                                        five10 -= 2;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{2, 0});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (five10 <= 1) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 2) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 3) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (10) &&
+                            allSum - minElem < (10) &&
+                            (five10 > 1)) {
+
+                        five10 -= 2;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{2, 0});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (five10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    if (filteredSpaces.get(n) > 3) break;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 5 &&
+                                            allSum1 - minElem1 < 5 &&
+                                            (five10 > 0)) {
+
+                                        five10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{1, 0});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (five10 == 0) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) > 2) break;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) > 2) break;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) > 3) break;
+                    if (filteredSpaces.get(k) < 2) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (5) &&
+                            allSum - minElem < (5) &&
+                            (five10 > 0)) {
+
+                        five10 -= 1;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{1, 0});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 6 &&
+                                            allSum1 - minElem1 < 6 &&
+                                            (six10 > 0)) {
+
+                                        six10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{0, 1});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (five10 == 0 || six10 == 0) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 3) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (11) &&
+                            allSum - minElem < (11) &&
+                            (five10 > 0 && six10 > 0)) {
+
+                        five10 -= 1;
+                        six10 -= 1;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{1, 1});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (five10 <= 1) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) < 2) continue;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) < 3) continue;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 4) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 10 &&
+                                            allSum1 - minElem1 < 10 &&
+                                            (five10 > 1)) {
+
+                                        five10 -= 2;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{2, 0});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (five10 <= 1) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 2) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 3) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (10) &&
+                            allSum - minElem < (10) &&
+                            (five10 > 1)) {
+
+                        five10 -= 2;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{2, 0});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 6 &&
+                                            allSum1 - minElem1 < 6 &&
+                                            (six10 > 0)) {
+
+                                        six10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{0, 1});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six10 <= 1) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 4) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (12) &&
+                            allSum - minElem < (12) &&
+                            (six10 > 1)) {
+
+                        six10 -= 2;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{0, 2});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 6 &&
+                                            allSum1 - minElem1 < 6 &&
+                                            (six10 > 0)) {
+
+                                        six10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{0, 1});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six10 <= 1) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 4) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (12) &&
+                            allSum - minElem < (12) &&
+                            (six10 > 1)) {
+
+                        six10 -= 2;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{0, 2});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    if (filteredSpaces.get(n) > 3) break;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 5 &&
+                                            allSum1 - minElem1 < 5 &&
+                                            (five10 > 0)) {
+
+                                        five10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{1, 0});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        six10 = shortfall[1];
+        five10 = shortfall[0];
+        threes10 = new ArrayList<>();
+        used10 = new HashSet<>(used5);
+        init4 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 2; i--) {
+            if (six10 == 0 || five10 == 0) break;
+            if (used10.contains(i)) continue;
+            if (filteredSpaces.get(i) < 3) continue;
+            for (int j = i - 1; j >= 1; j--) {
+                if (used10.contains(j)) continue;
+                if (filteredSpaces.get(j) < 4) continue;
+                for (int k = j - 1; k >= 0; k--) {
+                    if (used10.contains(k)) continue;
+                    if (filteredSpaces.get(k) < 4) continue;
+                    int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j);
+                    int minElem = Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j));
+
+                    if (!used10.contains(i) && !used10.contains(j) && !used10.contains(k) &&
+                            allSum >= (11) &&
+                            allSum - minElem < (11) &&
+                            (six10 > 0 && five10 > 0)) {
+
+                        six10 -= 1;
+                        five10 -= 1;
+                        used10.add(i);
+                        used10.add(j);
+                        used10.add(k);
+                        threes10.add(new int[]{i + 1, k + 1, j + 1});
+                        init4.add(new int[]{1, 1});
+
+                        if (six10 == 0 && five10 == 0) {
+                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                        }
+                        List<Object> trial1 = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, 5, used10);
+
+                        if ((boolean) trial1.get(4)) {
+                            finalCombos = mergeLists((List<int[]>) trial1.get(0), threes10);
+                            finalInit = mergeLists((List<int[]>) trial1.get(1), init4);
+                            finalUsed = (Set<Integer>) trial1.get(3);
+                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                        }
+
+
+                        for (int l = filteredSpaces.size() - 1; l >= 2; l--) {
+                            if (six10 == 0) break;
+                            if (used10.contains(l)) continue;
+                            if (filteredSpaces.get(l) > 2) break;
+                            for (int m = l - 1; m >= 1; m--) {
+                                if (used10.contains(m)) continue;
+                                if (filteredSpaces.get(m) > 2) break;
+                                for (int n = m - 1; n >= 0; n--) {
+                                    if (used10.contains(n)) continue;
+                                    if (filteredSpaces.get(n) < 2) continue;
+                                    int allSum1 = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n);
+                                    int minElem1 = Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n));
+
+                                    if (!used10.contains(l) && !used10.contains(m) && !used10.contains(n) &&
+                                            allSum1 >= 6 &&
+                                            allSum1 - minElem1 < 6 &&
+                                            (six10 > 0)) {
+
+                                        six10 -= 1;
+                                        used10.add(l);
+                                        used10.add(m);
+                                        used10.add(n);
+                                        threes10.add(new int[]{l + 1, m + 1, n + 1});
+                                        init4.add(new int[]{0, 1});
+
+                                        if (six10 == 0 && five10 == 0) {
+                                            return Arrays.asList(threes10, init4, new int[]{0, 0}, used10, true);
+                                        }
+
+                                        trial = combineFlipped(filteredAllocations, filteredSpaces, new int[]{five10, six10}, backupSize, used10);
+
+                                        if (((boolean) trial.get(4))) {
+                                            finalCombos = mergeLists((List<int[]>) trial.get(0), threes10);
+                                            finalInit = mergeLists((List<int[]>) trial.get(1), init4);
+                                            finalUsed = (Set<Integer>) trial.get(3);
+                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return Arrays.asList(threes10, init4, new int[]{0, six10}, used10, false);
+
+    }
+
+    public static List<Object> fours(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5) {
+        if (used5 == null) {
+            used5 = new HashSet<>();
+        }
+
+        if (sum1(spaces) < backupSize * shortfall[0] + 6 * shortfall[1]) {
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used5, false);
+        }
+
+        List<int[]> filteredAllocations = new ArrayList<>();
+        List<Integer> filteredSpaces = new ArrayList<>();
+
+        List<int[]> finalCombos = new ArrayList<>();
+        List<int[]> finalInit = new ArrayList<>();
+        Set<Integer> finalUsed = new HashSet<>();
+
+        for (int i = 0; i < spaces.size(); i++) {
+            if (spaces.get(i) != 0) {
+                filteredAllocations.add(allocations.get(i));
+                filteredSpaces.add(spaces.get(i));
+            }
+        }
+        int six6 = shortfall[1];
+        int five6=shortfall[0];
+        List<int[]> fours6 = new ArrayList<>();
+        Set<Integer> used6 = new HashSet<>(used5);
+        List<int[]> init = new ArrayList<>();
+
+        List<Object> trial = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, backupSize, used6);
+        if (((boolean) trial.get(4))) {
+            finalCombos = (List<int[]>) trial.get(0);
+            finalInit = (List<int[]>) trial.get(1);
+            finalUsed = (Set<Integer>) trial.get(3);
+            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+        }
+
+
+        for (int l = filteredSpaces.size() - 1; l >= 3; l--) {
+            if (five6 <= 2) break;
+            if (used6.contains(l)) continue;
+            if (filteredSpaces.get(l)<3) continue;
+            for (int m = l - 1; m >= 2; m--) {
+                if (used6.contains(m)) continue;
+                if (filteredSpaces.get(m)<4) continue;
+                for (int n = m - 1; n >= 1; n--) {
+                    if (used6.contains(n)) continue;
+                    if (filteredSpaces.get(n)<4) continue;
+                    for (int p = n - 1; p >= 0; p--) {
+                        if (used6.contains(p)) continue;
+                        if (filteredSpaces.get(p) < 4) continue;
+
+                        int allSum = filteredSpaces.get(m) + filteredSpaces.get(n) + filteredSpaces.get(l) + filteredSpaces.get(p);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n)), filteredSpaces.get(p));
+
+                        if (!used6.contains(l) && !used6.contains(m) && !used6.contains(n) && !used6.contains(p) &&
+                                allSum >= (15) &&
+                                allSum - minElem < (15) &&
+                                (five6 > 2)) {
+
+                            five6 -= 3;
+                            used6.add(l);
+                            used6.add(m);
+                            used6.add(n);
+                            used6.add(p);
+                            fours6.add(new int[]{l + 1, m + 1, n + 1, p + 1});
+                            init.add(new int[]{3, 0});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        six6 = shortfall[1];
+        five6=shortfall[0];
+        fours6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 3; i--) {
+            if (six6 == 0 ||five6<=1) break;
+            if (used6.contains(i)) continue;
+            if (filteredSpaces.get(i)<4) continue;
+            for (int j = i - 1; j >= 2; j--) {
+                if (used6.contains(j)) continue;
+                if (filteredSpaces.get(j)<4) continue;
+                for (int k = j - 1; k >= 1; k--) {
+                    if (used6.contains(k)) continue;
+                    if (filteredSpaces.get(k)<4) continue;
+                    for (int o = k - 1; o >= 0; o--) {
+                        if (used6.contains(o)) continue;
+                        if (filteredSpaces.get(o) < 4) continue;
+
+                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
+
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
+                                allSum >= (16) &&
+                                allSum - minElem < (16) &&
+                                (six6 > 0 && five6>1)) {
+
+                            six6 -= 1;
+                            five6-=2;
+                            used6.add(i);
+                            used6.add(j);
+                            used6.add(k);
+                            used6.add(o);
+                            fours6.add(new int[]{i + 1, k + 1, j + 1, o + 1});
+                            init.add(new int[]{2, 1});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                            for (int l = filteredSpaces.size() - 1; l >= 3; l--) {
+                                if (five6 <= 2) break;
+                                if (used6.contains(l)) continue;
+                                if (filteredSpaces.get(l)<3) continue;
+                                for (int m = l - 1; m >= 2; m--) {
+                                    if (used6.contains(m)) continue;
+                                    if (filteredSpaces.get(m)<4) continue;
+                                    for (int n = m - 1; n >= 1; n--) {
+                                        if (used6.contains(n)) continue;
+                                        if (filteredSpaces.get(n)<4) continue;
+                                        for (int p = n - 1; p >= 0; p--) {
+                                            if (used6.contains(p)) continue;
+                                            if (filteredSpaces.get(p) < 4) continue;
+
+                                            allSum = filteredSpaces.get(m) + filteredSpaces.get(n) + filteredSpaces.get(l) + filteredSpaces.get(p);
+
+                                            minElem = Math.min(Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n)), filteredSpaces.get(p));
+
+                                            if (!used6.contains(l) && !used6.contains(m) && !used6.contains(n) && !used6.contains(p) &&
+                                                    allSum >= (15) &&
+                                                    allSum - minElem < (15) &&
+                                                    (five6 > 2)) {
+
+                                                five6 -= 3;
+                                                used6.add(l);
+                                                used6.add(m);
+                                                used6.add(n);
+                                                used6.add(p);
+                                                fours6.add(new int[]{l + 1, m + 1, n + 1, p + 1});
+                                                init.add(new int[]{3, 0});
+
+                                                if (six6 == 0 && five6==0) {
+                                                    return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                                                }
+                                                trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                                                if ((boolean) trial1.get(4)) {
+                                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        six6 = shortfall[1];
+        five6=shortfall[0];
+        fours6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int l = filteredSpaces.size() - 1; l >= 3; l--) {
+            if (five6 ==0) break;
+            if (used6.contains(l)) continue;
+            if (filteredSpaces.get(l)>1) break;
+            for (int m = l - 1; m >= 2; m--) {
+                if (used6.contains(m)) continue;
+                if (filteredSpaces.get(m)>1) break;
+                for (int n = m - 1; n >= 1; n--) {
+                    if (used6.contains(n)) continue;
+                    if (filteredSpaces.get(n)>1) break;
+                    for (int p = n - 1; p >= 0; p--) {
+                        if (used6.contains(p)) continue;
+                        if (filteredSpaces.get(p) >2) break;
+                        if (filteredSpaces.get(p) <2) continue;
+
+                        int allSum = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n) + filteredSpaces.get(p);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n)), filteredSpaces.get(p));
+
+                        if (!used6.contains(l) && !used6.contains(m) && !used6.contains(n) && !used6.contains(p) &&
+                                allSum >= (5) &&
+                                allSum - minElem < (5) &&
+                                (five6 > 0)) {
+
+                            five6 -= 1;
+                            used6.add(l);
+                            used6.add(m);
+                            used6.add(n);
+                            used6.add(p);
+                            fours6.add(new int[]{l + 1, m + 1, n + 1, p + 1});
+                            init.add(new int[]{1, 0});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        six6 = shortfall[1];
+        five6=shortfall[0];
+        fours6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 3; i--) {
+            if (six6 == 0) break;
+            if (used6.contains(i)) continue;
+            if (filteredSpaces.get(i)>1) break;
+            for (int j = i - 1; j >= 2; j--) {
+                if (used6.contains(j)) continue;
+                if (filteredSpaces.get(j)>1) break;
+                for (int k = j - 1; k >= 1; k--) {
+                    if (used6.contains(k)) continue;
+                    if (filteredSpaces.get(k)>2) break;
+                    for (int o = k - 1; o >= 0; o--) {
+                        if (used6.contains(o)) continue;
+                        if (filteredSpaces.get(o) < 2) continue;
+                        if (filteredSpaces.get(k)>3) break;
+
+                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
+
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
+                                allSum >= (6) &&
+                                allSum - minElem < (6) &&
+                                (six6 > 0)) {
+
+                            six6 -= 1;
+                            used6.add(i);
+                            used6.add(j);
+                            used6.add(k);
+                            used6.add(o);
+                            fours6.add(new int[]{i + 1, k + 1, j + 1, o + 1});
+                            init.add(new int[]{0, 1});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                            for (int l = filteredSpaces.size() - 1; l >= 3; l--) {
+                                if (five6 ==0) break;
+                                if (used6.contains(l)) continue;
+                                if (filteredSpaces.get(l)>1) break;
+                                for (int m = l - 1; m >= 2; m--) {
+                                    if (used6.contains(m)) continue;
+                                    if (filteredSpaces.get(m)>1) break;
+                                    for (int n = m - 1; n >= 1; n--) {
+                                        if (used6.contains(n)) continue;
+                                        if (filteredSpaces.get(n)>1) break;
+                                        for (int p = n - 1; p >= 0; p--) {
+                                            if (used6.contains(p)) continue;
+                                            if (filteredSpaces.get(p) >2) break;
+                                            if (filteredSpaces.get(p) <2) continue;
+
+                                            allSum = filteredSpaces.get(l) + filteredSpaces.get(m) + filteredSpaces.get(n) + filteredSpaces.get(p);
+
+                                            minElem = Math.min(Math.min(Math.min(filteredSpaces.get(l), filteredSpaces.get(m)), filteredSpaces.get(n)), filteredSpaces.get(p));
+
+                                            if (!used6.contains(l) && !used6.contains(m) && !used6.contains(n) && !used6.contains(p) &&
+                                                    allSum >= (5) &&
+                                                    allSum - minElem < (5) &&
+                                                    (five6 > 0)) {
+
+                                                five6 -= 1;
+                                                used6.add(l);
+                                                used6.add(m);
+                                                used6.add(n);
+                                                used6.add(p);
+                                                fours6.add(new int[]{l + 1, m + 1, n + 1, p + 1});
+                                                init.add(new int[]{1, 0});
+
+                                                if (six6 == 0 && five6==0) {
+                                                    return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                                                }
+                                                trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                                                if ((boolean) trial1.get(4)) {
+                                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                                }
+
+                                            }
+                                        }
+                                    }
+                                }
+
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        six6 = shortfall[1];
+        five6=shortfall[0];
+        fours6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 3; i--) {
+            if (six6 <= 1) break;
+            if (used6.contains(i)) continue;
+            if (filteredSpaces.get(i)>1) break;
+            for (int j = i - 1; j >= 2; j--) {
+                if (used6.contains(j)) continue;
+                if (filteredSpaces.get(j)<2) continue;
+                if (filteredSpaces.get(j)>3) break;
+                for (int k = j - 1; k >= 1; k--) {
+                    if (used6.contains(k)) continue;
+                    if (filteredSpaces.get(k)<3) continue;
+                    for (int o = k - 1; o >= 0; o--) {
+                        if (used6.contains(o)) continue;
+                        if (filteredSpaces.get(o) < 3) continue;
+
+                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
+
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
+                                allSum >= (12) &&
+                                allSum - minElem < (12) &&
+                                (six6 > 1)) {
+
+                            six6 -= 2;
+                            used6.add(i);
+                            used6.add(j);
+                            used6.add(k);
+                            used6.add(o);
+                            fours6.add(new int[]{i + 1, k + 1, j + 1, o + 1});
+                            init.add(new int[]{0, 2});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        six6 = shortfall[1];
+        fours6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 3; i--) {
+            if (five6 <= 1) break;
+            if (used6.contains(i)) continue;
+            if (filteredSpaces.get(i)>2) break;
+            if (filteredSpaces.get(i)<2) continue;
+            for (int j = i - 1; j >= 2; j--) {
+                if (used6.contains(j)) continue;
+                if (filteredSpaces.get(j)<2) continue;
+                if (filteredSpaces.get(j)>2) break;
+                for (int k = j - 1; k >= 1; k--) {
+                    if (used6.contains(k)) continue;
+                    if (filteredSpaces.get(k)<2) continue;
+                    if (filteredSpaces.get(k)>2) break;
+                    for (int o = k - 1; o >= 0; o--) {
+                        if (used6.contains(o)) continue;
+                        if (filteredSpaces.get(o) < 4) continue;
+
+                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
+
+                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
+
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
+                                allSum >= (10) &&
+                                allSum - minElem < (10) &&
+                                (five6 > 1)) {
+
+                            five6 -= 2;
+                            used6.add(i);
+                            used6.add(j);
+                            used6.add(k);
+                            used6.add(o);
+                            fours6.add(new int[]{i + 1, k + 1, j + 1, o + 1});
+                            init.add(new int[]{2, 0});
+
+                            if (six6 == 0 && five6==0) {
+                                return Arrays.asList(fours6, init, new int[]{0, 0}, used6, true);
+                            }
+                            List<Object> trial1 = threes(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                            if ((boolean) trial1.get(4)) {
+                                finalCombos = mergeLists((List<int[]>) trial1.get(0), fours6);
+                                finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                finalUsed = (Set<Integer>) trial1.get(3);
+                                return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                            }
+
+                        }
+                    }
+                }
+            }
+
+        }
+
+        return Arrays.asList(fours6, init, new int[]{five6, six6}, used6, false);
+    }
+
+    public static List<Object> fives(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5) {
+        if (used5 == null) {
+            used5 = new HashSet<>();
+        }
+
+        if (sum1(spaces) < backupSize * shortfall[0] + 6 * shortfall[1]) {
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used5, false);
+        }
+
+        List<int[]> filteredAllocations = new ArrayList<>();
+        List<Integer> filteredSpaces = new ArrayList<>();
+
+        List<int[]> finalCombos = new ArrayList<>();
+        List<int[]> finalInit = new ArrayList<>();
+        Set<Integer> finalUsed = new HashSet<>();
+
+        for (int i = 0; i < spaces.size(); i++) {
+            if (spaces.get(i) != 0) {
+                filteredAllocations.add(allocations.get(i));
+                filteredSpaces.add(spaces.get(i));
+            }
+        }
+        int six6 = shortfall[1];
+        int five6 = shortfall[0];
+        List<int[]> fives6 = new ArrayList<>();
+        Set<Integer> used6 = new HashSet<>(used5);
+        List<int[]> init = new ArrayList<>();
+
+        List<Object> trial = fours(filteredAllocations, filteredSpaces, new int[]{five6, six6}, backupSize, used6);
+        if (((boolean) trial.get(4))) {
+            finalCombos = (List<int[]>) trial.get(0);
+            finalInit = (List<int[]>) trial.get(1);
+            finalUsed = (Set<Integer>) trial.get(3);
+            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+        }
+
+        int six9 = shortfall[1];
+        int five9= shortfall[0];
+        List<int[]> fives9 = new ArrayList<>();
+        Set<Integer> used9 = new HashSet<>(used5);
+        List<int[]> init3 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 4; i--) {
+            if (six9 == 0) break;
+            if (used9.contains(i)) continue;
+            if (filteredSpaces.get(i)>1) break;
+            for (int j = i - 1; j >= 3; j--) {
+                if (used9.contains(j)) continue;
+                if (filteredSpaces.get(j)>1) break;
+                for (int k = j - 1; k >= 2; k--) {
+                    if (used9.contains(k)) continue;
+                    if (filteredSpaces.get(k)>1) break;
+                    for (int o = k - 1; o >= 1; o--) {
+                        if (used9.contains(o)) continue;
+                        if (filteredSpaces.get(o)>1) break;
+                        for (int q = o - 1; q >= 0; q--) {
+                            if (used9.contains(q)) continue;
+                            if (filteredSpaces.get(q)>2) break;
+                            if (filteredSpaces.get(q)<2) continue;
+
+                            int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o) + filteredSpaces.get(q);
+                            int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o)), filteredSpaces.get(q));
+
+                            if (!used9.contains(i) && !used9.contains(j) && !used9.contains(k) && !used9.contains(o) && !used9.contains(q) &&
+                                    allSum >= (6) &&
+                                    allSum - minElem < (6) &&
+                                    (six9 > 0)) {
+
+                                six9 -= 1;
+                                used9.add(i);
+                                used9.add(j);
+                                used9.add(k);
+                                used9.add(o);
+                                used9.add(q);
+                                fives9.add(new int[]{i + 1, k + 1, j + 1, o + 1, q+1});
+                                init3.add(new int[]{0, 1});
+
+                                if (six9 == 0 && five9==0) {
+                                    return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
+                                }
+
+                                List<Object> trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                if ((boolean) trial1.get(4)) {
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fives9);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                }
+
+                                for (int a = filteredSpaces.size() - 1; a >= 4; a--) {
+                                    if (five9 == 0) break;
+                                    if (used9.contains(a)) continue;
+                                    if (filteredSpaces.get(a)>1) break;
+                                    for (int b = a - 1; b >= 3; b--) {
+                                        if (used9.contains(b)) continue;
+                                        if (filteredSpaces.get(b)>1) break;
+                                        for (int c = b - 1; c >= 2; c--) {
+                                            if (used9.contains(c)) continue;
+                                            if (filteredSpaces.get(c)>1) break;
+                                            for (int d = c - 1; d >= 1; d--) {
+                                                if (used9.contains(d)) continue;
+                                                if (filteredSpaces.get(d)>1) break;
+                                                for (int e = d - 1; e >= 0; e--) {
+                                                    if (used9.contains(e)) continue;
+                                                    if (filteredSpaces.get(e)>1) break;
+
+                                                    allSum = filteredSpaces.get(a) + filteredSpaces.get(b) + filteredSpaces.get(c) + filteredSpaces.get(d) + filteredSpaces.get(e);
+                                                    minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(a), filteredSpaces.get(b)), filteredSpaces.get(c)), filteredSpaces.get(d)), filteredSpaces.get(e));
+
+                                                    if (!used9.contains(a) && !used9.contains(b) && !used9.contains(c) && !used9.contains(d) && !used9.contains(e) &&
+                                                            allSum >= (5) &&
+                                                            allSum - minElem < (5) &&
+                                                            (five9 > 0)) {
+
+                                                        five9 -= 1;
+                                                        used9.add(a);
+                                                        used9.add(b);
+                                                        used9.add(c);
+                                                        used9.add(d);
+                                                        used9.add(e);
+                                                        fives9.add(new int[]{a + 1, b + 1, c + 1, d + 1, e+1});
+                                                        init3.add(new int[]{1, 0});
+
+                                                        if (six9 == 0 && five9==0) {
+                                                            return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
+                                                        }
+
+                                                        trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                                        if ((boolean) trial1.get(4)) {
+                                                            finalCombos = mergeLists((List<int[]>) trial1.get(0), fives9);
+                                                            finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                                            finalUsed = (Set<Integer>) trial1.get(3);
+                                                            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                                        }
+
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+
+
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        six9 = shortfall[1];
+        five9= shortfall[0];
+        fives9 = new ArrayList<>();
+        used9 = new HashSet<>(used5);
+        init3 = new ArrayList<>();
+
+
+        for (int a = filteredSpaces.size() - 1; a >= 4; a--) {
+            if (five9 == 0) break;
+            if (used9.contains(a)) continue;
+            if (filteredSpaces.get(a)>1) break;
+            for (int b = a - 1; b >= 3; b--) {
+                if (used9.contains(b)) continue;
+                if (filteredSpaces.get(b)>1) break;
+                for (int c = b - 1; c >= 2; c--) {
+                    if (used9.contains(c)) continue;
+                    if (filteredSpaces.get(c)>1) break;
+                    for (int d = c - 1; d >= 1; d--) {
+                        if (used9.contains(d)) continue;
+                        if (filteredSpaces.get(d)>1) break;
+                        for (int e = d - 1; e >= 0; e--) {
+                            if (used9.contains(e)) continue;
+                            if (filteredSpaces.get(e)>1) break;
+
+                            int allSum = filteredSpaces.get(a) + filteredSpaces.get(b) + filteredSpaces.get(c) + filteredSpaces.get(d) + filteredSpaces.get(e);
+                            int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(a), filteredSpaces.get(b)), filteredSpaces.get(c)), filteredSpaces.get(d)), filteredSpaces.get(e));
+
+                            if (!used9.contains(a) && !used9.contains(b) && !used9.contains(c) && !used9.contains(d) && !used9.contains(e) &&
+                                    allSum >= (5) &&
+                                    allSum - minElem < (5) &&
+                                    (five9 > 0)) {
+
+                                five9 -= 1;
+                                used9.add(a);
+                                used9.add(b);
+                                used9.add(c);
+                                used9.add(d);
+                                used9.add(e);
+                                fives9.add(new int[]{a + 1, b + 1, c + 1, d + 1, e+1});
+                                init3.add(new int[]{1, 0});
+
+                                if (six9 == 0 && five9==0) {
+                                    return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
+                                }
+
+                                List<Object> trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                if ((boolean) trial1.get(4)) {
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fives9);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+
+        six6 = shortfall[1];
+        five6 = shortfall[0];
+        fives6 = new ArrayList<>();
+        used6 = new HashSet<>(used5);
+        init = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 4; i--) {
+            if (five6 <= 3) break;
+            if (used6.contains(i)) continue;
+            if (filteredSpaces.get(i)<4) continue;
+            for (int j = i - 1; j >= 3; j--) {
+                if (used6.contains(j)) continue;
+                if (filteredSpaces.get(j)<4) continue;
+                for (int k = j - 1; k >= 2; k--) {
+                    if (used6.contains(k)) continue;
+                    if (filteredSpaces.get(k)<4) continue;
+                    for (int o = k - 1; o >= 1; o--) {
+                        if (used6.contains(o)) continue;
+                        if (filteredSpaces.get(o)<4) continue;
+                        for (int q = o - 1; q >= 0; q--) {
+                            if (used6.contains(q)) continue;
+                            if (filteredSpaces.get(q)<4) continue;
+
+                            int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o) + filteredSpaces.get(q);
+                            int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o)), filteredSpaces.get(q));
+
+                            if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) && !used6.contains(q) &&
+                                    allSum >= (20) &&
+                                    allSum - minElem < (20) &&
+                                    (five6 > 3)) {
+
+                                five6 -= 4;
+                                used6.add(i);
+                                used6.add(j);
+                                used6.add(k);
+                                used6.add(o);
+                                used6.add(q);
+                                fives6.add(new int[]{i + 1, k + 1, j + 1, o + 1, q + 1});
+                                init.add(new int[]{4, 0});
+
+                                if (six6 == 0 && five6==0) {
+                                    return Arrays.asList(fives6, init, new int[]{0, 0}, used6, true);
+                                }
+                                List<Object> trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five6, six6}, 5, used6);
+
+                                if ((boolean) trial1.get(4)) {
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fives6);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init);
+                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+        }
+
+        return Arrays.asList(fives6, init, new int[]{five6, six6}, used6, false);
+    }
+
+    public static List<Object> sixes(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5) {
+        if (used5 == null) {
+            used5 = new HashSet<>();
+        }
+
+        if (sum1(spaces) < backupSize * shortfall[0] + 6 * shortfall[1]) {
+            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used5, false);
+        }
+
+        List<int[]> filteredAllocations = new ArrayList<>();
+        List<Integer> filteredSpaces = new ArrayList<>();
+
+        List<int[]> finalCombos = new ArrayList<>();
+        List<int[]> finalInit = new ArrayList<>();
+        Set<Integer> finalUsed = new HashSet<>();
+
+        for (int i = 0; i < spaces.size(); i++) {
+            if (spaces.get(i) != 0) {
+                filteredAllocations.add(allocations.get(i));
+                filteredSpaces.add(spaces.get(i));
+            }
+        }
+        int six6 = shortfall[1];
+        int five6= shortfall[0];
+        List<int[]> sixes6 = new ArrayList<>();
+        Set<Integer> used6 = new HashSet<>(used5);
+        List<int[]> init = new ArrayList<>();
+
+        List<Object> trial = fives(filteredAllocations, filteredSpaces, new int[]{five6, six6}, backupSize, used6);
+        if (((boolean) trial.get(4))) {
+            finalCombos = (List<int[]>) trial.get(0);
+            finalInit = (List<int[]>) trial.get(1);
+            finalUsed = (Set<Integer>) trial.get(3);
+            return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+        }
+
+
+        int six9 = shortfall[1];
+        int five9= shortfall[0];
+        List<int[]> sixes9 = new ArrayList<>();
+        Set<Integer> used9 = new HashSet<>(used5);
+        List<int[]> init3 = new ArrayList<>();
+
+        for (int i = filteredSpaces.size() - 1; i >= 5; i--) {
+            if (six9 == 0) break;
+            if (filteredSpaces.get(i)>1) break;
+            if (used9.contains(i)) continue;
+            for (int j = i - 1; j >= 4; j--) {
+                if (filteredSpaces.get(j)>1) break;
+                if (used9.contains(j)) continue;
+                for (int k = j - 1; k >= 3; k--) {
+                    if (filteredSpaces.get(k)>1) break;
+                    if (used9.contains(k)) continue;
+                    for (int o = k - 1; o >= 2; o--) {
+                        if (filteredSpaces.get(o)>1) break;
+                        if (used9.contains(o)) continue;
+                        for (int q = o - 1; q >= 1; q--) {
+                            if (filteredSpaces.get(q)>1) break;
+                            if (used9.contains(q)) continue;
+                            for (int s = q - 1; s >= 0; s--) {
+                                if (filteredSpaces.get(s)>1) break;
+                                if (used9.contains(s)) continue;
+
+                                int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o) + filteredSpaces.get(q) + filteredSpaces.get(s);
+                                int minElem = Math.min(Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o)), filteredSpaces.get(q)), filteredSpaces.get(s));
+
+                                if (!used9.contains(i) && !used9.contains(j) && !used9.contains(k) && !used9.contains(o) && !used9.contains(q) && !used9.contains(s) &&
+                                        allSum >= (6) &&
+                                        allSum - minElem < (6) &&
+                                        (six9 > 0)) {
+
+                                    six9 -= 1;
+                                    used9.add(i);
+                                    used9.add(j);
+                                    used9.add(k);
+                                    used9.add(o);
+                                    used9.add(q);
+                                    used9.add(s);
+                                    sixes9.add(new int[]{i + 1, k + 1, j + 1, o + 1, q + 1, s +1});
+                                    init3.add(new int[]{0, 1});
+
+                                    if (six9 == 0 && five9==0) {
+                                        return Arrays.asList(sixes9, init3, new int[]{0, 0}, used9, true);
+                                    }
+
+                                    List<Object> trial1 = fives(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                    if ((boolean) trial1.get(4)) {
+                                        finalCombos = mergeLists((List<int[]>) trial1.get(0), sixes9);
+                                        finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                        finalUsed = (Set<Integer>) trial1.get(3);
+                                        return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                    }
+
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new int[]{five9, six9}, used9, false);
+    }
+
     public static List<List<Object>> optimize(List<List<Integer>> sortedAllocations, List<int[]> allocations, int backupSize, List<List<Integer>> outCombos, List<Integer> spaces) {
         List<List<Integer>> combos = new ArrayList<>();
         for (List<Integer> item : outCombos) {

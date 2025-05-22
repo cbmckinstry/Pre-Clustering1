@@ -71,7 +71,7 @@ def call_combine(allocations, spaces, shortfall, backup_size, used):
     backup_size = int(backup_size)
 
     combine = gateway.entry_point
-    java_result = combine.combine( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
+    java_result = combine.sixes( java_allocations, java_spaces,java_shortfall, backup_size, java_used)
 
     def java_list_to_python(java_list):
         return [list(item) if hasattr(item, '__iter__') else item for item in java_list]
