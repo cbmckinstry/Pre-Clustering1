@@ -64,9 +64,10 @@ def index():
                     combos1.append([elem])
                     listing1.append([0,0])
                 combos2,newalloc=call_optimize(sorted_allocations.copy(),listing1,backupsize,combos1,sorted_spaces)
-                combos=combos2
-                listing=newalloc
-            combos,listing=cleanup(combos,sorted_spaces,listing)
+                combos3=combos2
+                listing3=newalloc
+            combos,listing=cleanup(combos3,sorted_spaces,listing3)
+
             damage=harm(combos.copy(),sorted_allocations.copy())
             totalhelp=combosSum(combos.copy(),sorted_allocations.copy(),off.copy())
 

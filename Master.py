@@ -252,7 +252,10 @@ def cleanup(combos, remaining, init):
                 used.add(j)
                 final.extend(trial[0])
                 final_init.extend(trial[1])
-
+    for p in range(len(just3)):
+        if p not in used:
+            final.append(just3[p])
+            final_init.append(init[p])
     for e in range(len(final)):
         for f in range(len(final[e])):
             final[e][f]+=1
