@@ -58,6 +58,8 @@ def index():
                 combos,listing=call_combine(sorted_allocations,sorted_spaces,off.copy(),backupsize,None)
             listing1=listing.copy()
             combos1=combos.copy()
+            combos3=combos1.copy()
+            listing3=listing1.copy()
             rem_vehs1=unused(sorted_allocations.copy(),combos.copy())
             if combos:
                 for elem in rem_vehs1:
