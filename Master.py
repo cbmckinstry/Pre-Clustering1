@@ -176,3 +176,84 @@ def restore_order(original, shuffled, list_of_lists, list_of_ints):
     restored_list_of_ints = [list_of_ints[i] for i in sorted_indices]
 
     return restored_shuffled, restored_list_of_lists, restored_list_of_ints
+
+def can_do(combo1, combo2, remaining, init1, init2):
+    trials = []
+    indices = []
+
+    for a in range(len(combo1)):
+        for b in range(len(combo1)):
+            if b == a:
+                continue
+            for c in range(len(combo1)):
+                if c == a or c == b:
+                    continue
+
+                triple = [
+                    [remaining[combo1[a]], remaining[combo2[0]]],
+                    [remaining[combo1[b]], remaining[combo2[1]]],
+                    [remaining[combo1[c]], remaining[combo2[2]]]
+                ]
+                index_set = [
+                    [combo1[a], combo2[0]],
+                    [combo1[b], combo2[1]],
+                    [combo1[c], combo2[2]]
+                ]
+
+                trials.append(triple)
+                indices.append(index_set)
+
+    summed_trials = [[sum(pair) for pair in trial] for trial in trials]
+
+    sorted_summed = []
+    sorted_indices = []
+    for sums, ids in zip(summed_trials, indices):
+        paired = sorted(zip(sums, ids))
+        nums_sorted, ids_sorted = zip(*paired)
+        sorted_summed.append(list(nums_sorted))
+        sorted_indices.append(list(ids_sorted))
+
+    num_fives = init1[0] + init2[0]
+    num_sixes = init1[1] + init2[1]
+    required = [5] * num_fives + [6] * num_sixes
+
+    for i in range(len(sorted_summed)):
+        if all(sorted_summed[i][j] >= required[j] for j in range(3)):
+            result_init = [[1, 0] if x == 5 else [0, 1] for x in required]
+            return [sorted_indices[i], result_init]
+
+    return None
+
+
+def cleanup(combos, remaining, init):
+    final = []
+    final_init = []
+    just3 = []
+    init3 = []
+    used = set()
+    for e in range(len(combos)):
+        for f in range(len(combos[e])):
+            combos[e][f]-=1
+    for i in range(len(combos)):
+        if len(combos[i]) == 3:
+            just3.append(combos[i])
+            init3.append(init[i])
+        else:
+            final.append(combos[i])
+            final_init.append(init[i])
+
+    for i in range(len(just3) - 1):
+        for j in range(i + 1, len(just3)):
+            if i in used or j in used:
+                continue
+            trial = can_do(just3[i], just3[j], remaining, init3[i], init3[j])
+            if trial is not None:
+                used.add(i)
+                used.add(j)
+                final.extend(trial[0])
+                final_init.extend(trial[1])
+
+    for e in range(len(final)):
+        for f in range(len(final[e])):
+            final[e][f]+=1
+    return final, final_init
