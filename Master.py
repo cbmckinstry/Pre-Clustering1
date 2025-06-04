@@ -188,6 +188,8 @@ def can_do(combo1, combo2, remaining, init1, init2):
             for c in range(len(combo1)):
                 if c == a or c == b:
                     continue
+                if sum(init1)+sum(init2)!=3:
+                    continue
 
                 triple = [
                     [remaining[combo1[a]], remaining[combo2[0]]],
@@ -243,11 +245,13 @@ def cleanup(combos, remaining, init):
             final_init.append(init[i])
 
     for i in range(len(just3) - 1):
+        if i in used:
+            continue
         for j in range(i + 1, len(just3)):
-            if i in used or j in used:
+            if j in used:
                 continue
             trial = can_do(just3[i], just3[j], remaining, init3[i], init3[j])
-            if trial is not None:
+            if trial is not None and i not in used and j not in used:
                 used.add(i)
                 used.add(j)
                 final.extend(trial[0])
@@ -255,7 +259,7 @@ def cleanup(combos, remaining, init):
     for p in range(len(just3)):
         if p not in used:
             final.append(just3[p])
-            final_init.append(init[p])
+            final_init.append(init3[p])
     for e in range(len(final)):
         for f in range(len(final[e])):
             final[e][f]+=1
