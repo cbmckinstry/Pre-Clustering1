@@ -22,7 +22,8 @@ Session(app)
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    print(f"IP logged: {user_ip}")
+    if str(user_ip)!='116.203.134.67':
+        print(f"IP logged: {user_ip}")
     if request.method == "POST":
         try:
             # Input parsing and validation
