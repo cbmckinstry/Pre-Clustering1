@@ -56,7 +56,8 @@ def requires_auth(f):
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    if str(user_ip) not in ['116.203.134.67','35.230.45.39','34.82.242.193','127.0.0.1']:
+    ua = request.headers.get("User-Agent", "")
+    if str(user_ip) not in ['116.203.134.67','127.0.0.1'] and "GoogleHC" not in ua:
         visits = load_visits()
         now = datetime.now(timezone.utc)
         date = now.strftime("%Y-%m-%d")
