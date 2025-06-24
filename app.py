@@ -216,16 +216,6 @@ def index():
         len=len,
     )
 
-@app.route("/visits")
-@requires_auth
-def visits():
-    try:
-        with open("/tmp/secret_visits.json", "r") as f:
-            contents = f.read()
-            return f"<h1>Visit Log:</h1><pre>{contents}</pre>"
-    except FileNotFoundError:
-        return "No visits file found at /tmp/secret_visits.json", 404
-
 @app.route("/matrices", methods=["POST"])
 def matrices():
     try:
@@ -357,6 +347,51 @@ def ranges():
         enumerate=enumerate,
         len=len,
     )
+
+@app.route("/visits")
+@requires_auth
+def visits():
+    try:
+        with open("/tmp/secret_visits.json", "r") as f:
+            visits = json.load(f)
+    except FileNotFoundError:
+        return "<h2>No visit data found.</h2>", 404
+
+    # Build HTML table
+    html = """
+    <html>
+    <head>
+        <title>Visit Log</title>
+        <style>
+            body { font-family: Arial, sans-serif; margin: 2rem; }
+            table { border-collapse: collapse; width: 100%; }
+            th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
+            th { background-color: #f2f2f2; }
+            tr:hover { background-color: #f9f9f9; }
+        </style>
+    </head>
+    <body>
+        <h1>Visit Log</h1>
+        <table>
+            <thead>
+                <tr><th>IP Address</th><th>Date</th><th>Visit Count</th></tr>
+            </thead>
+            <tbody>
+    """
+
+    for ip, dates in visits.items():
+        for date, count in dates.items():
+            html += f"<tr><td>{ip}</td><td>{date}</td><td>{count}</td></tr>"
+
+    html += """
+            </tbody>
+        </table>
+    </body>
+    </html>
+    """
+
+    return html
+
 
 if __name__ == "__main__":
     app.run(debug=True)
