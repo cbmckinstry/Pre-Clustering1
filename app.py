@@ -1,17 +1,14 @@
-from flask import Flask, render_template, request, session, Response
+from flask import Flask, render_template, request, session
 from flask_session import Session
 from Master import *
 import os
 import redis
-import json
-from datetime import datetime,timezone
+
 
 app = Flask(__name__)
 
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
-
-SECRET_FILE = "/tmp/secret_visits.json"
 
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
@@ -21,37 +18,6 @@ app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL"))
 
 Session(app)
 
-def load_visits():
-    if os.path.exists(SECRET_FILE):
-        with open(SECRET_FILE, "r") as f:
-            return json.load(f)
-    return {}
-
-def save_visits(data):
-    with open(SECRET_FILE, "w") as f:
-        json.dump(data, f, indent=2)
-
-def check_auth(username, password):
-    return (
-            username == os.environ.get("USER")
-            and password == os.environ.get("PASS")
-    )
-
-def authenticate():
-    return Response(
-        "Access denied. Set correct username and password.\n",
-        401,
-        {"WWW-Authenticate": 'Basic realm="Login Required"'},
-    )
-
-def requires_auth(f):
-    def decorated(*args, **kwargs):
-        auth = request.authorization
-        if not auth or not check_auth(auth.username, auth.password):
-            return authenticate()
-        return f(*args, **kwargs)
-    decorated.__name__ = f.__name__
-    return decorated
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -63,13 +29,7 @@ def index():
         or user_agent.strip() == ""
 )
     if str(user_ip) != '127.0.0.1' and not is_bot:
-        visits = load_visits()
-        now = datetime.now(timezone.utc)
-        date = now.strftime("%Y-%m-%d")
-        time = now.strftime("%H:%M:%S")
-        visits.setdefault(user_ip, {}).setdefault(date, []).append(time)
-
-        save_visits(visits)
+        print(user_ip)
     if request.method == "POST":
         try:
             # Input parsing and validation
@@ -352,49 +312,6 @@ def ranges():
         enumerate=enumerate,
         len=len,
     )
-
-@app.route("/visits")
-@requires_auth
-def visits():
-    try:
-        with open(SECRET_FILE, "r") as f:
-            visits = json.load(f)
-    except FileNotFoundError:
-        return "<h2>No visit data found.</h2>", 404
-
-    html = """
-    <html>
-    <head>
-        <title>Visit Log</title>
-        <style>
-            body { font-family: Arial, sans-serif; margin: 2rem; color: #333; }
-            table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
-            th, td { border: 1px solid #ccc; padding: 0.5rem 0.75rem; text-align: left; }
-            th { background-color: #f7f7f7; }
-            tr:nth-child(even) { background-color: #f9f9f9; }
-            h1 { font-size: 1.5rem; }
-            .ip-header { margin-top: 2rem; font-size: 1.2rem; color: #0055aa; }
-        </style>
-    </head>
-    <body>
-        <h1>Visit Log (Grouped by IP)</h1>
-    """
-
-    # Sort IPs for consistent display
-    for ip in sorted(visits.keys()):
-        html += f'<div class="ip-header">IP Address: {ip}</div>'
-        html += """
-        <table>
-            <thead><tr><th>Date</th><th>Time</th></tr></thead>
-            <tbody>
-        """
-        for date in sorted(visits[ip].keys()):
-            for time in visits[ip][date]:
-                html += f"<tr><td>{date}</td><td>{time}</td></tr>"
-        html += "</tbody></table>"
-
-    html += "</body></html>"
-    return html
 
 if __name__ == "__main__":
     app.run(debug=True)
