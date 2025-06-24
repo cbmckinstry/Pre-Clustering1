@@ -16,36 +16,13 @@ app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "session:"
 app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL"))
 
-raw_url = os.environ.get("DATABASE_URL")
-if raw_url.startswith("postgres://"):
-    raw_url = raw_url.replace("postgres://", "postgresql://", 1)
-app.config['SQLALCHEMY_DATABASE_URI'] = raw_url
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-
 Session(app)
-
-db = SQLAlchemy(app)
-
-class Visit(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    ip = db.Column(db.String(100), unique=True, nullable=False)
-    count = db.Column(db.Integer, default=1)
-
-with app.app_context():
-    db.create_all()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    if str(user_ip)!='116.203.134.67':
-        visit = Visit.query.filter_by(ip=user_ip).first()
-        if visit:
-            visit.count += 1
-        else:
-            visit = Visit(ip=user_ip, count=1)
-            db.session.add(visit)
-
-        db.session.commit()
+    if str(user_ip)!='116.203.134.67'and str(user_ip)!='1':
+        print('User IP: '+str(user_ip))
     if request.method == "POST":
         try:
             # Input parsing and validation
