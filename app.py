@@ -43,6 +43,8 @@ def index():
             pers5 = int(pers5_input) if pers5_input else 0
             pers6 = int(pers6_input) if pers6_input else 0
             pers7 = 0
+            print(vehlist)
+            print(pers5,pers6)
 
             veh2=vehlist.copy()
             veh2.sort(reverse=True)
