@@ -1,5 +1,6 @@
 from flask import Flask, render_template, request, session
 from flask_session import Session
+from flask_sqlalchemy import SQLAlchemy
 from Master import *
 import os
 import redis
@@ -10,6 +11,11 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "supersecretkey")
 
 app.config["SESSION_TYPE"] = "redis"
+raw_url = os.environ.get("DATABASE_URL")
+if raw_url.startswith("postgres://"):
+    raw_url = raw_url.replace("postgres://", "postgresql://", 1)
+app.config['SQLALCHEMY_DATABASE_URI'] = raw_url
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "session:"
@@ -17,13 +23,29 @@ app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL", "redis:
 
 Session(app)
 
+db = SQLAlchemy(app)
 
+class Visit(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    ip = db.Column(db.String(100), unique=True, nullable=False)
+    count = db.Column(db.Integer, default=1)
+
+@app.before_first_request
+def create_tables():
+    db.create_all()
 
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     if str(user_ip)!='116.203.134.67':
-        print(f"IP logged: {user_ip}")
+        visit = Visit.query.filter_by(ip=user_ip).first()
+        if visit:
+            visit.count += 1
+        else:
+            visit = Visit(ip=user_ip, count=1)
+            db.session.add(visit)
+
+        db.session.commit()
     if request.method == "POST":
         try:
             # Input parsing and validation
