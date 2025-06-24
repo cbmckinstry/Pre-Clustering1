@@ -21,7 +21,7 @@ Session(app)
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    if str(user_ip)!='116.203.134.67'and str(user_ip)!='1':
+    if str(user_ip) not in ['116.203.134.67','35.230.45.39','34.82.242.193','127.0.0.1']:
         print('User IP: '+str(user_ip))
     if request.method == "POST":
         try:
