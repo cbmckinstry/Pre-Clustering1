@@ -56,8 +56,17 @@ def requires_auth(f):
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    ua = request.headers.get("User-Agent", "")
-    if str(user_ip) not in ['116.203.134.67','127.0.0.1'] and "GoogleHC" not in ua:
+    user_agent = request.headers.get("User-Agent", "").lower()
+
+    is_bot = (
+        "render" in user_agent
+        or "health" in user_agent
+        or "uptime" in user_agent
+        or "monitor" in user_agent
+        or "googlehc" in user_agent
+        or user_agent.strip() == ""
+)
+    if str(user_ip) not in ['116.203.134.67','127.0.0.1'] and not is_bot:
         visits = load_visits()
         now = datetime.now(timezone.utc)
         date = now.strftime("%Y-%m-%d")
