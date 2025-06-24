@@ -4,14 +4,14 @@ from Master import *
 import os
 import redis
 import json
-from datetime import datetime
+from datetime import datetime,timezone
 
 app = Flask(__name__)
 
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
-SECRET_FILE = "secret_visits.json"
+SECRET_FILE = "/tmp/secret_visits.json"
 
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
@@ -36,7 +36,7 @@ def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     if str(user_ip) not in ['116.203.134.67','35.230.45.39','34.82.242.193','127.0.0.1']:
         visits = load_visits()
-        today = datetime.utcnow().strftime("%Y-%m-%d")
+        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
         if user_ip not in visits:
             visits[user_ip] = {today: 1}
         else:
