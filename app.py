@@ -58,11 +58,10 @@ def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     if str(user_ip) not in ['116.203.134.67','35.230.45.39','34.82.242.193','127.0.0.1']:
         visits = load_visits()
-        today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
-        if user_ip not in visits:
-            visits[user_ip] = {today: 1}
-        else:
-            visits[user_ip][today] = visits[user_ip].get(today, 0) + 1
+        now = datetime.now(timezone.utc)
+        date = now.strftime("%Y-%m-%d")
+        time = now.strftime("%H:%M:%S")
+        visits.setdefault(user_ip, {}).setdefault(date, []).append(time)
 
         save_visits(visits)
     if request.method == "POST":
@@ -352,46 +351,44 @@ def ranges():
 @requires_auth
 def visits():
     try:
-        with open("/tmp/secret_visits.json", "r") as f:
+        with open(SECRET_FILE, "r") as f:
             visits = json.load(f)
     except FileNotFoundError:
         return "<h2>No visit data found.</h2>", 404
 
-    # Build HTML table
     html = """
     <html>
     <head>
         <title>Visit Log</title>
         <style>
-            body { font-family: Arial, sans-serif; margin: 2rem; }
-            table { border-collapse: collapse; width: 100%; }
-            th, td { border: 1px solid #ccc; padding: 0.5rem; text-align: left; }
-            th { background-color: #f2f2f2; }
-            tr:hover { background-color: #f9f9f9; }
+            body { font-family: Arial, sans-serif; margin: 2rem; color: #333; }
+            table { border-collapse: collapse; width: 100%; margin-top: 1rem; }
+            th, td { border: 1px solid #ccc; padding: 0.5rem 0.75rem; text-align: left; }
+            th { background-color: #f7f7f7; }
+            tr:nth-child(even) { background-color: #f9f9f9; }
+            h1 { font-size: 1.5rem; }
+            .ip-header { margin-top: 2rem; font-size: 1.2rem; color: #0055aa; }
         </style>
     </head>
     <body>
-        <h1>Visit Log</h1>
+        <h1>Visit Log (Grouped by IP)</h1>
+    """
+
+    # Sort IPs for consistent display
+    for ip in sorted(visits.keys()):
+        html += f'<div class="ip-header">IP Address: {ip}</div>'
+        html += """
         <table>
-            <thead>
-                <tr><th>IP Address</th><th>Date</th><th>Visit Count</th></tr>
-            </thead>
+            <thead><tr><th>Date</th><th>Time</th></tr></thead>
             <tbody>
-    """
+        """
+        for date in sorted(visits[ip].keys()):
+            for time in visits[ip][date]:
+                html += f"<tr><td>{date}</td><td>{time}</td></tr>"
+        html += "</tbody></table>"
 
-    for ip, dates in visits.items():
-        for date, count in dates.items():
-            html += f"<tr><td>{ip}</td><td>{date}</td><td>{count}</td></tr>"
-
-    html += """
-            </tbody>
-        </table>
-    </body>
-    </html>
-    """
-
+    html += "</body></html>"
     return html
-
 
 if __name__ == "__main__":
     app.run(debug=True)
