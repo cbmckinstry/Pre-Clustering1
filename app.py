@@ -3,11 +3,15 @@ from flask_session import Session
 from Master import *
 import os
 import redis
+import json
+from datetime import datetime
 
 app = Flask(__name__)
 
 
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+
+SECRET_FILE = "secret_visits.json"
 
 app.config["SESSION_TYPE"] = "redis"
 app.config["SESSION_PERMANENT"] = False
@@ -17,11 +21,28 @@ app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL"))
 
 Session(app)
 
+def load_visits():
+    if os.path.exists(SECRET_FILE):
+        with open(SECRET_FILE, "r") as f:
+            return json.load(f)
+    return {}
+
+def save_visits(data):
+    with open(SECRET_FILE, "w") as f:
+        json.dump(data, f, indent=2)
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     if str(user_ip) not in ['116.203.134.67','35.230.45.39','34.82.242.193','127.0.0.1']:
-        print('User IP: '+str(user_ip))
+        visits = load_visits()
+        today = datetime.utcnow().strftime("%Y-%m-%d")
+        if user_ip not in visits:
+            visits[user_ip] = {today: 1}
+        else:
+            visits[user_ip][today] = visits[user_ip].get(today, 0) + 1
+
+        save_visits(visits)
     if request.method == "POST":
         try:
             # Input parsing and validation
