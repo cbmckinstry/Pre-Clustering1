@@ -8,18 +8,19 @@ import redis
 app = Flask(__name__)
 
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "supersecretkey")
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
 
 app.config["SESSION_TYPE"] = "redis"
+app.config["SESSION_PERMANENT"] = False
+app.config["SESSION_USE_SIGNER"] = True
+app.config["SESSION_KEY_PREFIX"] = "session:"
+app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL"))
+
 raw_url = os.environ.get("DATABASE_URL")
 if raw_url.startswith("postgres://"):
     raw_url = raw_url.replace("postgres://", "postgresql://", 1)
 app.config['SQLALCHEMY_DATABASE_URI'] = raw_url
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
-app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_USE_SIGNER"] = True
-app.config["SESSION_KEY_PREFIX"] = "session:"
-app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL", "redis://localhost:6379"))
 
 Session(app)
 
@@ -30,8 +31,7 @@ class Visit(db.Model):
     ip = db.Column(db.String(100), unique=True, nullable=False)
     count = db.Column(db.Integer, default=1)
 
-@app.before_first_request
-def create_tables():
+with app.app_context():
     db.create_all()
 
 @app.route("/", methods=["GET", "POST"])
