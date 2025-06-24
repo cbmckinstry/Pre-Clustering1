@@ -56,9 +56,8 @@ def requires_auth(f):
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
-    print(request.headers.get("X-Forwarded-For", request.remote_addr))
     user_agent = request.headers.get("User-Agent", "").lower()
-
+    print(user_agent)
     is_bot = (
         "render" in user_agent
         or "health" in user_agent
