@@ -59,11 +59,7 @@ def index():
     user_agent = request.headers.get("User-Agent", "").lower()
     print(user_agent)
     is_bot = (
-        "render" in user_agent
-        or "health" in user_agent
-        or "uptime" in user_agent
-        or "monitor" in user_agent
-        or "googlehc" in user_agent
+        "go-http-client/" in user_agent
         or user_agent.strip() == ""
 )
     if str(user_ip) not in ['116.203.134.67','127.0.0.1'] and not is_bot:
