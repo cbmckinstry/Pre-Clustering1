@@ -194,6 +194,15 @@ def index():
         len=len,
     )
 
+@app.route("/visits")
+def visits():
+    try:
+        with open("/tmp/secret_visits.json", "r") as f:
+            contents = f.read()
+            return f"<h1>Visit Log:</h1><pre>{contents}</pre>"
+    except FileNotFoundError:
+        return "No visits file found at /tmp/secret_visits.json", 404
+
 @app.route("/matrices", methods=["POST"])
 def matrices():
     try:
