@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, session
+from flask import Flask, render_template, request, session, Response
 from flask_session import Session
 from Master import *
 import os
@@ -30,6 +30,28 @@ def load_visits():
 def save_visits(data):
     with open(SECRET_FILE, "w") as f:
         json.dump(data, f, indent=2)
+
+def check_auth(username, password):
+    return (
+            username == os.environ.get("USER")
+            and password == os.environ.get("PASS")
+    )
+
+def authenticate():
+    return Response(
+        "Access denied. Set correct username and password.\n",
+        401,
+        {"WWW-Authenticate": 'Basic realm="Login Required"'},
+    )
+
+def requires_auth(f):
+    def decorated(*args, **kwargs):
+        auth = request.authorization
+        if not auth or not check_auth(auth.username, auth.password):
+            return authenticate()
+        return f(*args, **kwargs)
+    decorated.__name__ = f.__name__
+    return decorated
 
 @app.route("/", methods=["GET", "POST"])
 def index():
@@ -195,6 +217,7 @@ def index():
     )
 
 @app.route("/visits")
+@requires_auth
 def visits():
     try:
         with open("/tmp/secret_visits.json", "r") as f:
