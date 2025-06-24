@@ -57,12 +57,12 @@ def requires_auth(f):
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     user_agent = request.headers.get("User-Agent", "").lower()
-    print(user_agent)
     is_bot = (
         "go-http-client/" in user_agent
+        or "cron-job.org" in user_agent
         or user_agent.strip() == ""
 )
-    if str(user_ip) not in ['116.203.134.67','127.0.0.1'] and not is_bot:
+    if str(user_ip) != '127.0.0.1' and not is_bot:
         visits = load_visits()
         now = datetime.now(timezone.utc)
         date = now.strftime("%Y-%m-%d")
