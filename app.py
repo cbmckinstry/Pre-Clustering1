@@ -29,7 +29,7 @@ def index():
         or user_agent.strip() == ""
 )
     if str(user_ip) != '127.0.0.1' and not is_bot:
-        print(user_ip)
+        print("Viewer IP: "+str(user_ip))
     if request.method == "POST":
         try:
             # Input parsing and validation
@@ -43,8 +43,7 @@ def index():
             pers5 = int(pers5_input) if pers5_input else 0
             pers6 = int(pers6_input) if pers6_input else 0
             pers7 = 0
-            print(vehlist)
-            print(pers5,pers6)
+            print("User IP: " +str(user_ip)+", Vehicles: "+ str(vehlist) + ", 5-person: " + str(pers5)+ ", 6-person: "+str(pers6))
 
             veh2=vehlist.copy()
             veh2.sort(reverse=True)
