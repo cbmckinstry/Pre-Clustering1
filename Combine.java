@@ -5,116 +5,6 @@ import py4j.GatewayServer;
 
 public class Combine {
 
-    public static List<Object> combine(List<int[]> allocations, List<Integer> space, int[] shortfall, int backupSize, Set<Integer> used) {
-        if (used == null) {
-            used = new HashSet<>();
-        }
-        if (sum1(space) < backupSize * shortfall[0] + 6 * shortfall[1]) {
-            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used, false);
-        }
-        List<int[]> allocations0 = new ArrayList<>();
-        List<Integer> space0 = new ArrayList<>();
-
-        if (allocations.size() < 2) {
-            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), shortfall, used, false);
-        }
-
-        for (int i = 0; i < space.size(); i++) {
-            if (space.get(i) != 0) {
-                allocations0.add(allocations.get(i));
-                space0.add(space.get(i));
-            }
-        }
-
-        int six = shortfall[1];
-        int backup = shortfall[0];
-
-        int six4 = six;
-        Set<Integer> used4 = new HashSet<>(used);
-        List<int[]> combos4 = new ArrayList<>();
-        int backup4 = backup;
-        List<int[]> init = new ArrayList<>();
-
-        if (backupSize == 7) {
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (backup4 == 0) break;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (backup4 == 0) break;
-                    if ((space0.get(m) + space0.get(n) >= 7) && !used4.contains(m) && !used4.contains(n)) {
-                        used4.add(m);
-                        used4.add(n);
-                        combos4.add(new int[]{m + 1, n + 1});
-                        backup4--;
-                        init.add(new int[]{1, 0});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos4, init, new int[]{backup4, six4}, used4, true);
-                        }
-                    }
-                }
-            }
-            List<int[]> combos5 = new ArrayList<>(combos4);
-            Set<Integer> used5 = new HashSet<>(used4);
-            List<int[]> init1 = new ArrayList<>(init);
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (six4 == 0) break;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (six4 == 0) break;
-                    if ((space0.get(m) + space0.get(n) >= 6) && !used5.contains(m) && !used5.contains(n)) {
-                        used5.add(m);
-                        used5.add(n);
-                        combos5.add(new int[]{m + 1, n + 1});
-                        six4--;
-                        init1.add(new int[]{0, 1});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos5, init1, new int[]{backup4, six4}, used5, true);
-                        }
-                    }
-                }
-            }
-            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new int[]{backup4, six4}, used5, false);
-        } else {
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (six4 == 0) break;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (six4 == 0) break;
-                    if ((space0.get(m) + space0.get(n) >= 6) && !used4.contains(m) && !used4.contains(n)) {
-                        used4.add(m);
-                        used4.add(n);
-                        combos4.add(new int[]{m + 1, n + 1});
-                        six4--;
-                        init.add(new int[]{0, 1});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos4, init, new int[]{backup4, six4}, used4, true);
-                        }
-                    }
-                }
-            }
-
-            List<int[]> combos5 = new ArrayList<>(combos4);
-            Set<Integer> used5 = new HashSet<>(used4);
-            List<int[]> init1 = new ArrayList<>(init);
-
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (backup4 == 0) break;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (backup4 == 0) break;
-                    if ((space0.get(m) + space0.get(n) >= 5) && !used5.contains(m) && !used5.contains(n)) {
-                        used5.add(m);
-                        used5.add(n);
-                        combos5.add(new int[]{m + 1, n + 1});
-                        backup4 -= 1;
-                        init1.add(new int[]{1, 0});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos5, init1, new int[]{backup4, six4}, used5, true);
-                        }
-                    }
-                }
-            }
-            return Arrays.asList(new ArrayList<>(), new ArrayList<>(), new int[]{backup4, six4}, used5, false);
-
-        }
-    }
-
     public static List<Object> combineFlipped(List<int[]> allocations, List<Integer> space, int[] shortfall, int backupSize, Set<Integer> used) {
         if (used == null) {
             used = new HashSet<>();
@@ -145,48 +35,7 @@ public class Combine {
         int backup4 = backup;
         List<int[]> init = new ArrayList<>();
 
-        if (backupSize == 7) {
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (backup4 == 0) break;
-                if (used4.contains(m)) continue;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (backup4 == 0) break;
-                    if (used4.contains(n)) continue;
-                    if ((space0.get(m) + space0.get(n) >= 7) && !used4.contains(m) && !used4.contains(n)) {
-                        used4.add(m);
-                        used4.add(n);
-                        combos4.add(new int[]{m + 1, n + 1});
-                        backup4--;
-                        init.add(new int[]{1, 0});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos4, init, new int[]{backup4, six4}, used4, true);
-                        }
-                    }
-                }
-            }
-            List<int[]> combos5 = new ArrayList<>(combos4);
-            Set<Integer> used5 = new HashSet<>(used4);
-            List<int[]> init1 = new ArrayList<>(init);
-            for (int m = space0.size() - 2; m >= 0; m--) {
-                if (six4 == 0) break;
-                if (used5.contains(m)) continue;
-                for (int n = space0.size() - 1; n > m; n--) {
-                    if (six4 == 0) break;
-                    if (used5.contains(n)) continue;
-                    if ((space0.get(m) + space0.get(n) >= 6) && !used5.contains(m) && !used5.contains(n)) {
-                        used5.add(m);
-                        used5.add(n);
-                        combos5.add(new int[]{m + 1, n + 1});
-                        six4--;
-                        init1.add(new int[]{0, 1});
-                        if (backup4 == 0 && six4 == 0) {
-                            return Arrays.asList(combos5, init1, new int[]{backup4, six4}, used5, true);
-                        }
-                    }
-                }
-            }
-            return Arrays.asList(combos5, init1, new int[]{backup4, six4}, used5, false);
-        } else {
+
             for (int m = space0.size() - 2; m >= 0; m--) {
                 if (six4 == 0) break;
                 if (used4.contains(m)) continue;
@@ -231,7 +80,7 @@ public class Combine {
             return Arrays.asList(combos5, init1, new int[]{backup4, six4}, used5, false);
 
 
-        }
+
     }
 
     public static List<Object> threesFlipped(List<int[]> allocations, List<Integer> spaces, int[] shortfall, int backupSize, Set<Integer> used5) {

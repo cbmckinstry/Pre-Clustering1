@@ -31,8 +31,6 @@ def alltogether(combos,allist,damage):
             fives.append(item)
         if len(item[0])==6:
             sixes.append(item)
-        if len(item[0])==7:
-            sevens.append(item)
     return twos,threes,fours,fives,sixes,sevens
 
 def compute_ranges(people):
