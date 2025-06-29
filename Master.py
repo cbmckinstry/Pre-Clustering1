@@ -2,18 +2,13 @@ from Extension import *
 from Allocations import *
 from collections import defaultdict, deque
 
-def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups, seven_person_groups):
+def validate_inputs(vehicle_capacities, five_person_groups, six_person_groups):
     if not all(isinstance(cap, int) and cap >= 0 for cap in vehicle_capacities):
         raise ValueError("Vehicle capacities must be a list of non-negative integers.")
     if not isinstance(five_person_groups, int) or five_person_groups < 0:
         raise ValueError("Five-person groups must be a non-negative integer.")
     if not isinstance(six_person_groups, int) or six_person_groups < 0:
         raise ValueError("Six-person groups must be a non-negative integer.")
-    if not isinstance(seven_person_groups, int) or seven_person_groups < 0:
-        raise ValueError("Seven-person groups must be a non-negative integer.")
-    if seven_person_groups!=0 and five_person_groups!=0:
-        raise ValueError("There cannot be both 5 and 7 person crews")
-
 def alltogether(combos,allist,damage):
     i=zip(combos,allist,damage)
     out=[]

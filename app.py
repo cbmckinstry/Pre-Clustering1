@@ -42,17 +42,16 @@ def index():
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
             pers5 = int(pers5_input) if pers5_input else 0
             pers6 = int(pers6_input) if pers6_input else 0
-            pers7 = 0
             print("User IP: " +str(user_ip)+", Vehicles: "+ str(vehlist) + ", 5-person: " + str(pers5)+ ", 6-person: "+str(pers6))
 
             veh2=vehlist.copy()
             veh2.sort(reverse=True)
 
             # Validate inputs
-            validate_inputs(vehlist, pers5, pers6, pers7)
+            validate_inputs(vehlist, pers5, pers6)
 
-            backup_group = pers7 if pers7 != 0 else pers5
-            backupsize = 5 if pers7 == 0 else 7
+            backup_group =  pers5
+            backupsize = 5
             primary_group = pers6
 
             results_1=optimal_allocation(veh2[:].copy(),primary_group,backup_group,6,backupsize)
@@ -114,32 +113,25 @@ def index():
                 session["vehlist"] = vehlist
                 session["pers5"] = pers5
                 session["pers6"] = pers6
-                session["pers7"] = pers7
             elif pull_combinations!=0:
                 session["vehlist"] = allone(combos.copy())
                 session["pers6"] = totalhelp[1]
-                if backupsize==5:
-                    session["pers5"] = totalhelp[0]
-                    session["pers7"] = pers7
-                else:
-                    session["pers5"] = pers5
-                    session["pers7"] = totalhelp[0]
+                session["pers5"] = totalhelp[0]
             elif use_combinations!=0:
                 session["vehlist"]=sumAll(combos.copy(),vehlist)
                 session["pers6"] = pers6
                 session["pers5"] = pers5
-                session["pers7"] = pers7
             session["rem_vehs"]=rem_vehs
             session["results"] = [results[0],off]
 
         except Exception as e:
+            print("Error: "+str(e))
             return render_template(
                 "index.html",
                 error_message=f"An error occurred: {str(e)}",
                 vehlist=vehlist_input,
                 pers5=pers5_input,
                 pers6=pers6_input,
-                pers7=0,
                 results=None,
                 totalhelp=None,
                 sorted_allocations=None,
@@ -201,13 +193,13 @@ def matrices():
         session["crews"] = crews
 
     except Exception as e:
+        print("Error: "+str(e))
         return render_template(
             "index.html",
             error_message=f"An error occurred: {str(e)}",
             vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
-            pers7=0,
             results=session.get("results"),
             totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
@@ -231,7 +223,6 @@ def matrices():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        pers7=0,
         results=session.get("results"),
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
@@ -265,13 +256,13 @@ def ranges():
         session["total_people"] = total_people
 
     except Exception as e:
+        print("Error: "+str(e))
         return render_template(
             "index.html",
             error_message=f"An error occurred: {str(e)}",
             vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
-            pers7=0,
             results=session.get("results"),
             totalhelp=session.get("totalhelp"),
             sorted_allocations=session.get("sorted_allocations"),
@@ -295,7 +286,6 @@ def ranges():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        pers7=0,
         results=session.get("results"),
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
