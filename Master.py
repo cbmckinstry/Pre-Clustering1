@@ -226,17 +226,25 @@ def cleanup(combos, remaining, init):
     just3 = []
     init3 = []
     used = set()
-    for e in range(len(combos)):
-        for f in range(len(combos[e])):
-            combos[e][f]-=1
-    for i in range(len(combos)):
-        if len(combos[i]) == 3:
-            just3.append(combos[i])
+    combos1 = [lst.copy() for lst in combos]
+    for e in range(len(combos1)):
+        for f in range(len(combos1[e])):
+            combos1[e][f]-=1
+    for i in range(len(combos1)):
+        if len(combos1[i]) == 3:
+            just3.append(combos1[i])
             init3.append(init[i])
         else:
-            final.append(combos[i])
+            final.append(combos1[i])
             final_init.append(init[i])
-
+    if not just3:
+        return combos, init
+    sort_keys = [sum(remaining[i] for i in idxs) for idxs in just3]
+    combined = list(zip(sort_keys, just3, init3))
+    combined.sort(key=lambda x: x[0])
+    _, just3, init3 = zip(*combined)
+    just3 = list(just3)
+    init3 = list(init3)
     for i in range(len(just3) - 1):
         if i in used:
             continue
