@@ -157,9 +157,9 @@
 
             <button type="submit">Submit</button>
 
+            <div class="results-section">
             <h3>Ranges Result:</h3>
             {% if ranges_result %}
-                <div class="results-section">
                 {% if ranges_result[0] or ranges_result[1]%}
                     {% if ranges_result[0] %}
                         <p>Optimal: {{ ranges_result[0][0] }}</p>
@@ -174,14 +174,11 @@
                 {% else %}
                     <p>No results for ranges</p>
                 {% endif %}
-            </div>
             {% else %}
                 <p>No results for ranges</p>
             {% endif %}
-
             <h3>Crew Structure Result:</h3>
             {% if matrices_result %}
-                <div class="results-section">
                     {% if matrices_result[0]!=0 %}
                         <p>5-person crews: {{ matrices_result[0] }}</p>
                     {% endif %}
@@ -191,10 +188,10 @@
                     {% if matrices_result[2]!=0 %}
                         <p>7-person crews: {{ matrices_result[2] }}</p>
                     {% endif %}
-                </div>
             {% else %}
                 <p>No results for crew structure yet.</p>
             {% endif %}
+            </div>
         </form>
     </div>
 
