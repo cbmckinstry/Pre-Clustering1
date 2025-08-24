@@ -144,10 +144,11 @@
 
         <!-- Matrices Form -->
         <form method="POST" action="/matrices">
-            <h2>Crew Structure</h2>
             {% if error_message and request.path == '/matrices' %}
                 <div class="error-message">{{ error_message }}</div>
             {% endif %}
+
+            <h2>Crew Structure</h2>
             <label for="people">Enter Total People:</label>
             <input type="number" id="people" name="people" value="{{ people }}" required>
 
@@ -156,31 +157,31 @@
 
             <button type="submit">Submit</button>
 
+            <h3>Ranges Result:</h3>
             {% if ranges_result %}
-            <div class="results-section">
-                <h3>Ranges Result:</h3>
+                <div class="results-section">
                 {% if ranges_result[0] or ranges_result[1]%}
-                {% if ranges_result[0] %}
-                <p>Optimal: {{ ranges_result[0][0] }}</p>
-                <p>5 and 6-person range: {{ ranges_result[0][0] }} to {{ ranges_result[0][1] }}</p>
-                {% endif %}
-                {% if ranges_result[1] %}
-                {% if not ranges_result[0] %}
-                <p>Optimal: {{ ranges_result[1][1] }}</p>
-                {% endif %}
-                <p>6 and 7-person range: {{ ranges_result[1][0] }} to {{ ranges_result[1][1] }}</p>
-                {% endif %}
+                    {% if ranges_result[0] %}
+                        <p>Optimal: {{ ranges_result[0][0] }}</p>
+                         <p>5 and 6-person range: {{ ranges_result[0][0] }} to {{ ranges_result[0][1] }}</p>
+                    {% endif %}
+                    {% if ranges_result[1] %}
+                        {% if not ranges_result[0] %}
+                            <p>Optimal: {{ ranges_result[1][1] }}</p>
+                        {% endif %}
+                        <p>6 and 7-person range: {{ ranges_result[1][0] }} to {{ ranges_result[1][1] }}</p>
+                    {% endif %}
                 {% else %}
-                <p> No valid range results</p>
+                    <p>No results for ranges</p>
                 {% endif %}
             </div>
             {% else %}
-            <p>No results for ranges yet.</p>
+                <p>No results for ranges</p>
             {% endif %}
 
+            <h3>Crew Structure Result:</h3>
             {% if matrices_result %}
                 <div class="results-section">
-                    <h3>Crew Structure Result:</h3>
                     {% if matrices_result[0]!=0 %}
                         <p>5-person crews: {{ matrices_result[0] }}</p>
                     {% endif %}
