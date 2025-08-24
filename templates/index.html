@@ -142,40 +142,6 @@
             <p>Submit each form independently and view results below each section.</p>
         </div>
 
-        <!-- Ranges Form -->
-        <form method="POST" action="/ranges">
-            <h2>Crew Ranges</h2>
-            {% if error_message and request.path == '/ranges' %}
-                <div class="error-message">{{ error_message }}</div>
-            {% endif %}
-            <label for="total_people">Enter Total People:</label>
-            <input type="number" id="total_people" name="total_people" value="{{ total_people }}" required>
-
-            <button type="submit">Submit</button>
-
-            {% if ranges_result %}
-                <div class="results-section">
-                    <h3>Ranges Result:</h3>
-                        {% if ranges_result[0] or ranges_result[1]%}
-                            {% if ranges_result[0] %}
-                                <p>Optimal: {{ ranges_result[0][0] }}</p>
-                                <p>5 and 6-person range: {{ ranges_result[0][0] }} to {{ ranges_result[0][1] }}</p>
-                            {% endif %}
-                            {% if ranges_result[1] %}
-                                {% if not ranges_result[0] %}
-                                    <p>Optimal: {{ ranges_result[1][1] }}</p>
-                                {% endif %}
-                                <p>6 and 7-person range: {{ ranges_result[1][0] }} to {{ ranges_result[1][1] }}</p>
-                            {% endif %}
-                        {% else %}
-                            <p> No valid range results</p>
-                        {% endif %}
-                </div>
-            {% else %}
-                <p>No results for ranges yet.</p>
-            {% endif %}
-        </form>
-
         <!-- Matrices Form -->
         <form method="POST" action="/matrices">
             <h2>Crew Structure</h2>
@@ -189,6 +155,28 @@
             <input type="number" id="crews" name="crews" value="{{ crews }}" required>
 
             <button type="submit">Submit</button>
+
+            {% if ranges_result %}
+            <div class="results-section">
+                <h3>Ranges Result:</h3>
+                {% if ranges_result[0] or ranges_result[1]%}
+                {% if ranges_result[0] %}
+                <p>Optimal: {{ ranges_result[0][0] }}</p>
+                <p>5 and 6-person range: {{ ranges_result[0][0] }} to {{ ranges_result[0][1] }}</p>
+                {% endif %}
+                {% if ranges_result[1] %}
+                {% if not ranges_result[0] %}
+                <p>Optimal: {{ ranges_result[1][1] }}</p>
+                {% endif %}
+                <p>6 and 7-person range: {{ ranges_result[1][0] }} to {{ ranges_result[1][1] }}</p>
+                {% endif %}
+                {% else %}
+                <p> No valid range results</p>
+                {% endif %}
+            </div>
+            {% else %}
+            <p>No results for ranges yet.</p>
+            {% endif %}
 
             {% if matrices_result %}
                 <div class="results-section">
