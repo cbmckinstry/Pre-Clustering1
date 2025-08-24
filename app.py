@@ -183,11 +183,11 @@ def matrices():
         people = int(people_input) if people_input else 0
         crews = int(crews_input) if crews_input else 0
 
-        # Run matrices algorithm
         matrices_result = compute_matrices(people, crews)
+        ranges_result = compute_ranges(people)
 
-        # Store the result in session
         session["matrices_result"] = matrices_result
+        session["ranges_result"] = ranges_result
         session["people"] = people
         session["crews"] = crews
 
@@ -207,7 +207,7 @@ def matrices():
             backupsize=session.get("backupsize"),
             allocations_only=int(request.form.get("allocations_only", 0)),
             pull_combinations=session.get("pull_combinations", 0),
-            matrices_result=None,
+            matrices_result=session.get("matrices_result"),
             ranges_result=session.get("ranges_result"),
             total_people=session.get("total_people", ""),
             people=people_input,
@@ -239,69 +239,5 @@ def matrices():
         enumerate=enumerate,
         len=len,
     )
-
-@app.route("/ranges", methods=["POST"])
-def ranges():
-    try:
-        # Input parsing
-        total_people_input = request.form.get("total_people", "").strip()
-        total_people = int(total_people_input) if total_people_input else 0
-
-        # Run ranges algorithm
-        ranges_result = compute_ranges(total_people)
-
-        # Store the result in session
-        session["ranges_result"] = ranges_result
-        session["total_people"] = total_people
-
-    except Exception as e:
-        print("Error: "+str(e))
-        return render_template(
-            "index.html",
-            error_message=f"An error occurred: {str(e)}",
-            vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
-            pers5=session.get("pers5", ""),
-            pers6=session.get("pers6", ""),
-            results=session.get("results"),
-            totalhelp=session.get("totalhelp"),
-            sorted_allocations=session.get("sorted_allocations"),
-            backupsize=session.get("backupsize"),
-            alllist=session.get("alllist"),
-            rem_vehs=session.get("rem_vehs"),
-            allocations_only=int(request.form.get("allocations_only", 0)),
-            pull_combinations=session.get("pull_combinations", 0),
-            matrices_result=session.get("matrices_result"),
-            ranges_result=None,
-            total_people=total_people_input,
-            people=session.get("people", ""),
-            crews=session.get("crews", ""),
-            zip=zip,
-            enumerate=enumerate,
-            len=len,
-        )
-
-    return render_template(
-        "index.html",
-        vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
-        pers5=session.get("pers5", ""),
-        pers6=session.get("pers6", ""),
-        results=session.get("results"),
-        totalhelp=session.get("totalhelp"),
-        sorted_allocations=session.get("sorted_allocations"),
-        backupsize=session.get("backupsize"),
-        alllist=session.get("alllist"),
-        allocations_only=int(request.form.get("allocations_only", 0)),
-        pull_combinations=session.get("pull_combinations", 0),
-        rem_vehs=session.get("rem_vehs"),
-        matrices_result=session.get("matrices_result"),
-        ranges_result=session.get("ranges_result"),
-        total_people=session.get("total_people", ""),
-        people=session.get("people", ""),
-        crews=session.get("crews", ""),
-        zip=zip,
-        enumerate=enumerate,
-        len=len,
-    )
-
 if __name__ == "__main__":
     app.run(debug=True)
