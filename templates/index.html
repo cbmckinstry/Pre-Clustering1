@@ -79,15 +79,15 @@
         }
         .results-section {
             margin-top: 15px;
-            overflow-x: auto; /* Allows horizontal scrolling if needed */
-            max-width: 100%; /* Prevents overflow */
+            overflow-x: auto;
+            max-width: 100%;
         }
 
         .results-section table {
             width: 100%;
             border-collapse: collapse;
-            table-layout: fixed; /* Makes columns evenly distributed */
-            min-width: 100%; /* Ensures no unnecessary scrolling */
+            table-layout: fixed;
+            min-width: 100%;
         }
 
         .results-section th,
@@ -95,8 +95,8 @@
             padding: 8px;
             text-align: center;
             border: 1px solid #ccc;
-            word-wrap: break-word; /* Ensures text does not overflow */
-            word-break: break-word; /* Ensures long words wrap */
+            word-wrap: break-word;
+            word-break: break-word;
         }
 
         @media (max-width: 768px) {
@@ -111,38 +111,33 @@
         @media (max-width: 600px) {
             .checkbox-submit-container {
                 flex-direction: column;
-                align-items: flex-start; /* Stacks elements neatly on small screens */
+                align-items: flex-start;
                 gap: 10px;
             }
         }
 
         @media (max-width: 768px) {
             .results-section th {
-                font-size: 12px; /* Smaller font for table headers on small screens */
-                padding: 6px; /* Reduce padding for better spacing */
+                font-size: 12px;
+                padding: 6px;
             }
         }
     </style>
 </head>
 <body>
 <div class="container">
-    <!-- Left Column -->
     <div class="left-column">
-        <!-- Instructions Section -->
         <div class="instructions">
             <h2>Instructions</h2>
             <p>Welcome to the Pre-Clustering Tool. Use the following forms to calculate vehicle capacities, crew structures, and ranges for your clustering needs.</p>
             <ul>
                 <li><strong>Vehicle Capacities:</strong> Enter non-assign together vehicle capacities (both backup and active) and the number of 5- and 6-person groups to get allocations and combinations.</li>
 
-                <li><strong>Crew Ranges:</strong> Enter the total number of people to determine possible ranges for crew sizes.</li>
-
-                <li><strong>Crew Structure:</strong> Provide the total number of people and crews to calculate the distribution of 5-, 6-, and 7-person groups.</li>
+                <li><strong>Crew Structure:</strong> Provide the total number of people and crews to determine possible ranges for crew sizes and to calculate the distribution of 5-, 6-, and 7-person groups.</li>
             </ul>
             <p>Submit each form independently and view results below each section.</p>
         </div>
 
-        <!-- Matrices Form -->
         <form method="POST" action="/matrices">
             {% if error_message and request.path == '/matrices' %}
                 <div class="error-message">{{ error_message }}</div>
@@ -177,7 +172,7 @@
             {% else %}
                 <p>No results for ranges</p>
             {% endif %}
-            <h3>Crew Structure Result:</h3>
+            <h3>Structure Result:</h3>
             {% if matrices_result %}
                     {% if matrices_result[0]!=0 %}
                         <p>5-person crews: {{ matrices_result[0] }}</p>
@@ -189,16 +184,13 @@
                         <p>7-person crews: {{ matrices_result[2] }}</p>
                     {% endif %}
             {% else %}
-                <p>No results for crew structure yet.</p>
+                <p>No results for structure</p>
             {% endif %}
             </div>
         </form>
     </div>
 
-    <!-- Right Column -->
     <div class="right-column">
-        <!-- Vehicle Capacities Form -->
-        <!-- Vehicle Capacities Form -->
         <form method="POST" action="/">
             <h2>Vehicle Capacities</h2>
             {% if error_message and request.path == '/' %}
@@ -238,7 +230,7 @@
 
                 .checkbox-submit-container {
                     display: flex;
-                    align-items: center; /* aligns vertically */
+                    align-items: center;
                     gap: 40px;
                     margin-top: 15px;
                     flex-wrap: wrap;
@@ -258,7 +250,7 @@
                     width: 22px;
                     height: 22px;
                     margin: 0 7px 0 0;
-                    transform: translateY(-1px); /* keeps checkbox vertically aligned */
+                    transform: translateY(-1px);
                     cursor: pointer;
                 }
 
@@ -347,7 +339,6 @@
                         {% endif %}
                     {% endif %}
 
-                    <!-- Allocations Matrix -->
                     {% if sorted_allocations %}
                         <h3>Sorted Allocations:</h3>
                         <table>
@@ -365,8 +356,8 @@
                                 <tr>
                                     <td>{{ entry[3] }}</td>
                                     <td>{{ entry[0] }}</td>
-                                    <td>{{ entry[1][0] }}</td> <!-- 5-person groups -->
-                                    <td>{{ entry[1][1] }}</td> <!-- 6-person groups -->
+                                    <td>{{ entry[1][0] }}</td>
+                                    <td>{{ entry[1][1] }}</td>
                                     <td>{{ entry[2] }}</td>
                                 </tr>
                             {% endfor %}
