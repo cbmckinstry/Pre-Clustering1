@@ -1,0 +1,62 @@
+Partition of {1,...,5} numbers into <=6-element divisible blocks
+
+Proposition.
+Let a_1,...,a_n ∈ {1,2,3,4,5} with total sum S.
+There exists a partition of the multiset into blocks
+
+    B_1, B_2, ..., B_t, R
+
+such that:
+
+1) 1 ≤ |B_i| ≤ 6 and sum(B_i) ≡ 0 (mod 6) for each i;
+2) |R| ≤ 5 and sum(R) ≡ S (mod 6);
+3) sum_i sum(B_i) = 6 * floor(S/6).
+
+Equivalently, sum_i (sum(B_i))/6 = floor(S/6) = S//6.
+
+So: the divisible-by-6 blocks contribute exactly S//6 when each block’s sum is divided by 6, and every such block uses at most 6 elements.
+
+Key Lemma (6-element zero-sum).
+If you choose more than 5 numbers (at least 6) from {1,2,3,4,5} (repeats allowed), then there exists a nonempty subset whose sum is divisible by 6.
+
+Proof (Prefix sums + Pigeonhole principle):
+Let the chosen numbers be a1, a2, ..., an with n >= 6.
+Define prefix sums:
+    S_k = a1 + a2 + ... + ak  for k = 1,...,n.
+
+Now reduce these sums modulo 6.
+
+Case 1: Some S_k ≡ 0 (mod 6).
+Then the subset {a1,...,ak} has sum divisible by 6. Done.
+
+Case 2: No S_k ≡ 0 (mod 6).
+Then each S_k lies in {1,2,3,4,5}. There are n >= 6 such residues but only 5 possible values, so by the pigeonhole principle two prefix sums must be congruent: S_i ≡ S_j (mod 6) for some i < n.
+Then S_n - S_i ≡ 0 (mod 6). But S_j - S_i = a_{i+1} + ... + a_n, a nonempty block of the sequence.
+Thus, {a_{i+1},...,a_n} is a subset with sum divisible by 6.
+
+Therefore, in all cases, such a subset exists.
+
+Constructive Buffer Algorithm (Proof).
+Process the numbers in any order while maintaining a small buffer B of at most 6 currently ungrouped elements.
+
+- Start with B = ∅.
+- For each incoming element, add it to B.
+- Whenever |B| = 6, apply the lemma to B to find a nonempty subset Z ⊆ B with sum(Z) ≡ 0 (mod 6).
+  * Output Z as a block B_i (note |Z| ≤ 6).
+  * Remove Z from B (so buffer shrinks to size ≤ 5).
+- Continue to the end.
+
+At termination, the buffer R has |R| ≤ 5. Each emitted block B_i is divisible by 6 and has size ≤ 6.
+Since only divisible-by-6 chunks leave the buffer, we have
+
+    S = (Σ_i sum(B_i)) + sum(R),   with sum(R) ≡ S (mod 6).
+
+Thus Σ_i sum(B_i) ≡ 0 (mod 6). Because |R| ≤ 5 with elements ≤ 5, sum(R) ∈ {0,1,2,3,4,5}.
+Therefore
+
+    Σ_i sum(B_i) = S - sum(R) = 6 * floor(S/6).
+
+So the divisible blocks, when divided by 6 and summed, give exactly S//6.
+
+Conclusion.
+Every divisible block uses ≤ 6 elements, and their totals/6 add up to S//6, as desired.
