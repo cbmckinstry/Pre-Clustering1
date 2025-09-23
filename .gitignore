@@ -1,0 +1,20 @@
+# IntelliJ
+.idea/
+
+# macOS
+.DS_Store
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+flask_session/
+
+# Java
+*.class
+out/
+target/
+
+# Logs & archives
+*.log
+*.tar.gz
