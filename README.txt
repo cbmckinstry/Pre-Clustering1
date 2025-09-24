@@ -13,7 +13,6 @@ Combination:
         size - the number of vehicles combined
         cardinality - the number of 5- and 6-person crews, denoted as A-B (A 5-person and B 6-person crews)
         target - a given solution of size n and cardinality c, (n,c), e.g. (2, 1-0)
-
     Algorithm Structure:
         Smallest Sum Iteration:
             We iterate through the sorted remainder list by starting with the smallest elements and slowly
