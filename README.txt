@@ -16,7 +16,7 @@ Combination:
         target - a given solution of size n and cardinality c, (n,c), e.g. (2, 1-0)
 
     Algorithm Structure:
-        Smallest sum iteration:
+        Smallest Sum Iteration:
             We iterate through the sorted remainder list by starting with the smallest elements and slowly
             expanding. This ensures the tighest possible bound for our specified target. This bound ensures that
             selecting one grouping cannot take away from others within the target. This greedy approach
@@ -58,3 +58,10 @@ Combination:
             is that no more than two types of size 4 combinations can exist at the same time.
             All of these statements can be proven via easy dirct numerical proofs.
         All Together:
+            Taken together, the algorithm is a modified version of the one detailed in the proof. The Smallest
+            Sum Iteration and Backtracking ensure that we follow the same sound logic, while Pruning ensures
+            that we remain efficient. Overall, the algorithm is extremely close to optimal with 2 drawbacks:
+            a larger size can take from a smaller when recursing and there is no weight for vehicle size when
+            only considering remainder. Thus, we need a "cleanup" method to optimize our result.
+
+Optimize:
