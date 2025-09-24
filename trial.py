@@ -16,13 +16,13 @@ def generate_uniform_trials(low, high, x):
     return np.random.randint(low, high + 1, x).tolist()
 
 def discrete_distribution(num_trials):
-    values = [11, 13, 12, 10, 14, 15, 9, 8, 16, 5, 2, 3, 4]
+    values = [5, 1, 0, 4, 2, 3, 3, 2, 4, 5, 2, 3, 4]
     probabilities = [0.13, 0.13, 0.13, 0.1, 0.1, 0.07, 0.07, 0.05, 0.05, 0.1, 0.02, 0.02, 0.03]
 
     return [int(x) for x in np.random.choice(values, size=num_trials, p=probabilities)]
-binomial_trials = generate_binomial_trials_from_stats(3, 1, 15)
-uniform_trials = generate_uniform_trials(1, 5, 15)
-samples = discrete_distribution(15)
+binomial_trials = generate_binomial_trials_from_stats(3, 1, 30)
+uniform_trials = generate_uniform_trials(1, 5, 30)
+samples = discrete_distribution(30)
 
 print("Binomial Trials:")
 final=len(binomial_trials)
