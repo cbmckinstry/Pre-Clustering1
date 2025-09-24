@@ -8,6 +8,7 @@
 __pycache__/
 *.pyc
 *.pyo
+trial.py
 flask_session/
 
 # Java
@@ -21,6 +22,4 @@ target/
 *.log
 *.tar.gz
 *.sh
-
-Extensions/
-External Libraries/
+commands
