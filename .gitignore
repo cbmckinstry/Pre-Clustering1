@@ -12,6 +12,7 @@ flask_session/
 
 # Java
 *.class
+out.java
 *.xml
 out/
 target/
@@ -20,3 +21,6 @@ target/
 *.log
 *.tar.gz
 *.sh
+
+Extensions/
+External Libraries/
