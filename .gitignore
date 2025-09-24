@@ -8,6 +8,7 @@
 __pycache__/
 *.pyc
 *.pyo
+flask_session/
 
 # Java
 *.class
