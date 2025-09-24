@@ -9,7 +9,6 @@ Allocation:
     3)  This list from 2) is then sorted and the number of 5- and 6-person is adjusted to reflect the shortfall
 
 Combination:
-
     Notation and Vocabulary:
         size - the number of vehicles combined
         cardinality - the number of 5- and 6-person crews, denoted as A-B (A 5-person and B 6-person crews)
@@ -18,7 +17,7 @@ Combination:
     Algorithm Structure:
         Smallest Sum Iteration:
             We iterate through the sorted remainder list by starting with the smallest elements and slowly
-            expanding. This ensures the tighest possible bound for our specified target. This bound ensures that
+            expanding. This ensures the tightest possible bound for our specified target. This bound ensures that
             selecting one grouping cannot take away from others within the target. This greedy approach
             can easily be proven optimal via contradiction.
         Solution Existence and Size:
@@ -56,12 +55,29 @@ Combination:
             Additionally, there are certain combinations that cannot exist at the same time or in quantities,
             such as 2 size 6 combinations with one fitting 1 crew and the other fitting 5. Another example
             is that no more than two types of size 4 combinations can exist at the same time.
-            All of these statements can be proven via easy dirct numerical proofs.
+            All of these statements can be proven via easy direct numerical proofs.
         All Together:
             Taken together, the algorithm is a modified version of the one detailed in the proof. The Smallest
             Sum Iteration and Backtracking ensure that we follow the same sound logic, while Pruning ensures
             that we remain efficient. Overall, the algorithm is extremely close to optimal with 2 drawbacks:
             a larger size can take from a smaller when recursing and there is no weight for vehicle size when
-            only considering remainder. Thus, we need a "cleanup" method to optimize our result.
+            only considering remainder. Thus, we need "cleanup" and "optimize" methods to finalize our result.
 
 Optimize:
+The function iteratively improves the set of combos by swapping vehicles between pairs of combos to reduce the
+maximum combo weight across the pair, while preserving total crew counts and re-splitting crews between the two
+combos to respect space constraints. After no more such improvements exist, a secondary balancing pass adjusts
+lopsided cases: it seeks swaps that better balance large vs. smaller combos and fixes singleton edge cases by
+swapping equal-weight vehicles so the roomier vehicle moves into the larger combo. Finally, single-vehicle combos
+are dropped from the output; the result is the updated multi-vehicle combos and their corresponding crew allocations.
+
+Cleanup:
+As mentioned in the previous section, a larger group can take from a smaller. The only case I have found of this
+is a size 3 taking from 2, so there is another method that tests if the size 3s can be altered and reduced.
+
+Notes:
+The proofs were done for 6-person crews that were unplaced only. I believe this logic holds for 5-person crews as
+well, but I have yet to formally prove it. You will notice that there is slightly tweaked code for 5-person crews
+that follows all the same rules. This should not be an issue as the allocation algorithm chooses the output that
+places the most 5-person crews. Since the placement of a 6-person crew can be swapped with 5, and we do not have
+many 5-person crews in general, there should never be a situation where we have both 5- and 6-person crews unplaced.
