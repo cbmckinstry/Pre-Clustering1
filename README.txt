@@ -13,17 +13,21 @@ Combination:
     Notation and Vocabulary:
         size - the number of vehicles combined
         cardinality - the number of 5- and 6-person crews, denoted as A-B (A 5-person and B 6-person crews)
-        level - the ordering within size with respect to cardinality, i.e. level = A+B
         target - a given solution of size n and cardinality c, (n,c), e.g. (2, 1-0)
 
     Algorithm Structure:
         Smallest sum iteration:
             We iterate through the sorted remainder list by starting with the smallest elements and slowly
-            expanding. This ensures the tighest possible bound for our specified target. This greedy approach
-            can be proven optimal via contradiction.
+            expanding. This ensures the tighest possible bound for our specified target. This bound ensures that
+            selecting one grouping cannot take away from others within the target. This greedy approach
+            can easily be proven optimal via contradiction.
+        Solution Existence and Size:
+            We can also claim that there is always a valid solution and that each grouping will be of size 6
+            or less. Check divisible_partition_proof.txt for the formal proof. Within the proof, an algorithm
+            for finding a solution is detailed, however, it does not provide an optimal solution.
         Backtracking:
-            Smallest sum only holds for equal targets. This adds a great number of complexity
-            to the problem.
+            The algorithm provided in the proof was not optimal, so we solve this by instead forming
+            combinations as opposed to splitting them. This method, however, is far more complex.
                 We solve this by creating a directed graph using the sizes:
                     2 <- 3 <- 4 <- 5 <- 6 (start)
                 Each element contains its possible nodes/targets:
@@ -35,9 +39,22 @@ Combination:
                                 (3, 0-1)    (4, 0-1)    (5, 1-0)
                                 (3, 1-0)    (4, 0-2)
                                             (4, 1-0)
-        The algorithm implements a recursive depth first search terminating when a solution is found.
+            For simplicity, we'll look at the first diagram. The algorithm is finding a solution with the
+            fewest large combinations by backtracking and continuously calling down after a placement. For
+            example, suppose we could not find a solution of size 2 and 3. We form 1 combination of size 4,
+            then call down to 3, which calls 2. It cannot find a solution with the rest being size 2, so it
+            forms a size 3, calling down to size 2, and so on. In short, it’s a top-down recursive search
+            with backtracking that prioritizes smaller group sizes but allows larger ones when necessary,
+            systematically exploring combinations along the directed graph.
         Pruning:
-            We are able to use a number of break and continue statements in our backtracking as a result
-            of the sorted list, iterative method, and numerical contradictions. Our official worst-case
-            time complexity is O(n^20), however, I have yet to get a runtime over 8 seconds with a reasonable
-            input.
+            We are able to use a number of break and continue statements in our iterations as a result
+            of numerical contradictions and limitations. For example, if we want to place 5 6-person crews
+            in a combination of size 6, each vehicle must have remainder 5.
+            From the diagram above, you may also notice it appears that nodes are "missing" from this
+            diagram; they are not. For example, a size 6 combination that fits 4 6-person crews can always
+            be broken down into smaller combinations.
+            Additionally, there are certain combinations that cannot exist at the same time or in quantities,
+            such as 2 size 6 combinations with one fitting 1 crew and the other fitting 5. Another example
+            is that no more than two types of size 4 combinations can exist at the same time.
+            All of these statements can be proven via easy dirct numerical proofs.
+        All Together:
