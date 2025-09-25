@@ -1,5 +1,3 @@
-Logic for Preassignment:
-
 Allocation:
     1)  We first place the crews optimally using dynamic programming
         a)  When the algorithm finds a solution that allocates more than or equal to the current max, it stores it
@@ -74,9 +72,14 @@ Cleanup:
 As mentioned in the previous section, a larger group can take from a smaller. The only case I have found of this
 is a size 3 taking from 2, so there is another method that tests if the size 3s can be altered and reduced.
 
+Ranges and Structure:
+Crew ranges is simply running a loop that finds all solutions to 5x+6y=people. The crew structure uses the two
+inputs and solves 5x+6y=people and x+y=crews using the invertible matrix theorem.
+
 Notes:
 The proofs were done for 6-person crews that were unplaced only. I believe this logic holds for 5-person crews as
-well, but I have yet to formally prove it. You will notice that there is slightly tweaked code for 5-person crews
-that follows all the same rules. This should not be an issue as the allocation algorithm chooses the output that
-places the most 5-person crews. Since the placement of a 6-person crew can be swapped with 5, and we do not have
-many 5-person crews in general, there should never be a situation where we have both 5- and 6-person crews unplaced.
+well, but I have yet to formally prove it as it is a bit more difficult. You will notice that there is slightly
+tweaked code for 5-person crews that follows all the same rules. This should not be an issue as the allocation
+algorithm chooses the output that places the most 5-person crews. Since the placement of a 6-person crew can be
+swapped with 5, and we do not have many 5-person crews in general, there should never be a situation where we have
+both 5- and 6-person crews unplaced.
