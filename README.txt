@@ -74,7 +74,10 @@ is a size 3 taking from 2, so there is another method that tests if the size 3s 
 
 Ranges and Structure:
 Crew ranges is simply running a loop that finds all solutions to 5x+6y=people. The crew structure uses the two
-inputs and solves 5x+6y=people and x+y=crews using the invertible matrix theorem.
+inputs and solves 5x+6y=people and x+y=crews using the invertible matrix theorem. By the Chicken McNugget Thm,
+any number greater integer greater than 20 can be written as a linear combination of 5 and 6, thus we can form
+our 5- and 6-person crews. We also rely upon the commutative property of multiplication as 5 6-person crews is
+the same as 6 5-person crews, thus crew structure for a given number of people is not necessarily unique.
 
 Notes:
 The proofs were done for 6-person crews that were unplaced only. I believe this logic holds for 5-person crews as
