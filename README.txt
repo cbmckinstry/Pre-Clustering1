@@ -19,8 +19,8 @@ Combination:
             can easily be proven optimal via contradiction.
         Solution Existence and Size:
             We can also claim that there is always a valid solution and that each grouping will be of size 6
-            or less. Check divisible_partition_proof.txt for the formal proof. Within the proof, an algorithm
-            for finding a solution is detailed, however, it does not provide an optimal solution.
+            or less. Check Proofs.txt for the formal proof. Within the proof, an algorithm for finding a 
+            solution is detailed, however, it does not provide an optimal solution.
         Backtracking:
             The algorithm provided in the proof was not optimal, so we solve this by instead forming
             combinations as opposed to splitting them. This method, however, is far more complex.
