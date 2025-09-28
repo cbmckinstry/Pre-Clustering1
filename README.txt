@@ -85,4 +85,4 @@ well, but I have yet to formally prove it as it is a bit more difficult. You wil
 tweaked code for 5-person crews that follows all the same rules. This should not be an issue as the allocation
 algorithm chooses the output that places the most 5-person crews. Since the placement of a 6-person crew can be
 swapped with 5, and we do not have many 5-person crews in general, there should never be a situation where we have
-both 5- and 6-person crews unplaced.
+both 5-person crews unplaced.
