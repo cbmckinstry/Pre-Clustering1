@@ -282,7 +282,7 @@
                 }
 
             </style>
-            {% if results is not none and request.method == 'POST'%}
+            {% if results %}
                 <div class="results-section">
                     <h3>Vehicle Capacities Results</h3>
                     {% if results[1][0] == 0 and results[1][1] == 0 %}

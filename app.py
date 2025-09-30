@@ -150,7 +150,7 @@ def index():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        results=session.get("results"),
+        results=None,
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
         rem_vehs=session.get("rem_vehs"),
