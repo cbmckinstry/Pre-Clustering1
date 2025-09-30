@@ -32,6 +32,10 @@ def index():
         print("Viewer IP: "+str(user_ip))
 
     results=None
+    totalhelp=None
+    sorted_allocations=None
+    rem_vehs=None
+    alllist=None
     if request.method == "POST":
         try:
             # Input parsing and validation
@@ -153,14 +157,14 @@ def index():
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
         results=results,
-        totalhelp=session.get("totalhelp"),
-        sorted_allocations=session.get("sorted_allocations"),
-        rem_vehs=session.get("rem_vehs"),
+        totalhelp=totalhelp,
+        sorted_allocations=sorted_allocations,
+        rem_vehs=rem_vehs,
         allocations_only=session.get("allocations_only", 0),
         pull_combinations=session.get("pull_combinations", 0),
         error_message=None,
         backupsize=session.get("backupsize"),
-        alllist=session.get("alllist"),
+        alllist=alllist,
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
         total_people=session.get("total_people", ""),
