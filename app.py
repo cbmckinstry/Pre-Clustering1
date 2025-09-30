@@ -31,7 +31,6 @@ def index():
     if str(user_ip) != '127.0.0.1' and not is_bot:
         print("Viewer IP: "+str(user_ip))
 
-    session["results"]=None
     if request.method == "POST":
         try:
             # Input parsing and validation
