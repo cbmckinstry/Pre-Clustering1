@@ -34,14 +34,12 @@ def index():
         try:
             # Input parsing and validation
             vehlist_input = request.form.get("vehlist", "").strip()
-            pers5_input = request.form.get("pers5", "").strip()
-            pers6_input = request.form.get("pers6", "").strip()
             pull_combinations = int(request.form.get("pull_combinations", 0))
             use_combinations=int(request.form.get("use_combinations", 0))
 
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
-            pers5 = int(pers5_input) if pers5_input else 0
-            pers6 = int(pers6_input) if pers6_input else 0
+            pers5 = int(request.form['pers5'] if request.form['pers5'] != '' else 0)
+            pers6 = int(request.form['pers6'] if request.form['pers6'] != '' else 0)
             print("User IP: " +str(user_ip)+", Vehicles: "+ str(vehlist) + ", 5-person: " + str(pers5)+ ", 6-person: "+str(pers6))
 
             veh2=vehlist.copy()
@@ -130,8 +128,8 @@ def index():
                 "index.html",
                 error_message=f"An error occurred: {str(e)}",
                 vehlist=vehlist_input,
-                pers5=pers5_input,
-                pers6=pers6_input,
+                pers5=pers5,
+                pers6=pers6,
                 results=None,
                 totalhelp=None,
                 sorted_allocations=None,
@@ -178,10 +176,9 @@ def matrices():
     try:
         # Input parsing
         people_input = request.form.get("people", "").strip()
-        crews_input = request.form.get("crews", "").strip()
+        crews= int(request.form['crews'] if request.form['crews'] != '' else 0)
 
         people = int(people_input) if people_input else 0
-        crews = int(crews_input) if crews_input else 0
 
         matrices_result = compute_matrices(people, crews)
         ranges_result = compute_ranges(people)
@@ -211,7 +208,7 @@ def matrices():
             ranges_result=session.get("ranges_result"),
             total_people=session.get("total_people", ""),
             people=people_input,
-            crews=crews_input,
+            crews=crews,
             zip=zip,
             enumerate=enumerate,
             len=len,
