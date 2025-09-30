@@ -30,6 +30,8 @@ def index():
 )
     if str(user_ip) != '127.0.0.1' and not is_bot:
         print("Viewer IP: "+str(user_ip))
+
+    results=None
     if request.method == "POST":
         try:
             # Input parsing and validation
@@ -150,7 +152,7 @@ def index():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        results=None,
+        results=results,
         totalhelp=session.get("totalhelp"),
         sorted_allocations=session.get("sorted_allocations"),
         rem_vehs=session.get("rem_vehs"),
