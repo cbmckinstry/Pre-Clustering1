@@ -203,10 +203,10 @@
             <textarea id="vehlist" name="vehlist" rows="4" required>{{ vehlist }}</textarea>
 
             <label for="pers5">Enter Number of 5-person Groups:</label>
-            <input type="number" id="pers5" name="pers5" placeholder = "(Optional)" value="{{ request.form['pers5'] if request.form['pers5'] else '' }}">
+            <input type="number" id="pers5" name="pers5" value="{{ request.form['pers5'] if request.form['pers5'] else 0 }}">
 
             <label for="pers6">Enter Number of 6-person Groups:</label>
-            <input type="number" id="pers6" name="pers6" placeholder = "(Optional)" value="{{ request.form['pers6'] if request.form['pers6'] else '' }}" >
+            <input type="number" id="pers6" name="pers6" value="{{ request.form['pers6'] if request.form['pers6'] else 0 }}" >
 
             <div class="checkbox-submit-container">
                 <button type="submit" class="submit-button">Submit</button>
