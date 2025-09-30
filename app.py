@@ -30,12 +30,7 @@ def index():
 )
     if str(user_ip) != '127.0.0.1' and not is_bot:
         print("Viewer IP: "+str(user_ip))
-
-    results=None
-    totalhelp=None
-    sorted_allocations=None
-    rem_vehs=None
-    alllist=None
+    session["results"]=None
     if request.method == "POST":
         try:
             # Input parsing and validation
@@ -82,6 +77,8 @@ def index():
                 combos3=combos2
                 listing3=newalloc
 
+            #combos=combos3
+            #listing=listing3
             combos,listing=cleanup(combos3,sorted_spaces,listing3)
 
             damage=harm(combos.copy(),sorted_allocations.copy())
@@ -156,15 +153,15 @@ def index():
         vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
-        results=results,
-        totalhelp=totalhelp,
-        sorted_allocations=sorted_allocations,
-        rem_vehs=rem_vehs,
+        results=session.get("results"),
+        totalhelp=session.get("totalhelp"),
+        sorted_allocations=session.get("sorted_allocations"),
+        rem_vehs=session.get("rem_vehs"),
         allocations_only=session.get("allocations_only", 0),
         pull_combinations=session.get("pull_combinations", 0),
         error_message=None,
         backupsize=session.get("backupsize"),
-        alllist=alllist,
+        alllist=session.get("alllist"),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
         total_people=session.get("total_people", ""),
