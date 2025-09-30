@@ -32,6 +32,10 @@ def index():
         print("Viewer IP: "+str(user_ip))
 
     if request.method == "POST":
+        pers5 = pers6 = 0
+        pull_combinations = 0
+        use_combinations = 0
+        vehlist = []
         try:
             # Input parsing and validation
             vehlist_input = request.form.get("vehlist", "").strip()
