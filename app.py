@@ -38,9 +38,9 @@ def index():
             pull_combinations = int(request.form.get("pull_combinations", 0))
             use_combinations=int(request.form.get("use_combinations", 0))
 
+            pers5 = int(request.form.get("pers5", 0))
+            pers6 = int(request.form.get("pers6", 0))
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
-            pers5 = int(request.form['pers5'] if request.form['pers5'] != '' else 0)
-            pers6 = int(request.form['pers6'] if request.form['pers6'] != '' else 0)
             print("User IP: " +str(user_ip)+", Vehicles: "+ str(vehlist) + ", 5-person: " + str(pers5)+ ", 6-person: "+str(pers6))
 
             veh2=vehlist.copy()
