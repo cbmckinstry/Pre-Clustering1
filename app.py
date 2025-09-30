@@ -76,8 +76,6 @@ def index():
                 combos3=combos2
                 listing3=newalloc
 
-            #combos=combos3
-            #listing=listing3
             combos,listing=cleanup(combos3,sorted_spaces,listing3)
 
             damage=harm(combos.copy(),sorted_allocations.copy())
