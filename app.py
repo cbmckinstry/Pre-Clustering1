@@ -178,9 +178,9 @@ def index():
 def matrices():
     try:
         people_input = request.form.get("people", "").strip()
-        crews= int(request.form['crews'] if request.form['crews'] != '' else 0)
-
+        crews_input = request.form.get("crews", "").strip()
         people = int(people_input) if people_input else 0
+        crews= int(crews_input) if crews_input else 0
 
         matrices_result = compute_matrices(people, crews)
         ranges_result = compute_ranges(people)
