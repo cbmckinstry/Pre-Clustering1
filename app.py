@@ -28,7 +28,6 @@ else:
 
 Session(app)
 
-
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -43,11 +42,7 @@ def index():
 
     if request.method == "POST":
         pers5 = pers6 = 0
-        pull_combinations = 0
-        use_combinations = 0
-        vehlist = []
         try:
-            # Input parsing and validation
             vehlist_input = request.form.get("vehlist", "").strip()
             pull_combinations = int(request.form.get("pull_combinations", 0))
             use_combinations=int(request.form.get("use_combinations", 0))
@@ -60,7 +55,6 @@ def index():
             veh2=vehlist.copy()
             veh2.sort(reverse=True)
 
-            # Validate inputs
             validate_inputs(vehlist, pers5, pers6)
 
             backup_group =  pers5
@@ -91,8 +85,6 @@ def index():
                 combos3=combos2
                 listing3=newalloc
 
-            #combos=combos3
-            #listing=listing3
             combos,listing=cleanup(combos3,sorted_spaces,listing3)
 
             damage=harm(combos.copy(),sorted_allocations.copy())
@@ -102,9 +94,7 @@ def index():
             alllist=alltogether(combos,listing,damage)
 
             less=nonzero(sorted_spaces,sorted_sizes)
-
             rem_vehs2=unused1(less[1],combos.copy())
-
             rem_vehs=quant(rem_vehs2)
 
             restored_vehs, restored_all, restored_spaces =restore_order(vehlist[:].copy(),sorted_sizes,sorted_allocations,sorted_spaces)
@@ -114,8 +104,6 @@ def index():
                 for i in range(len(sorted_sizes))
             ]
 
-
-            # Store sorted allocations and results in session
             session["sorted_allocations"] = combined_sorted_data
             session["totalhelp"] = totalhelp
 
@@ -189,7 +177,6 @@ def index():
 @app.route("/matrices", methods=["POST"])
 def matrices():
     try:
-        # Input parsing
         people_input = request.form.get("people", "").strip()
         crews= int(request.form['crews'] if request.form['crews'] != '' else 0)
 
@@ -252,4 +239,4 @@ def matrices():
         len=len,
     )
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run()
