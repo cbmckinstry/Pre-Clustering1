@@ -8,11 +8,6 @@ from pathlib import Path
 
 app = Flask(__name__)
 
-
-import os
-from pathlib import Path
-import redis
-
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 redis_url = os.environ.get("REDIS_URL")
