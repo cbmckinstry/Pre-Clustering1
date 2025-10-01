@@ -3,18 +3,33 @@ from flask_session import Session
 from Master import *
 import os
 import redis
+from pathlib import Path
 
 
 app = Flask(__name__)
 
 
-app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY")
+import os
+from pathlib import Path
+import redis
 
-app.config["SESSION_TYPE"] = "redis"
+app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
+
+redis_url = os.environ.get("REDIS_URL")
+
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = "session:"
-app.config["SESSION_REDIS"] = redis.from_url(os.environ.get("REDIS_URL"))
+
+if redis_url:
+    app.config["SESSION_TYPE"] = "redis"
+    app.config["SESSION_REDIS"] = redis.from_url(redis_url)
+else:
+    app.config["SESSION_TYPE"] = "filesystem"
+    session_dir = Path(app.instance_path) / "flask_session"
+    session_dir.mkdir(parents=True, exist_ok=True)
+    app.config["SESSION_FILE_DIR"] = str(session_dir)
+
 
 Session(app)
 
