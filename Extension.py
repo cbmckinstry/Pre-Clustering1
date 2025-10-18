@@ -1,7 +1,6 @@
 from py4j.java_gateway import JavaGateway
 
 gateway = JavaGateway()
-
 ArrayList = gateway.jvm.java.util.ArrayList
 HashSet = gateway.jvm.java.util.HashSet
 
