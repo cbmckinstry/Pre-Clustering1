@@ -1,30 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
+set -euo pipefail
 
-# Ensure Java is installed and available
-export JAVA_HOME=/tmp/java
-export PATH=$JAVA_HOME/bin:$PATH
+JAVA_HOME="$HOME/java-17"
+export JAVA_HOME
+export PATH="$JAVA_HOME/bin:$PATH"
 
-if ! command -v java &> /dev/null; then
-    echo "Installing Java..."
-    curl -L https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz -o java.tar.gz
-    mkdir -p /tmp/java
-    tar -xzf java.tar.gz -C /tmp/java --strip-components=1
-fi
+# Start Java gateway in background
+nohup java -Xms32m -Xmx128m -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 
-# Verify Java installation
-java -version || echo "Java installation failed."
+# Wait for Java to open its port
+for i in {1..40}; do
+  (echo > /dev/tcp/127.0.0.1/25333) >/dev/null 2>&1 && break
+  sleep 0.25
+done
 
-# Compile Java files
-javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
+# Start Flask via Gunicorn
+exec gunicorn -w 1 --threads 8 -t 900 -b 0.0.0.0:5000 app:app
 
-# Start Java Gateway Server in the background
-nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
-
-# Allow Java some time to start
-sleep 5
-
-# Install Python dependencies (including Redis client)
-pip install --no-cache-dir -r requirements.txt redis || echo "Failed to install dependencies."
-
-# Start Gunicorn with a single worker (Render has only 0.1 vCPU)
-gunicorn -w 1 -t 900 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
