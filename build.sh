@@ -47,7 +47,6 @@ else
   echo "==> Java already compiled; skipping"
 fi
 
-# -------- (Optional) Pre-create logs folder --------
 mkdir -p logs
 
 echo "==> Build complete"
