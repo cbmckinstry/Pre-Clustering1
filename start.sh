@@ -22,5 +22,4 @@ sleep 5
 
 pip install -r requirements.txt redis || echo "Failed to install dependencies."
 
-# Start Gunicorn with a single worker (Render has only 0.1 vCPU)
 gunicorn -w 1 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
