@@ -11,7 +11,6 @@ fi
 
 java -version || echo "Java installation failed."
 
-# Compile Java files
 javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
 
 # Start Java Gateway Server in the background
