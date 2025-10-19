@@ -31,15 +31,65 @@ except Exception:
 PY
 )
 
+# Ensure py4j JAR exists at vendor/py4j and record its path
 mkdir -p vendor/py4j
+
+# 1) Try to locate the jar inside site-packages (works if pip wheel includes it)
+PY4J_JAR_PATH=$(python - <<'PY'
+import sys, pathlib
+try:
+    import py4j, pkgutil
+    base = pathlib.Path(py4j.__file__).parent
+    # Try both naming styles, anywhere under the package
+    cands = list(base.glob("**/py4j*-0.10.9.9*.jar")) + list(base.glob("**/py4j0.10.9.9*.jar")) + list(base.glob("**/py4j*.jar"))
+    print(str(cands[0]) if cands else "")
+except Exception:
+    print("")
+PY
+)
+
 if [ -n "$PY4J_JAR_PATH" ]; then
   cp -f "$PY4J_JAR_PATH" vendor/py4j/
-elif [ ! -f vendor/py4j/py4j0.10.9.9.jar ]; then
-  echo "Could not find py4j jar in site-packages. Downloading from Maven Central..."
-  curl -fsSL https://repo1.maven.org/maven2/org/py4j/py4j/0.10.9.9/py4j-0.10.9.9.jar -o vendor/py4j/py4j0.10.9.9.jar
 fi
 
-# 4) Compile your Java gateway
+# 2) If still missing, download from Maven Central (hyphenated name)
+if [ ! -f vendor/py4j/py4j-0.10.9.9.jar ] && [ ! -f vendor/py4j/py4j0.10.9.9.jar ]; then
+  echo "Downloading py4j 0.10.9.9 jar from Maven Central..."
+  curl -fsSL https://repo1.maven.org/maven2/org/py4j/py4j/0.10.9.9/py4j-0.10.9.9.jar -o vendor/py4j/py4j-0.10.9.9.jar || {
+    echo "Primary download failed. Falling back to 'pip download'…"
+    # 3) Fallback: pip download the wheel and extract jar from it (works even if Maven Central is blocked)
+    mkdir -p .tmp_py4j
+    pip download --no-deps py4j==0.10.9.9 -d .tmp_py4j
+    WHEEL=$(ls .tmp_py4j/py4j-0.10.9.9-*.whl | head -n1)
+    if [ -n "$WHEEL" ]; then
+      python - <<'PY'
+import sys, zipfile, pathlib, shutil
+wheel = list(pathlib.Path(".tmp_py4j").glob("py4j-0.10.9.9-*.whl"))[0]
+with zipfile.ZipFile(wheel) as zf:
+    for n in zf.namelist():
+        if n.endswith(".jar") and "py4j" in n:
+            zf.extract(n, ".tmp_py4j")
+            src = pathlib.Path(".tmp_py4j")/n
+            dst_dir = pathlib.Path("vendor/py4j"); dst_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst_dir / src.name)
+            print(src.name)
+            break
+PY
+    else
+      echo "ERROR: could not obtain py4j jar by any method."
+      exit 1
+    fi
+  }
+fi
+
+# Normalize a single variable for the jar path (handles either name)
+if [ -f vendor/py4j/py4j-0.10.9.9.jar ]; then
+  PY4J_JAR="vendor/py4j/py4j-0.10.9.9.jar"
+else
+  PY4J_JAR="vendor/py4j/py4j0.10.9.9.jar"
+fi
+
+# Compile with whatever jar name we found
 export JAVA_HOME="$PWD/vendor/java"
 export PATH="$JAVA_HOME/bin:$PATH"
-javac -cp "vendor/py4j/py4j0.10.9.9.jar:." Combine.java
+javac -cp "$PY4J_JAR:." Combine.java
