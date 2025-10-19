@@ -1,5 +1,4 @@
 #!/bin/bash
-
 export JAVA_HOME=/tmp/java
 export PATH=$JAVA_HOME/bin:$PATH
 
