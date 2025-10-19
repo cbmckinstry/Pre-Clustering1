@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# Ensure Java is installed and available
 export JAVA_HOME=/tmp/java
 export PATH=$JAVA_HOME/bin:$PATH
 
