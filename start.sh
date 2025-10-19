@@ -11,6 +11,7 @@ fi
 
 java -version || echo "Java installation failed."
 
+# Compile Java files
 javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
 
 # Start Java Gateway Server in the background
@@ -20,3 +21,5 @@ nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 sleep 5
 
 pip install -r requirements.txt redis || echo "Failed to install dependencies."
+
+gunicorn -w 1 -b 0.0.0.0:5000 app:app || echo "Gunicorn failed to start."
