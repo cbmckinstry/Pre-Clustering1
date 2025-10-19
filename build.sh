@@ -3,7 +3,6 @@ set -euo pipefail
 export PIP_DISABLE_PIP_VERSION_CHECK=1
 PY4J_VER="0.10.9.9"
 
-# JDK (persisted in repo)
 if [ ! -x vendor/java/bin/java ]; then
   echo "Installing JDK 17..."
   mkdir -p vendor/java
@@ -14,7 +13,6 @@ fi
 # Python deps
 python -m pip install -r requirements.txt
 
-# Ensure Py4J jar under vendor/py4j (find-or-extract in one Python block)
 mkdir -p vendor/py4j
 PY4J_JAR=$(python - <<'PY'
 import sys, pathlib, zipfile, shutil, subprocess
@@ -36,10 +34,11 @@ print(next(dest.glob("py4j*.jar")))
 PY
 )
 
-# Compile Java
 export JAVA_HOME="$PWD/vendor/java"
 export PATH="$JAVA_HOME/bin:$PATH"
-javac -cp "$PY4J_JAR:." Combine.java
 
-# Cleanup
+CLASSPATH="vendor/py4j/*:."
+echo "Compiling with CLASSPATH=$CLASSPATH"
+javac -cp "$CLASSPATH" Combine.java
+
 rm -rf .tmp_py4j || true
