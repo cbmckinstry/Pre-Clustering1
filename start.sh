@@ -10,7 +10,6 @@ if ! command -v java &> /dev/null; then
     tar -xzf java.tar.gz -C /tmp/java --strip-components=1
 fi
 
-# Verify Java installation
 java -version || echo "Java installation failed."
 
 # Compile Java files
