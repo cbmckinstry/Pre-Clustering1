@@ -20,7 +20,6 @@ nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 # Allow Java some time to start
 sleep 5
 
-# Install Python dependencies (including Redis client)
 pip install -r requirements.txt redis || echo "Failed to install dependencies."
 
 # Start Gunicorn with a single worker (Render has only 0.1 vCPU)
