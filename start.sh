@@ -1,24 +1,25 @@
 #!/bin/bash
-export JAVA_HOME=/tmp/java
-export PATH=$JAVA_HOME/bin:$PATH
+set -euo pipefail
 
-if ! command -v java &> /dev/null; then
-    echo "Installing Java..."
-    curl -L https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz -o java.tar.gz
-    mkdir -p /tmp/java
-    tar -xzf java.tar.gz -C /tmp/java --strip-components=1
-fi
+export JAVA_HOME="$PWD/vendor/java"
+export PATH="$JAVA_HOME/bin:$PATH"
 
-java -version || echo "Java installation failed."
+# Start the Java gateway in the background
+java -cp "vendor/py4j/py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
 
-# Compile Java files
-javac -cp "py4j0.10.9.9.jar:." Combine.java || echo "Java compilation failed."
+# Wait for the Py4J gateway to accept connections on port 25333 (adjust if your Combine uses another port)
+echo "Waiting for Java gateway on 25333..."
+for i in {1..60}; do
+  (echo > /dev/tcp/127.0.0.1/25333) >/dev/null 2>&1 && break
+  sleep 1
+done
 
-# Start Java Gateway Server in the background
-nohup java -cp "py4j0.10.9.9.jar:." Combine > java_server.log 2>&1 &
+# If it never came up, show the log for fast debugging
+(echo > /dev/tcp/127.0.0.1/25333) >/dev/null 2>&1 || {
+  echo "Java gateway failed to start. Tail of java_server.log:";
+  tail -n 200 java_server.log;
+  exit 1;
+}
 
-# Allow Java some time to start
-sleep 5
-
-pip install -r requirements.txt redis || echo "Failed to install dependencies."
-
+# Launch your Python web app
+exec gunicorn app:app
