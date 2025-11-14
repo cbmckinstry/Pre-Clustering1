@@ -24,7 +24,6 @@ else:
     session_dir.mkdir(parents=True, exist_ok=True)
     app.config["SESSION_FILE_DIR"] = str(session_dir)
 
-
 Session(app)
 
 @app.route("/", methods=["GET", "POST"])
