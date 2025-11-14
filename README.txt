@@ -16,9 +16,9 @@ Combination:
             We iterate through the sorted remainder list by starting with the smallest valid element combination
             and slowly expanding. This ensures the tightest possible bound for our specified target. This bound
             ensures that selecting one grouping cannot take away from others within the target. This greedy
-            approach can be rigorously proven optimal for our specific situation via proof by exhaustion. The proof
-            takes a minute, but it's doable using Z6 logic and the assumption that no combination can be further
-            reduced.
+            approach can be rigorously proven optimal for our specific situation via proof by exhaustion. The
+            proof takes a minute, but it's doable using Z6 logic and the assumption that no combination can be
+            further reduced.
         Solution Existence and Size:
             We can also claim that there is always a valid solution and that each grouping will be of size 6
             or less. Check Proofs.txt for the formal proof. Within the proof, an algorithm for finding a 
