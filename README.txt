@@ -12,12 +12,12 @@ Combination:
         cardinality - the number of 5- and 6-person crews, denoted as A-B (A 5-person and B 6-person crews)
         target - a given solution of size n and cardinality c, (n,c), e.g. (2, 1-0)
     Algorithm Structure:
-        Smallest Sum Iteration:
+        Smallest Sum(-ish) Iteration:
             We iterate through the sorted remainder list by starting with the smallest valid element combination
             and slowly expanding. This ensures the tightest possible bound for our specified target. This bound
             ensures that selecting one grouping cannot take away from others within the target. This greedy
             approach can be rigorously proven optimal for our specific situation via proof by exhaustion. The
-            proof takes a minute, but it's doable using Z6 logic and the assumption that no combination can be
+            proof takes a minute, but it's doable using mod6 logic and the assumption that no combination can be
             further reduced.
         Solution Existence and Size:
             We can also claim that there is always a valid solution and that each grouping will be of size 6
@@ -51,7 +51,8 @@ Combination:
             then call down to 3, which calls 2. It cannot find a solution with the rest being size 2, so it
             forms a size 3, calling down to size 2, and so on. In short, it’s a top-down recursive search
             with backtracking that prioritizes smaller group sizes but allows larger ones when necessary,
-            systematically exploring combinations along the directed graph.
+            systematically exploring combinations along the directed graph. From this, the worst-case
+            runtime is roughly O(N^(2+3+4+5+6)) = O(N^20).
         Pruning:
             We are able to use a number of break and continue statements in our iterations as a result
             of numerical contradictions and limitations. For example, if we want to place 5 6-person crews
