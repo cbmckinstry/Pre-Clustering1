@@ -63,7 +63,8 @@ Combination:
             Additionally, there are certain combinations that cannot exist at the same time or in quantities,
             such as 2 size 6 combinations with one fitting 1 crew and the other fitting 5. Another example
             is that no more than two types of size 4 combinations can exist at the same time.
-            All of these statements can be proven via easy direct numerical proofs.
+            All of these statements can be proven via easy direct numerical proofs; their results
+            significantly reduce the realistic runtime from O(N^20).
         All Together:
             Taken together, the algorithm is a modified version of the one detailed in the proof. The Smallest
             Sum Iteration and Backtracking ensure that we follow the same sound logic, while Pruning ensures
