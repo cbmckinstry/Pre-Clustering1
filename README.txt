@@ -27,20 +27,22 @@ Combination:
             The algorithm provided in the proof was not optimal, so we solve this by instead forming
             combinations as opposed to splitting them. This method, however, is far more complex.
                 We solve this by creating a directed graph using the sizes:
-                    2 <- 3 <- 4 <- 5 <- 6 (start)
+
+                    2 <- 3 <- 4 <- 5 <- 6 (start)                                                   (1)
+
                 Each element contains its possible nodes/targets (5s and 6s):
                        2           3           4           5          6
                                             (4, 0-3)
                                 (3, 0-2)    (4, 2-1)    (5, 0-4)
                     (2, 0-1)    (3, 1-1)    (4, 3-0)    (5, 4-0)    (6, 0-5)
-                    (2, 1-0) <- (3, 2-0) <- (4, 0-2) <- (5, 0-1) <- (6, 0-1)     (start)
+                    (2, 1-0) <- (3, 2-0) <- (4, 0-2) <- (5, 0-1) <- (6, 0-1)     (start)            (2)
                                 (3, 0-1)    (4, 2-0)    (5, 1-0)
                                 (3, 1-0)    (4, 0-1)
                                             (4, 1-0)
                 Primary Case (No 5s):
                        2           3           4           5          6
                                 (3, 0-2)    (4, 0-3)    (5, 0-4)    (6, 0-5)
-                    (2, 0-1) <- (3, 0-1) <- (4, 0-2) <- (5, 0-1) <- (6, 0-1)     (start)
+                    (2, 0-1) <- (3, 0-1) <- (4, 0-2) <- (5, 0-1) <- (6, 0-1)     (start)            (3)
                                             (4, 0-1)
 
             For simplicity, we'll look at the first diagram. The algorithm is finding a solution with the
