@@ -5,6 +5,7 @@ import os
 import redis
 from pathlib import Path
 from datetime import datetime, timezone
+from zoneinfo import ZoneInfo
 
 app = Flask(__name__)
 
@@ -72,7 +73,7 @@ def index():
             DATA_LOG.append(
                 {
                     "ip": user_ip,
-                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
                     "input": {
                         "vehlist": vehlist,
                         "pers5": pers5,
