@@ -3,6 +3,7 @@ import time
 import os
 import signal
 import sys
+import shutil
 from pathlib import Path
 
 # -----------------------------------------------------
@@ -10,29 +11,29 @@ from pathlib import Path
 # -----------------------------------------------------
 PROJECT_DIR = Path(__file__).resolve().parent
 JAVA_CLASS = "Combine"
-PY4J_JAR = PROJECT_DIR / "py4j0.10.9.9.jar"      # local + Render
+PY4J_JAR = PROJECT_DIR / "py4j0.10.9.9.jar"
 APP_MODULE = "app.py"
 PYTHON = sys.executable
 
-# Render automatically sets this environment variable
-IS_RENDER = os.environ.get("RENDER", "false") == "true"
+# Render sets this automatically
+IS_RENDER = os.environ.get("RENDER", "false").lower() == "true"
 
 os.chdir(PROJECT_DIR)
 print(f"[*] Working directory: {os.getcwd()}")
 
 
 # -----------------------------------------------------
-# INSTALL JAVA (Render only)
+# Ensure Java/Javac exists
 # -----------------------------------------------------
-def ensure_java_installed():
+def ensure_java():
     if IS_RENDER:
-        print("[*] Render environment detected.")
-
+        print("[*] Render environment detected")
+        # Match your old start.sh behavior
         os.environ["JAVA_HOME"] = "/tmp/java"
         os.environ["PATH"] = "/tmp/java/bin:" + os.environ["PATH"]
 
-        if not shutil.which("java"):
-            print("[*] Installing Java (OpenJDK 17)...")
+        if not shutil.which("javac"):
+            print("[*] Installing Java (OpenJDK 17) on Render...")
             subprocess.check_call(
                 "curl -L https://download.java.net/openjdk/jdk17/ri/openjdk-17+35_linux-x64_bin.tar.gz -o java.tar.gz",
                 shell=True,
@@ -40,18 +41,29 @@ def ensure_java_installed():
             subprocess.check_call("mkdir -p /tmp/java", shell=True)
             subprocess.check_call("tar -xzf java.tar.gz -C /tmp/java --strip-components=1", shell=True)
 
+        # Just for logging
         subprocess.call("java -version", shell=True)
+    else:
+        print("[*] Local environment detected")
+        if not shutil.which("javac"):
+            print("[!] 'javac' not found on PATH. Install a JDK locally.")
+            sys.exit(1)
+        subprocess.call(["java", "-version"])
 
 
 # -----------------------------------------------------
-# COMPILE JAVA
+# Compile Combine.java
 # -----------------------------------------------------
 def compile_java():
     java_file = f"{JAVA_CLASS}.java"
     class_file = f"{JAVA_CLASS}.class"
 
+    if not PY4J_JAR.exists():
+        print(f"[!] py4j jar not found at {PY4J_JAR}")
+        sys.exit(1)
+
     needs_compile = True
-    if os.path.exists(class_file):
+    if os.path.exists(java_file) and os.path.exists(class_file):
         needs_compile = os.path.getmtime(java_file) > os.path.getmtime(class_file)
 
     if needs_compile:
@@ -66,7 +78,7 @@ def compile_java():
 
 
 # -----------------------------------------------------
-# START JAVA GATEWAY
+# Start Java GatewayServer
 # -----------------------------------------------------
 def start_java_gateway():
     print("[*] Starting Java GatewayServer...")
@@ -75,46 +87,48 @@ def start_java_gateway():
         "-cp", f"{PY4J_JAR}:{PROJECT_DIR}",
         JAVA_CLASS
     ]
-
-    process = subprocess.Popen(java_cmd)
-    print(f"[*] Java process PID: {process.pid}")
+    proc = subprocess.Popen(java_cmd)
+    print(f"[*] Java process PID: {proc.pid}")
+    # Give it time to open the Py4J port
     time.sleep(3)
-    return process
+    return proc
 
 
 # -----------------------------------------------------
-# START FLASK
+# Start web app: Gunicorn on Render, Flask locally
 # -----------------------------------------------------
-def start_flask():
+def start_web_app():
     if IS_RENDER:
-        print("[*] Starting Gunicorn (Render)...")
+        print("[*] Starting Gunicorn on Render...")
         subprocess.check_call(["gunicorn", "-w", "1", "-b", "0.0.0.0:5000", "app:app"])
     else:
-        print("[*] Starting Flask (local)...")
+        print("[*] Starting Flask dev server locally...")
         subprocess.check_call([PYTHON, APP_MODULE])
 
 
 # -----------------------------------------------------
-# MAIN STARTUP SEQUENCE
+# MAIN
 # -----------------------------------------------------
 if __name__ == "__main__":
+    java_proc = None
     try:
+        ensure_java()
         compile_java()
         java_proc = start_java_gateway()
-        start_flask()
-
+        start_web_app()
     except KeyboardInterrupt:
-        print("\n[*] Interrupted. Shutting down...")
-
+        print("\n[*] Interrupted by user.")
+    except subprocess.CalledProcessError as e:
+        print(f"[!] Subprocess failed: {e}")
     finally:
-        print("[*] Killing Java process...")
-        try:
-            java_proc.send_signal(signal.SIGTERM)
-            java_proc.wait(timeout=5)
-        except Exception:
+        if java_proc is not None:
+            print("[*] Stopping Java GatewayServer...")
             try:
-                java_proc.kill()
-            except:
-                pass
-
+                java_proc.send_signal(signal.SIGTERM)
+                java_proc.wait(timeout=5)
+            except Exception:
+                try:
+                    java_proc.kill()
+                except Exception:
+                    pass
         print("[*] Done.")
