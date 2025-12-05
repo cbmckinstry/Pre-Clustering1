@@ -2,16 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Request Data</title>
+    <title>Collected Data</title>
     <style>
         body { font-family: sans-serif; }
-        table { border-collapse: collapse; width: 100%; }
-        th, td { border: 1px solid #ccc; padding: 4px 8px; text-align: left; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 30px; }
+        th, td { border: 1px solid #ccc; padding: 6px 10px; text-align: left; vertical-align: top; }
         th { background: #f0f0f0; }
-        pre { margin: 0; white-space: pre-wrap; }
+        .input-box { white-space: pre-wrap; }
     </style>
 </head>
 <body>
+
 <h1>Collected Data</h1>
 <p><a href="{{ url_for('index') }}">Back to main page</a></p>
 
@@ -20,22 +21,34 @@
     <thead>
     <tr>
         <th>IP</th>
-        <th>Timestamp (UTC)</th>
-        <th>Input</th>
+        <th>Timestamp (Central Time)</th>
+        <th>Inputs</th>
     </tr>
     </thead>
     <tbody>
     {% for e in entries %}
     <tr>
-        <td>{{ e.ip or e["ip"] }}</td>
-        <td>{{ e.timestamp or e["timestamp"] }}</td>
-        <td><pre>{{ e.input or e["input"] }}</pre></td>
+        <td>{{ e.ip }}</td>
+        <td>{{ e.timestamp }}</td>
+
+        <!-- Pre-Clustering input details in requested order -->
+        <td class="input-box">
+            <strong>Vehicle List:</strong> {{ e.input.vehlist }}<br>
+            <strong>5-Person Crews:</strong> {{ e.input.pers5 }}<br>
+            <strong>6-Person Crews:</strong> {{ e.input.pers6 }}<br>
+            <strong>Pull Combinations:</strong>
+            {{ 'Yes' if e.input.pull_combinations else 'No' }}<br>
+            <strong>Use Combinations:</strong>
+            {{ 'Yes' if e.input.use_combinations else 'No' }}
+        </td>
+
     </tr>
     {% endfor %}
     </tbody>
 </table>
 {% else %}
-<p>No entries yet.</p>
+<p>No entries logged yet.</p>
 {% endif %}
+
 </body>
 </html>
