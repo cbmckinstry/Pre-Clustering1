@@ -47,13 +47,16 @@
     <!-- IP header (with optional city/state/country if available) -->
     <h2 class="ip-heading">
         {{ ip }}
-        {% if group[0].geo is defined and group[0].geo %}
-        <span class="ip-meta">
-            – {{ group[0].geo.city or 'Unknown city' }},
-              {{ group[0].geo.region or 'Unknown region' }},
-              {{ group[0].geo.country or 'Unknown country' }}
-        </span>
-        {% endif %}
+    </h2>
+
+    {% if group[0].geo is defined and group[0].geo %}
+    <div class="ip-meta">
+        {{ group[0].geo.city or 'Unknown city' }},
+        {{ group[0].geo.region or 'Unknown region' }},
+        {{ group[0].geo.country or 'Unknown country' }}
+    </div>
+    {% endif %}
+
     </h2>
 
     <table>
@@ -68,9 +71,7 @@
         <tr>
             <td>{{ e.timestamp }}</td>
             <td class="input-box">
-                <strong>Vehicle List:</strong> {{ e.input.vehlist }}
-                <strong>5-Person Crews:</strong> {{ e.input.pers5 }}
-                <strong>6-Person Crews:</strong> {{ e.input.pers6 }}
+                <strong>Vehicle List:</strong> {{ e.input.vehlist }}    <strong>5-Person Crews:</strong> {{ e.input.pers5 }}    <strong>6-Person Crews:</strong> {{ e.input.pers6 }}
             </td>
         </tr>
         {% endfor %}
