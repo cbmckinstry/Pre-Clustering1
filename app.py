@@ -36,26 +36,32 @@ Session(app)
 # ------------------------------
 # Logging storage (Redis + fallback)
 # ------------------------------
-DATA_LOG = []   # local fallback
+DATA_LOG = []   # local fallback (dev only)
 
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
 
 
 def _get_redis():
+    """Return Redis connection if available, else None."""
     return app.config.get("SESSION_REDIS")
 
 
 def log_append(entry: dict):
-    """Append entry to Redis or fallback list."""
+    """
+    Append entry to Redis (production) or in-memory list (local dev).
+    """
     r = _get_redis()
     if r is not None:
-        r.rpush("data_log_v2", json.dumps(entry))   # NEW KEY
+        # key name for this app's data
+        r.rpush("data_log_v2", json.dumps(entry))
     else:
         DATA_LOG.append(entry)
 
 
 def log_get_all():
-    """Return list of entries (oldest first)."""
+    """
+    Return list of entries (oldest first).
+    """
     r = _get_redis()
     if r is not None:
         raw = r.lrange("data_log_v2", 0, -1)
@@ -63,11 +69,17 @@ def log_get_all():
     else:
         return list(DATA_LOG)
 
+
+# ------------------------------
+# IP → City/Region/Country lookup
+# ------------------------------
 def lookup_city(ip: str):
     """
-    Lookup using ip-api.com (very accurate, no API key required).
+    Lookup using ip-api.com (no API key required).
+    Returns dict {city, region, country} or None on failure.
     """
     try:
+        # Localhost / dev
         if ip.startswith("127.") or ip == "::1":
             return {"city": "Localhost", "region": None, "country": None}
 
@@ -81,14 +93,18 @@ def lookup_city(ip: str):
 
         return {
             "city": data.get("city"),
-            "region": data.get("regionName"),   # Iowa
-            "country": data.get("country")      # United States
+            "region": data.get("regionName"),
+            "country": data.get("country"),
         }
 
     except Exception as e:
         print("Geo lookup exception:", e)
         return None
 
+
+# ------------------------------
+# Main page
+# ------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -101,16 +117,16 @@ def index():
 
     # --- IP logging ---
     if str(user_ip) != "127.0.0.1" and not is_bot:
-        print("Viewer IP: " + str(user_ip))
+        print("Viewer IP:", user_ip)
 
-    # --- City lookup ---
+    # --- City lookup (for logging & /data) ---
     geo = lookup_city(user_ip)
     if geo:
         city_str = geo.get("city") or "Unknown city"
         region_str = geo.get("region") or ""
         country_str = geo.get("country") or ""
         location_print = ", ".join([s for s in [city_str, region_str, country_str] if s])
-        print(f"Approx. location: {location_print}")
+        print("Approx. location:", location_print)
 
     if request.method == "POST":
         pers5 = pers6 = 0
@@ -124,21 +140,21 @@ def index():
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
             print(
-                "User IP: "
-                + str(user_ip)
-                + ", Vehicles: "
-                + str(vehlist)
-                + ", 5-person: "
-                + str(pers5)
-                + ", 6-person: "
-                + str(pers6)
+                "User IP:",
+                user_ip,
+                "Vehicles:",
+                vehlist,
+                "5-person:",
+                pers5,
+                "6-person:",
+                pers6,
             )
 
             # --- add to /data log (Redis or in-memory) ---
             log_append(
                 {
                     "ip": user_ip,
-                    "geo": geo,  # store city/region/country here
+                    "geo": geo,  # may be None if lookup failed
                     "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
                     "input": {
                         "vehlist": vehlist,
@@ -150,7 +166,7 @@ def index():
                 }
             )
 
-            # ----- existing allocation logic -----
+            # ----- your existing allocation logic -----
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
 
@@ -229,7 +245,7 @@ def index():
             session["results"] = [results[0], off]
 
         except Exception as e:
-            print("Error: " + str(e))
+            print("Error:", e)
             return render_template(
                 "index.html",
                 error_message=f"An error occurred: {str(e)}",
@@ -284,6 +300,7 @@ def index():
         enumerate=enumerate,
         len=len,
     )
+
 
 # ------------------------------
 # /data page
