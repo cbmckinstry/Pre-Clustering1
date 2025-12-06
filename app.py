@@ -63,32 +63,30 @@ def log_get_all():
     else:
         return list(DATA_LOG)
 
-
 def lookup_city(ip: str):
     """
-    Lookup using IP2Location Web Service (requires API key).
+    Lookup using ip-api.com (very accurate, no API key required).
     """
     try:
         if ip.startswith("127.") or ip == "::1":
             return {"city": "Localhost", "region": None, "country": None}
 
-        API_KEY = os.environ.get("IP2_API_KEY")
-        if not API_KEY:
-            print("IP2Location API key missing")
-            return None
-
-        url = f"https://api.ip2location.com/v2/?key={API_KEY}&ip={ip}&format=json"
+        url = f"http://ip-api.com/json/{ip}"
         resp = requests.get(url, timeout=2)
         data = resp.json()
 
+        if data.get("status") != "success":
+            print(f"Geo lookup failed for {ip}: {data.get('message')}")
+            return None
+
         return {
-            "city": data.get("city_name"),
-            "region": data.get("region_name"),
-            "country": data.get("country_name")
+            "city": data.get("city"),
+            "region": data.get("regionName"),   # Iowa
+            "country": data.get("country")      # United States
         }
 
     except Exception as e:
-        print(f"IP2Location lookup failed: {e}")
+        print("Geo lookup exception:", e)
         return None
 
 @app.route("/", methods=["GET", "POST"])
