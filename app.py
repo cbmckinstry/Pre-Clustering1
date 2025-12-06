@@ -6,10 +6,14 @@ import redis
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
-import requests  # NEW: for IP → city lookup
+import requests  # for IP → city lookup
+import json
 
 app = Flask(__name__)
 
+# ------------------------------
+# Core config / sessions
+# ------------------------------
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 redis_url = os.environ.get("REDIS_URL")
@@ -30,13 +34,49 @@ else:
 Session(app)
 
 # ------------------------------
-# Simple in-memory data log
+# Logging storage (Redis + fallback)
 # ------------------------------
-DATA_LOG = []  # resets on restart
+# Fallback in-memory log for when Redis is not available (e.g., local dev)
+DATA_LOG = []
+
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
 
 
-# ---------- IP → City helper ----------
+def _get_redis():
+    """Return Redis connection if configured, else None."""
+    return app.config.get("SESSION_REDIS")
+
+
+def log_append(entry: dict):
+    """
+    Append a log entry.
+    - If Redis is configured (Render), store in Redis list "data_log".
+    - Otherwise, store in in-memory DATA_LOG (local/dev).
+    """
+    r = _get_redis()
+    if r is not None:
+        r.rpush("data_log", json.dumps(entry))
+    else:
+        DATA_LOG.append(entry)
+
+
+def log_get_all():
+    """
+    Get all log entries (oldest first).
+    - If Redis is configured, read from Redis.
+    - Otherwise, read from in-memory DATA_LOG.
+    """
+    r = _get_redis()
+    if r is not None:
+        entries = r.lrange("data_log", 0, -1)  # list of bytes
+        return [json.loads(e) for e in entries]
+    else:
+        return list(DATA_LOG)
+
+
+# ------------------------------
+# IP → City helper
+# ------------------------------
 def lookup_city(ip: str):
     """
     Use ipapi.co to map IP -> {city, region, country}.
@@ -63,6 +103,9 @@ def lookup_city(ip: str):
         return None
 
 
+# ------------------------------
+# Main page
+# ------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -108,11 +151,11 @@ def index():
                 + str(pers6)
             )
 
-            # --- add to /data log ---
-            DATA_LOG.append(
+            # --- add to /data log (Redis or in-memory) ---
+            log_append(
                 {
                     "ip": user_ip,
-                    "geo": geo,  # NEW: store city/region/country here
+                    "geo": geo,  # store city/region/country here
                     "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
                     "input": {
                         "vehlist": vehlist,
@@ -124,6 +167,7 @@ def index():
                 }
             )
 
+            # ----- your existing allocation logic -----
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
 
@@ -258,6 +302,9 @@ def index():
     )
 
 
+# ------------------------------
+# Matrices route
+# ------------------------------
 @app.route("/matrices", methods=["POST"])
 def matrices():
     try:
@@ -325,7 +372,7 @@ def matrices():
         alllist=session.get("alllist"),
         rem_vehs=session.get("rem_vehs"),
         backupsize=session.get("backupsize"),
-        allocations_only=int(request.form.get("allocations_only", 0)),
+        allocations_only=session.get("allocations_only", 0),
         pull_combinations=session.get("pull_combinations", 0),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
@@ -360,7 +407,8 @@ def data_view():
         return redirect(url_for("data_login"))
 
     # newest first
-    entries = list(reversed(DATA_LOG))
+    entries = list(reversed(log_get_all()))
+
     return render_template("data.html", entries=entries)
 
 
