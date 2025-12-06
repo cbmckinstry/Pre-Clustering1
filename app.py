@@ -4,9 +4,9 @@ from Master import *
 import os
 import redis
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime
 from zoneinfo import ZoneInfo
-import requests  # for IP → city lookup
+import requests
 import json
 
 app = Flask(__name__)
@@ -36,60 +36,45 @@ Session(app)
 # ------------------------------
 # Logging storage (Redis + fallback)
 # ------------------------------
-# Fallback in-memory log for when Redis is not available (e.g., local dev)
-DATA_LOG = []
+DATA_LOG = []   # local fallback
 
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
 
 
 def _get_redis():
-    """Return Redis connection if configured, else None."""
     return app.config.get("SESSION_REDIS")
 
 
 def log_append(entry: dict):
-    """
-    Append a log entry.
-    - If Redis is configured (Render), store in Redis list "data_log".
-    - Otherwise, store in in-memory DATA_LOG (local/dev).
-    """
+    """Append entry to Redis or fallback list."""
     r = _get_redis()
     if r is not None:
-        r.rpush("data_log", json.dumps(entry))
+        r.rpush("data_log_v2", json.dumps(entry))   # NEW KEY
     else:
         DATA_LOG.append(entry)
 
 
 def log_get_all():
-    """
-    Get all log entries (oldest first).
-    - If Redis is configured, read from Redis.
-    - Otherwise, read from in-memory DATA_LOG.
-    """
+    """Return list of entries (oldest first)."""
     r = _get_redis()
     if r is not None:
-        entries = r.lrange("data_log", 0, -1)  # list of bytes
-        return [json.loads(e) for e in entries]
+        raw = r.lrange("data_log_v2", 0, -1)
+        return [json.loads(x) for x in raw]
     else:
         return list(DATA_LOG)
 
 
 # ------------------------------
-# IP → City helper
+# IP → City lookup
 # ------------------------------
 def lookup_city(ip: str):
-    """
-    Use ipapi.co to map IP -> {city, region, country}.
-    Returns None on failure.
-    """
     try:
-        # Don't bother looking up localhost
         if ip.startswith("127.") or ip == "::1":
             return {"city": "Localhost", "region": None, "country": None}
 
         resp = requests.get(f"https://ipapi.co/{ip}/json/", timeout=2)
         if resp.status_code != 200:
-            print(f"Geo lookup failed for {ip}: HTTP {resp.status_code}")
+            print("Geo lookup failed:", resp.status_code)
             return None
 
         data = resp.json()
@@ -99,13 +84,10 @@ def lookup_city(ip: str):
             "country": data.get("country_name"),
         }
     except Exception as e:
-        print(f"Geo lookup exception for {ip}: {e}")
+        print("Geo lookup error:", e)
         return None
 
 
-# ------------------------------
-# Main page
-# ------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -120,7 +102,7 @@ def index():
     if str(user_ip) != "127.0.0.1" and not is_bot:
         print("Viewer IP: " + str(user_ip))
 
-    # --- City lookup (just below IP reporting) ---
+    # --- City lookup ---
     geo = lookup_city(user_ip)
     if geo:
         city_str = geo.get("city") or "Unknown city"
@@ -167,7 +149,7 @@ def index():
                 }
             )
 
-            # ----- your existing allocation logic -----
+            # ----- existing allocation logic -----
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
 
@@ -270,6 +252,7 @@ def index():
                 len=len,
             )
 
+    # GET (or POST success) render
     return render_template(
         "index.html",
         vehlist=",".join(
@@ -301,103 +284,17 @@ def index():
         len=len,
     )
 
-
 # ------------------------------
-# Matrices route
-# ------------------------------
-@app.route("/matrices", methods=["POST"])
-def matrices():
-    try:
-        people_input = request.form.get("people", "").strip()
-        crews_input = request.form.get("crews", "").strip()
-        people = int(people_input) if people_input else 0
-        crews = int(crews_input) if crews_input else 0
-
-        matrices_result = compute_matrices(people, crews)
-        ranges_result = compute_ranges(people)
-
-        session["matrices_result"] = matrices_result
-        session["ranges_result"] = ranges_result
-        session["people"] = people
-        session["crews"] = crews
-
-    except Exception as e:
-        print("Error: " + str(e))
-        return render_template(
-            "index.html",
-            error_message=f"An error occurred: {str(e)}",
-            vehlist=",".join(
-                map(
-                    str,
-                    session.get("vehlist", [])
-                    if isinstance(session.get("vehlist", []), list)
-                    else [session.get("vehlist")],
-                )
-            ),
-            pers5=session.get("pers5", ""),
-            pers6=session.get("pers6", ""),
-            results=session.get("results"),
-            totalhelp=session.get("totalhelp"),
-            sorted_allocations=session.get("sorted_allocations"),
-            alllist=session.get("alllist"),
-            rem_vehs=session.get("rem_vehs"),
-            backupsize=session.get("backupsize"),
-            allocations_only=int(request.form.get("allocations_only", 0)),
-            pull_combinations=session.get("pull_combinations", 0),
-            matrices_result=session.get("matrices_result"),
-            ranges_result=session.get("ranges_result"),
-            total_people=session.get("total_people", ""),
-            people=people_input,
-            crews=crews,
-            zip=zip,
-            enumerate=enumerate,
-            len=len,
-        )
-
-    return render_template(
-        "index.html",
-        vehlist=",".join(
-            map(
-                str,
-                session.get("vehlist", [])
-                if isinstance(session.get("vehlist", []), list)
-                else [session.get("vehlist")],
-            )
-        ),
-        pers5=session.get("pers5", ""),
-        pers6=session.get("pers6", ""),
-        results=session.get("results"),
-        totalhelp=session.get("totalhelp"),
-        sorted_allocations=session.get("sorted_allocations"),
-        alllist=session.get("alllist"),
-        rem_vehs=session.get("rem_vehs"),
-        backupsize=session.get("backupsize"),
-        allocations_only=session.get("allocations_only", 0),
-        pull_combinations=session.get("pull_combinations", 0),
-        matrices_result=session.get("matrices_result"),
-        ranges_result=session.get("ranges_result"),
-        total_people=session.get("total_people", ""),
-        people=session.get("people", ""),
-        crews=session.get("crews", ""),
-        zip=zip,
-        enumerate=enumerate,
-        len=len,
-    )
-
-
-# ------------------------------
-# Password-protected /data tab
+# /data page
 # ------------------------------
 @app.route("/data_login", methods=["GET", "POST"])
 def data_login():
     error = None
     if request.method == "POST":
-        pwd = request.form.get("password", "")
-        if pwd == DATA_PASSWORD:
+        if request.form.get("password") == DATA_PASSWORD:
             session["data_admin"] = True
             return redirect(url_for("data_view"))
-        else:
-            error = "Incorrect password."
+        error = "Incorrect password."
     return render_template("data_login.html", error=error)
 
 
@@ -406,9 +303,7 @@ def data_view():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
 
-    # newest first
-    entries = list(reversed(log_get_all()))
-
+    entries = list(reversed(log_get_all()))  # newest first
     return render_template("data.html", entries=entries)
 
 

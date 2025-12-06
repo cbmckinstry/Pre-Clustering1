@@ -15,11 +15,12 @@
             border: 2px solid #ccc;
         }
         .ip-heading {
-            margin: 0 0 8px 0;
+            margin: 0 0 4px 0;
         }
         .ip-meta {
             font-size: 0.9em;
             color: #555;
+            margin-bottom: 10px;
         }
     </style>
 </head>
@@ -30,7 +31,6 @@
 
 {% if entries %}
 
-{# ---- Group entries by IP ---- #}
 {% set grouped = {} %}
 {% for e in entries %}
 {% set ip = e.ip %}
@@ -40,23 +40,22 @@
 {% set _ = grouped[ip].append(e) %}
 {% endfor %}
 
-{# ---- Render each IP block ---- #}
 {% for ip, group in grouped.items() %}
 <div class="ip-block">
 
-    <!-- IP header (with optional city/state/country if available) -->
+    {% set g = group[0].geo if group[0].geo is defined else None %}
+
     <h2 class="ip-heading">
         {{ ip }}
-    </h2>
-
-    {% if group[0].geo is defined and group[0].geo %}
-    <div class="ip-meta">
-        {{ group[0].geo.city or 'Unknown city' }},
-        {{ group[0].geo.region or 'Unknown region' }},
-        {{ group[0].geo.country or 'Unknown country' }}
-    </div>
-    {% endif %}
-
+        {% if g %}
+        <span class="ip-meta">
+                ({{ g.city or 'Unknown city' }},
+                 {{ g.region or 'Unknown region' }},
+                 {{ g.country or 'Unknown country' }})
+            </span>
+        {% else %}
+        <span class="ip-meta">(Location unknown)</span>
+        {% endif %}
     </h2>
 
     <table>
@@ -71,7 +70,9 @@
         <tr>
             <td>{{ e.timestamp }}</td>
             <td class="input-box">
-                <strong>Vehicle List:</strong> {{ e.input.vehlist }}    <strong>5-Person Crews:</strong> {{ e.input.pers5 }}    <strong>6-Person Crews:</strong> {{ e.input.pers6 }}
+                <strong>Vehicle List:</strong> {{ e.input.vehlist }}
+                <strong>5-Person Crews:</strong> {{ e.input.pers5 }}
+                <strong>6-Person Crews:</strong> {{ e.input.pers6 }}
             </td>
         </tr>
         {% endfor %}
