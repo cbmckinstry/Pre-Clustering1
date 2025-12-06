@@ -6,6 +6,7 @@ import redis
 from pathlib import Path
 from datetime import datetime, timezone
 from zoneinfo import ZoneInfo
+import requests  # NEW: for IP → city lookup
 
 app = Flask(__name__)
 
@@ -35,6 +36,33 @@ DATA_LOG = []  # resets on restart
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
 
 
+# ---------- IP → City helper ----------
+def lookup_city(ip: str):
+    """
+    Use ipapi.co to map IP -> {city, region, country}.
+    Returns None on failure.
+    """
+    try:
+        # Don't bother looking up localhost
+        if ip.startswith("127.") or ip == "::1":
+            return {"city": "Localhost", "region": None, "country": None}
+
+        resp = requests.get(f"https://ipapi.co/{ip}/json/", timeout=2)
+        if resp.status_code != 200:
+            print(f"Geo lookup failed for {ip}: HTTP {resp.status_code}")
+            return None
+
+        data = resp.json()
+        return {
+            "city": data.get("city"),
+            "region": data.get("region"),
+            "country": data.get("country_name"),
+        }
+    except Exception as e:
+        print(f"Geo lookup exception for {ip}: {e}")
+        return None
+
+
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -44,8 +72,19 @@ def index():
             or "cron-job.org" in user_agent
             or user_agent.strip() == ""
     )
+
+    # --- IP logging ---
     if str(user_ip) != "127.0.0.1" and not is_bot:
         print("Viewer IP: " + str(user_ip))
+
+    # --- City lookup (just below IP reporting) ---
+    geo = lookup_city(user_ip)
+    if geo:
+        city_str = geo.get("city") or "Unknown city"
+        region_str = geo.get("region") or ""
+        country_str = geo.get("country") or ""
+        location_print = ", ".join([s for s in [city_str, region_str, country_str] if s])
+        print(f"Approx. location: {location_print}")
 
     if request.method == "POST":
         pers5 = pers6 = 0
@@ -73,6 +112,7 @@ def index():
             DATA_LOG.append(
                 {
                     "ip": user_ip,
+                    "geo": geo,  # NEW: store city/region/country here
                     "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
                     "input": {
                         "vehlist": vehlist,
