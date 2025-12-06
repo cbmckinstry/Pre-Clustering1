@@ -66,33 +66,30 @@ def log_get_all():
 
 def lookup_city(ip: str):
     """
-    Use ipwhois (ipwho.is) to map IP -> {city, region, country}.
-    Returns None on failure.
+    Lookup using IP2Location Web Service (requires API key).
     """
     try:
-        # Don't bother looking up localhost
         if ip.startswith("127.") or ip == "::1":
             return {"city": "Localhost", "region": None, "country": None}
 
-        # Free, no API key required
-        resp = requests.get(f"http://ipwho.is/{ip}", timeout=2)
-        data = resp.json()
-
-        # ipwhois uses a 'success' flag in the JSON
-        if not data.get("success", True):
-            print(f"Geo lookup failed for {ip}: {data.get('message')}")
+        API_KEY = os.environ.get("IP2_API_KEY")
+        if not API_KEY:
+            print("IP2Location API key missing")
             return None
 
+        url = f"https://api.ip2location.com/v2/?key={API_KEY}&ip={ip}&format=json"
+        resp = requests.get(url, timeout=2)
+        data = resp.json()
+
         return {
-            "city": data.get("city"),
-            "region": data.get("region"),
-            "country": data.get("country"),
+            "city": data.get("city_name"),
+            "region": data.get("region_name"),
+            "country": data.get("country_name")
         }
+
     except Exception as e:
-        print(f"Geo lookup exception for {ip}: {e}")
+        print(f"IP2Location lookup failed: {e}")
         return None
-
-
 
 @app.route("/", methods=["GET", "POST"])
 def index():
