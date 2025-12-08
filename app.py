@@ -333,6 +333,20 @@ def data_view():
     entries = list(reversed(log_get_all()))  # newest first
     return render_template("data.html", entries=entries)
 
+@app.route("/wipe_data", methods=["POST"])
+def wipe_data():
+    if not session.get("data_admin"):
+        return redirect(url_for("data_login"))
+
+    r = _get_redis()
+    if r:
+        r.delete("data_log_v2")   # removes all logged entries in Redis
+    else:
+        DATA_LOG.clear()         # in-memory fallback
+
+    return redirect(url_for("data_view"))
+
+
 
 if __name__ == "__main__":
     app.run()

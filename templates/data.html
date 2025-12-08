@@ -33,6 +33,14 @@
 <h1>Collected Data</h1>
 <p><a href="{{ url_for('index') }}">Back to main page</a></p>
 
+<form action="{{ url_for('wipe_data') }}" method="POST"
+      onsubmit="return confirm('Are you sure you want to delete ALL entries? This cannot be undone.');">
+    <button type="submit" style="margin-bottom: 15px; padding: 6px 12px;">
+        Wipe All Entries
+    </button>
+</form>
+
+
 {% if entries %}
 
 {# Group entries by IP #}
