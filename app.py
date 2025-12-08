@@ -102,9 +102,6 @@ def lookup_city(ip: str):
         return None
 
 
-# ------------------------------
-# Main page
-# ------------------------------
 @app.route("/", methods=["GET", "POST"])
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -127,6 +124,18 @@ def index():
         country_str = geo.get("country") or ""
         location_print = ", ".join([s for s in [city_str, region_str, country_str] if s])
         print("Approx. location:", location_print)
+
+    # --- Log pure viewers (GET) with null input ---
+    if request.method == "GET" and not is_bot:
+        log_append(
+            {
+                "ip": user_ip,
+                "geo": geo,  # may be None if lookup failed
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
+                "event": "view",
+                "input": None,  # viewer: no inputs
+            }
+        )
 
     if request.method == "POST":
         pers5 = pers6 = 0
@@ -156,6 +165,7 @@ def index():
                     "ip": user_ip,
                     "geo": geo,  # may be None if lookup failed
                     "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
+                    "event": "submit",
                     "input": {
                         "vehlist": vehlist,
                         "pers5": pers5,
@@ -300,7 +310,6 @@ def index():
         enumerate=enumerate,
         len=len,
     )
-
 
 # ------------------------------
 # /data page
