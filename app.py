@@ -330,6 +330,8 @@ def data_view():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
 
+    session.pop("data_admin", None)
+
     entries = list(reversed(log_get_all()))  # newest first
     return render_template("data.html", entries=entries)
 
