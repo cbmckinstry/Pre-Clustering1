@@ -22,6 +22,10 @@
             color: #555;
             margin-left: 6px;
         }
+        .null-text {
+            color: #999;
+            font-style: italic;
+        }
     </style>
 </head>
 <body>
@@ -45,6 +49,7 @@
 {% for ip, group in grouped.items() %}
 <div class="ip-block">
 
+    {# Use the first entry's geo info for the IP heading #}
     {% set g = group[0].geo if group[0].geo is defined else None %}
 
     <h2 class="ip-heading">
@@ -72,7 +77,58 @@
         <tr>
             <td>{{ e.timestamp }}</td>
             <td class="input-box">
-                <strong>Vehicle List:</strong> {{ e.input.vehlist }}    <strong>5-Person Crews:</strong> {{ e.input.pers5 }}    <strong>6-Person Crews:</strong> {{ e.input.pers6 }}
+                {% set inp = e.input if e.input is defined else None %}
+
+                {% if not inp %}
+                <strong>Inputs:</strong>
+                <span class="null-text">NULL</span>
+                {% else %}
+                {# Helper display that forces NULL when missing/None/empty #}
+                {% set veh = inp.vehlist if (inp.vehlist is defined and inp.vehlist is not none and inp.vehlist != '') else 'NULL' %}
+                {% set p5  = inp.pers5 if (inp.pers5  is defined and inp.pers5  is not none) else 'NULL' %}
+                {% set p6  = inp.pers6 if (inp.pers6  is defined and inp.pers6  is not none) else 'NULL' %}
+                {% set pull = inp.pull_combinations if (inp.pull_combinations is defined and inp.pull_combinations is not none) else 'NULL' %}
+                {% set use  = inp.use_combinations  if (inp.use_combinations  is defined and inp.use_combinations  is not none) else 'NULL' %}
+
+                <strong>Vehicle List:</strong>
+                {% if veh == 'NULL' %}
+                <span class="null-text">NULL</span>
+                {% else %}
+                {{ veh }}
+                {% endif %}
+                &nbsp;&nbsp;
+
+                <strong>5-Person Crews:</strong>
+                {% if p5 == 'NULL' %}
+                <span class="null-text">NULL</span>
+                {% else %}
+                {{ p5 }}
+                {% endif %}
+                &nbsp;&nbsp;
+
+                <strong>6-Person Crews:</strong>
+                {% if p6 == 'NULL' %}
+                <span class="null-text">NULL</span>
+                {% else %}
+                {{ p6 }}
+                {% endif %}
+                &nbsp;&nbsp;
+
+                <strong>Pull Combinations:</strong>
+                {% if pull == 'NULL' %}
+                <span class="null-text">NULL</span>
+                {% else %}
+                {{ pull }}
+                {% endif %}
+                &nbsp;&nbsp;
+
+                <strong>Use Combinations:</strong>
+                {% if use == 'NULL' %}
+                <span class="null-text">NULL</span>
+                {% else %}
+                {{ use }}
+                {% endif %}
+                {% endif %}
             </td>
         </tr>
         {% endfor %}
