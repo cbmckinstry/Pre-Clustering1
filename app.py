@@ -11,9 +11,6 @@ import json
 
 app = Flask(__name__)
 
-# ------------------------------
-# Core config / sessions
-# ------------------------------
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 redis_url = os.environ.get("REDIS_URL")
@@ -33,35 +30,42 @@ else:
 
 Session(app)
 
-# ------------------------------
-# Logging storage (Redis + fallback)
-# ------------------------------
-DATA_LOG = []   # local fallback (dev only)
+DATA_LOG = []
+LOG_COUNTER = 0
 
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
 
+DATA_PASSWORD_VIEW = os.environ.get("DATA_PASSWORD_VIEW", DATA_PASSWORD)
+DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", DATA_PASSWORD)
+DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", DATA_PASSWORD)
+
 
 def _get_redis():
-    """Return Redis connection if available, else None."""
     return app.config.get("SESSION_REDIS")
 
 
+def _next_local_id():
+    global LOG_COUNTER
+    LOG_COUNTER += 1
+    return LOG_COUNTER
+
+
 def log_append(entry: dict):
-    """
-    Append entry to Redis (production) or in-memory list (local dev).
-    """
     r = _get_redis()
+
+    entry = dict(entry)
+
     if r is not None:
-        # key name for this app's data
+        if "id" not in entry:
+            entry["id"] = int(r.incr("data_log_v2:id_counter"))
         r.rpush("data_log_v2", json.dumps(entry))
     else:
+        if "id" not in entry:
+            entry["id"] = _next_local_id()
         DATA_LOG.append(entry)
 
 
 def log_get_all():
-    """
-    Return list of entries (oldest first).
-    """
     r = _get_redis()
     if r is not None:
         raw = r.lrange("data_log_v2", 0, -1)
@@ -70,16 +74,39 @@ def log_get_all():
         return list(DATA_LOG)
 
 
-# ------------------------------
-# IP → City/Region/Country lookup
-# ------------------------------
+def log_replace_all(entries):
+    r = _get_redis()
+    if r is not None:
+        pipe = r.pipeline()
+        pipe.delete("data_log_v2")
+        for e in entries:
+            pipe.rpush("data_log_v2", json.dumps(e))
+        pipe.execute()
+    else:
+        global DATA_LOG
+        DATA_LOG = list(entries)
+
+
+def log_clear_all():
+    r = _get_redis()
+    if r is not None:
+        r.delete("data_log_v2")
+        r.delete("data_log_v2:id_counter")
+    else:
+        global DATA_LOG, LOG_COUNTER
+        DATA_LOG.clear()
+        LOG_COUNTER = 0
+
+def build_grouped_entries():
+    entries = list(reversed(log_get_all()))  # newest first overall
+    grouped = {}
+    for e in entries:
+        ip = e.get("ip", "Unknown IP")
+        grouped.setdefault(ip, []).append(e)
+    return grouped
+
 def lookup_city(ip: str):
-    """
-    Lookup using ip-api.com (no API key required).
-    Returns dict {city, region, country} or None on failure.
-    """
     try:
-        # Localhost / dev
         if ip.startswith("127.") or ip == "::1":
             return {"city": "Localhost", "region": None, "country": None}
 
@@ -112,11 +139,9 @@ def index():
             or user_agent.strip() == ""
     )
 
-    # --- IP logging ---
     if str(user_ip) != "127.0.0.1" and not is_bot:
         print("Viewer IP:", user_ip)
 
-    # --- City lookup (for logging & /data) ---
     geo = lookup_city(user_ip)
     if geo:
         city_str = geo.get("city") or "Unknown city"
@@ -125,15 +150,16 @@ def index():
         location_print = ", ".join([s for s in [city_str, region_str, country_str] if s])
         print("Approx. location:", location_print)
 
-    # --- Log pure viewers (GET) with null input ---
     if request.method == "GET" and not is_bot:
         log_append(
             {
                 "ip": user_ip,
-                "geo": geo,  # may be None if lookup failed
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
+                "geo": geo,
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime(
+                    "%Y-%m-%d,  %H:%M:%S"
+                ),
                 "event": "view",
-                "input": None,  # viewer: no inputs
+                "input": None,
             }
         )
 
@@ -159,12 +185,13 @@ def index():
                 pers6,
             )
 
-            # --- add to /data log (Redis or in-memory) ---
             log_append(
                 {
                     "ip": user_ip,
-                    "geo": geo,  # may be None if lookup failed
-                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
+                    "geo": geo,
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime(
+                        "%Y-%m-%d,  %H:%M:%S"
+                    ),
                     "event": "submit",
                     "input": {
                         "vehlist": vehlist,
@@ -176,7 +203,6 @@ def index():
                 }
             )
 
-            # ----- your existing allocation logic -----
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
 
@@ -186,17 +212,25 @@ def index():
             backupsize = 5
             primary_group = pers6
 
-            results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
+            results_1 = optimal_allocation(
+                veh2[:].copy(), primary_group, backup_group, 6, backupsize
+            )
             results = trickle_down(results_1, backupsize)
             off = [backup_group - results[0][0], primary_group - results[0][1]]
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
-            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
+            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(
+                results, backupsize
+            )
 
             if sum(off) <= pers6 and backupsize == 5:
-                combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+                combos, listing = call_sixesFlipped(
+                    sorted_allocations, sorted_spaces, off.copy(), backupsize, None
+                )
             else:
-                combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+                combos, listing = call_combine(
+                    sorted_allocations, sorted_spaces, off.copy(), backupsize, None
+                )
             listing1 = listing.copy()
             combos1 = combos.copy()
             combos3 = combos1.copy()
@@ -207,7 +241,11 @@ def index():
                     combos1.append([elem])
                     listing1.append([0, 0])
                 combos2, newalloc = call_optimize(
-                    sorted_allocations.copy(), listing1, backupsize, combos1, sorted_spaces
+                    sorted_allocations.copy(),
+                    listing1,
+                    backupsize,
+                    combos1,
+                    sorted_spaces,
                 )
                 combos3 = combos2
                 listing3 = newalloc
@@ -279,7 +317,6 @@ def index():
                 len=len,
             )
 
-    # GET (or POST success) render
     return render_template(
         "index.html",
         vehlist=",".join(
@@ -311,17 +348,17 @@ def index():
         len=len,
     )
 
-# ------------------------------
-# /data page
-# ------------------------------
 @app.route("/data_login", methods=["GET", "POST"])
 def data_login():
     error = None
     if request.method == "POST":
-        if request.form.get("password") == DATA_PASSWORD:
+        pwd = request.form.get("password", "")
+        if pwd == DATA_PASSWORD_VIEW:
             session["data_admin"] = True
+            session.pop("delete_unlocked", None)
             return redirect(url_for("data_view"))
-        error = "Incorrect password."
+        else:
+            error = "Incorrect password."
     return render_template("data_login.html", error=error)
 
 
@@ -330,24 +367,65 @@ def data_view():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
 
-    session.pop("data_admin", None)
+    grouped_entries = build_grouped_entries()
+    return render_template(
+        "data.html",
+        grouped_entries=grouped_entries,
+        delete_error=None,
+        wipe_error=None,
+    )
 
-    entries = list(reversed(log_get_all()))  # newest first
-    return render_template("data.html", entries=entries)
+
+@app.route("/delete_entry", methods=["POST"])
+def delete_entry():
+    if not session.get("data_admin"):
+        return redirect(url_for("data_login"))
+
+    entry_id = request.form.get("entry_id", type=int)
+    if entry_id is None:
+        return redirect(url_for("data_view"))
+
+    delete_unlocked = session.get("delete_unlocked", False)
+
+    if not delete_unlocked:
+        pwd = request.form.get("delete_password", "")
+        if pwd != DATA_PASSWORD_DELETE:
+            grouped_entries = build_grouped_entries()
+            return render_template(
+                "data.html",
+                grouped_entries=grouped_entries,
+                delete_error="Incorrect delete password.",
+                wipe_error=None,
+            )
+        session["delete_unlocked"] = True
+
+    entries = log_get_all()
+    filtered = [e for e in entries if e.get("id") != entry_id]
+    log_replace_all(filtered)
+    print(f"Deleted entry {entry_id}; remaining entries: {len(filtered)}")
+
+    return redirect(url_for("data_view"))
+
 
 @app.route("/wipe_data", methods=["POST"])
 def wipe_data():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
 
-    r = _get_redis()
-    if r:
-        r.delete("data_log_v2")   # removes all logged entries in Redis
-    else:
-        DATA_LOG.clear()         # in-memory fallback
+    pwd = request.form.get("wipe_password", "")
+    if pwd != DATA_PASSWORD_WIPE:
+        grouped_entries = build_grouped_entries()
+        return render_template(
+            "data.html",
+            grouped_entries=grouped_entries,
+            delete_error=None,
+            wipe_error="Incorrect wipe password.",
+        )
+
+    log_clear_all()
+    print("All entries wiped (Pre-Clustering).")
 
     return redirect(url_for("data_view"))
-
 
 
 if __name__ == "__main__":

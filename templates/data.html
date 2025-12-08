@@ -10,7 +10,7 @@
         th { background: #f0f0f0; }
 
         .input-box {
-            white-space: nowrap;
+            white-space: nowrap;  /* keep rows compact */
         }
 
         .ip-block {
@@ -26,6 +26,11 @@
             font-weight: normal;
             margin-right: 4px;
         }
+
+        .error {
+            color: red;
+            margin-bottom: 8px;
+        }
     </style>
 </head>
 <body>
@@ -33,28 +38,21 @@
 <h1>Collected Data</h1>
 <p><a href="{{ url_for('index') }}">Back to main page</a></p>
 
+{% if wipe_error %}
+<p class="error">{{ wipe_error }}</p>
+{% endif %}
+
 <form action="{{ url_for('wipe_data') }}" method="POST"
       onsubmit="return confirm('Are you sure you want to delete ALL entries? This cannot be undone.');">
+    <label for="wipe-password">Wipe password:</label>
+    <input type="password" id="wipe-password" name="wipe_password" required>
     <button type="submit" style="margin-bottom: 15px; padding: 6px 12px;">
         Wipe All Entries
     </button>
 </form>
 
-
-{% if entries %}
-
-{# Group entries by IP #}
-{% set grouped = {} %}
-{% for e in entries %}
-{% set ip = e.ip %}
-{% if ip not in grouped %}
-{% set _ = grouped.update({ ip: [] }) %}
-{% endif %}
-{% set _ = grouped[ip].append(e) %}
-{% endfor %}
-
-{# Render each IP group #}
-{% for ip, group in grouped.items() %}
+{% if grouped_entries %}
+{% for ip, group in grouped_entries.items() %}
 <div class="ip-block">
 
     {% set g = group[0].geo if group[0].geo is defined else None %}
@@ -77,6 +75,7 @@
         <tr>
             <th>Timestamp (Central Time)</th>
             <th>Inputs</th>
+            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
@@ -84,37 +83,35 @@
         {% for e in group %}
         {% set inp = e.input if e.input is defined else None %}
         {% set is_viewer = (e.event is defined and e.event == "view") %}
-
         <tr>
             <td>{{ e.timestamp }}</td>
-
             <td class="input-box">
-
                 {% if is_viewer %}
                 NULL
-
                 {% else %}
                 {% if not inp %}
                 NULL
                 {% else %}
-
                 <span class="label">Vehicle List:</span>{{ inp.vehlist if inp.vehlist is not none else "NULL" }}
-                &nbsp;  &nbsp;
-
+                &nbsp;&nbsp;
                 <span class="label">5-Person:</span>{{ inp.pers5 if inp.pers5 is not none else "NULL" }}
-                &nbsp;  &nbsp;
-
+                &nbsp;&nbsp;
                 <span class="label">6-Person:</span>{{ inp.pers6 if inp.pers6 is not none else "NULL" }}
-                &nbsp;  &nbsp;
-
-                <span class="label">Pull:</span>{{ inp.pull_combinations if inp.pull_combinations is not none else "NULL" }}
-                &nbsp;  &nbsp;
-
-                <span class="label">Use:</span>{{ inp.use_combinations if inp.use_combinations is not none else "NULL" }}
-
+                &nbsp;&nbsp;
+                <span class="label">Pull Combos:</span>{{ inp.pull_combinations if inp.pull_combinations is not none else "NULL" }}
+                &nbsp;&nbsp;
+                <span class="label">Use Combos:</span>{{ inp.use_combinations if inp.use_combinations is not none else "NULL" }}
                 {% endif %}
                 {% endif %}
-
+            </td>
+            <td>
+                <form action="{{ url_for('delete_entry') }}" method="POST" style="display:inline;">
+                    <input type="hidden" name="entry_id" value="{{ e.id }}">
+                    {% if not session.get('delete_unlocked') %}
+                    <input type="password" name="delete_password" placeholder="Delete password" required>
+                    {% endif %}
+                    <button type="submit">Delete</button>
+                </form>
             </td>
         </tr>
         {% endfor %}
@@ -124,9 +121,12 @@
 
 </div>
 {% endfor %}
-
 {% else %}
 <p>No entries logged yet.</p>
+{% endif %}
+
+{% if delete_error %}
+<p class="error">{{ delete_error }}</p>
 {% endif %}
 
 </body>
