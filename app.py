@@ -131,7 +131,7 @@ def index():
             {
                 "ip": user_ip,
                 "geo": geo,  # may be None if lookup failed
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d, %H:%M:%S"),
                 "event": "view",
                 "input": None,  # viewer: no inputs
             }
@@ -164,7 +164,7 @@ def index():
                 {
                     "ip": user_ip,
                     "geo": geo,  # may be None if lookup failed
-                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).isoformat(),
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d, %H:%M:%S"),
                     "event": "submit",
                     "input": {
                         "vehlist": vehlist,
