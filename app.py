@@ -56,10 +56,13 @@ DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", DATA_PASSWORD)
 DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", DATA_PASSWORD)
 
 # ------------------------------
-# Admin TTL (60 seconds)
+# Admin TTL (seconds)
 # ------------------------------
 ADMIN_TTL_SECONDS = int(os.environ.get("ADMIN_TTL_SECONDS", "60"))
-DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "0"))
+
+# If 0 => requires delete password every delete
+# If >0 => after entering delete password once, it stays unlocked for that many seconds
+DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "60"))
 
 def _now() -> float:
     return time.time()
@@ -92,7 +95,14 @@ def _k(suffix: str) -> str:
     return f"{DATA_KEY_PREFIX}{suffix}"
 
 def _get_redis():
-    return app.config.get("SESSION_REDIS")
+    r = app.config.get("SESSION_REDIS")
+    if r is None:
+        return None
+    try:
+        r.ping()
+        return r
+    except Exception:
+        return None
 
 def _next_local_id():
     global LOG_COUNTER
@@ -375,7 +385,15 @@ def data_view():
         return redirect(url_for("data_login"))
 
     grouped_entries = build_grouped_entries()
-    return render_template("data.html", grouped_entries=grouped_entries, delete_error=None, wipe_error=None)
+    delete_unlocked = is_delete_unlocked()
+
+    return render_template(
+        "data.html",
+        grouped_entries=grouped_entries,
+        delete_unlocked=delete_unlocked,
+        delete_error=None,
+        wipe_error=None,
+    )
 
 @app.route("/delete_entry", methods=["POST"], strict_slashes=False)
 def delete_entry():
@@ -395,6 +413,7 @@ def delete_entry():
             return render_template(
                 "data.html",
                 grouped_entries=grouped_entries,
+                delete_unlocked=is_delete_unlocked(),
                 delete_error="Incorrect delete password.",
                 wipe_error=None,
             )
@@ -416,6 +435,7 @@ def wipe_data():
         return render_template(
             "data.html",
             grouped_entries=grouped_entries,
+            delete_unlocked=is_delete_unlocked(),
             delete_error=None,
             wipe_error="Incorrect wipe password.",
         )
