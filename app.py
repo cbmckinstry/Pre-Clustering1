@@ -20,7 +20,11 @@ redis_url = os.environ.get("REDIS_URL")
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-app.config["SESSION_KEY_PREFIX"] = "session:"  # keep as-is unless you need to isolate sessions too
+
+# IMPORTANT: isolate session keys between apps sharing Redis
+# Render env example for this app:
+#   SESSION_KEY_PREFIX=session:pre:
+app.config["SESSION_KEY_PREFIX"] = os.environ.get("SESSION_KEY_PREFIX", "session:pre:")
 
 if redis_url:
     app.config["SESSION_TYPE"] = "redis"
@@ -34,7 +38,7 @@ else:
 Session(app)
 
 # ------------------------------
-# Data logging (Redis + fallback)
+# Logging storage (Redis + fallback)
 # ------------------------------
 DATA_LOG = []
 LOG_COUNTER = 0
@@ -44,24 +48,25 @@ DATA_PASSWORD_VIEW = os.environ.get("DATA_PASSWORD_VIEW", DATA_PASSWORD)
 DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", DATA_PASSWORD)
 DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", DATA_PASSWORD)
 
-# IMPORTANT: namespace ONLY the data-log keys so sharing Redis won't collide with other apps.
-# Set this env var per app (recommended):
-#   DATA_KEY_PREFIX = "pre:data_log_v2"   (this app)
-#   DATA_KEY_PREFIX = "other:data_log_v2" (other app)
-DATA_KEY_PREFIX = os.environ.get("DATA_KEY_PREFIX", "data_log_v2").strip() or "data_log_v2"
+# IMPORTANT: isolate log keys between apps sharing Redis
+# Render env example for this app:
+#   DATA_KEY_PREFIX=pre:data_log_v2
+DATA_KEY_PREFIX = os.environ.get("DATA_KEY_PREFIX", "pre:data_log_v2").strip() or "pre:data_log_v2"
+
 
 def _k(suffix: str) -> str:
-    # list key: "<prefix>"
-    # counter:  "<prefix>:id_counter"
     return f"{DATA_KEY_PREFIX}{suffix}"
+
 
 def _get_redis():
     return app.config.get("SESSION_REDIS")
+
 
 def _next_local_id():
     global LOG_COUNTER
     LOG_COUNTER += 1
     return LOG_COUNTER
+
 
 def log_append(entry: dict):
     r = _get_redis()
@@ -76,12 +81,15 @@ def log_append(entry: dict):
             entry["id"] = _next_local_id()
         DATA_LOG.append(entry)
 
+
 def log_get_all():
     r = _get_redis()
     if r is not None:
         raw = r.lrange(_k(""), 0, -1)
         return [json.loads(x) for x in raw]
-    return list(DATA_LOG)
+    else:
+        return list(DATA_LOG)
+
 
 def log_replace_all(entries):
     r = _get_redis()
@@ -95,6 +103,7 @@ def log_replace_all(entries):
         global DATA_LOG
         DATA_LOG = list(entries)
 
+
 def log_clear_all():
     r = _get_redis()
     if r is not None:
@@ -105,6 +114,7 @@ def log_clear_all():
         DATA_LOG.clear()
         LOG_COUNTER = 0
 
+
 def build_grouped_entries():
     entries = list(reversed(log_get_all()))  # newest first overall
     grouped = {}
@@ -112,6 +122,7 @@ def build_grouped_entries():
         ip = e.get("ip", "Unknown IP")
         grouped.setdefault(ip, []).append(e)
     return grouped
+
 
 def lookup_city(ip: str):
     try:
@@ -137,9 +148,6 @@ def lookup_city(ip: str):
         return None
 
 
-# ============================================================
-# MAIN SITE (regular users) - WORKS AT "/"
-# ============================================================
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
@@ -183,8 +191,6 @@ def index():
             pers5 = int(request.form.get("pers5") or 0)
             pers6 = int(request.form.get("pers6") or 0)
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
-
-            print("User IP:", user_ip, "Vehicles:", vehlist, "5-person:", pers5, "6-person:", pers6)
 
             log_append(
                 {
@@ -345,10 +351,7 @@ def index():
     )
 
 
-# ============================================================
-# DATA CENTER (admin only) - ONLY under /pre/data*
-# ============================================================
-@app.route("/pre/data_login", methods=["GET", "POST"], strict_slashes=False)
+@app.route("/data_login", methods=["GET", "POST"], strict_slashes=False)
 def data_login():
     error = None
     if request.method == "POST":
@@ -362,7 +365,7 @@ def data_login():
     return render_template("data_login.html", error=error)
 
 
-@app.route("/pre/data", strict_slashes=False)
+@app.route("/data", strict_slashes=False)
 def data_view():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
@@ -376,7 +379,7 @@ def data_view():
     )
 
 
-@app.route("/pre/delete_entry", methods=["POST"], strict_slashes=False)
+@app.route("/delete_entry", methods=["POST"], strict_slashes=False)
 def delete_entry():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
@@ -402,12 +405,10 @@ def delete_entry():
     entries = log_get_all()
     filtered = [e for e in entries if e.get("id") != entry_id]
     log_replace_all(filtered)
-    print(f"Deleted entry {entry_id}; remaining entries: {len(filtered)}")
-
     return redirect(url_for("data_view"))
 
 
-@app.route("/pre/wipe_data", methods=["POST"], strict_slashes=False)
+@app.route("/wipe_data", methods=["POST"], strict_slashes=False)
 def wipe_data():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
@@ -423,8 +424,6 @@ def wipe_data():
         )
 
     log_clear_all()
-    print("All entries wiped (Pre-Clustering).")
-
     return redirect(url_for("data_view"))
 
 
