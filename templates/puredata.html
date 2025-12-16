@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="utf-8">
-    <title>Data Admin</title>
+    <title>PureData (Archive)</title>
     <style>
         body { font-family: sans-serif; }
         table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
@@ -13,33 +13,20 @@
         .ip-heading { margin: 0 0 4px 0; }
         .ip-meta { font-size: 0.9em; color: #555; margin-left: 6px; }
         .label { font-weight: normal; margin-right: 4px; }
-        .error { color: red; margin-bottom: 8px; }
-        .section { border: 1px solid #ddd; padding: 12px; margin: 12px 0; }
     </style>
 </head>
 <body>
 
-<h1>Data Admin</h1>
-<p><a href="{{ url_for('index') }}">Back to main page</a></p>
-
-{% if wipe_error %}<p class="error">{{ wipe_error }}</p>{% endif %}
-{% if delete_error %}<p class="error">{{ delete_error }}</p>{% endif %}
-
-{% if can_wipe %}
-<div class="section">
-    <form action="{{ url_for('wipe_data') }}" method="POST"
-          onsubmit="return confirm('Are you sure you want to delete ALL entries? This cannot be undone (main log only).');">
-        <label for="wipe-password">Wipe password:</label>
-        <input type="password" id="wipe-password" name="wipe_password" required>
-        <button type="submit">Wipe Main Log</button>
-    </form>
-</div>
-{% endif %}
+<h1>PureData (Archive)</h1>
+<p>
+    <a href="{{ url_for('index') }}">Back to main page</a>
+    &nbsp;|&nbsp;
+    <a href="{{ url_for('data_view') }}">Go to /data</a>
+</p>
 
 {% if grouped_entries %}
 {% for ip, group in grouped_entries.items() %}
 <div class="ip-block">
-
     {% set g = group[0].geo if group[0].geo is defined else None %}
 
     <h2 class="ip-heading">
@@ -49,7 +36,7 @@
             ({{ g.city or 'Unknown city' }},
              {{ g.region or 'Unknown region' }},
              {{ g.country or 'Unknown country' }})
-        </span>
+          </span>
         {% else %}
         <span class="ip-meta">(Location unknown)</span>
         {% endif %}
@@ -60,11 +47,9 @@
         <tr>
             <th>Timestamp (Central Time)</th>
             <th>Inputs</th>
-            <th>Actions</th>
         </tr>
         </thead>
         <tbody>
-
         {% for e in group %}
         {% set inp = e.input if e.input is defined else None %}
         {% set is_viewer = (e.event is defined and e.event == "view") %}
@@ -75,7 +60,7 @@
                 NULL
                 {% else %}
                 {% if not inp %}
-                {% if e.note is defined %}<span class="label">Note:</span>{{ e.note }}{% else %}NULL{% endif %}
+                NULL
                 {% else %}
                 <span class="label">Vehicle List:</span>{{ inp.vehlist if inp.vehlist is not none else "NULL" }}
                 &nbsp;&nbsp;
@@ -89,25 +74,10 @@
                 {% endif %}
                 {% endif %}
             </td>
-            <td>
-                {% if can_delete %}
-                <form action="{{ url_for('delete_entry') }}" method="POST" style="display:inline;">
-                    <input type="hidden" name="entry_id" value="{{ e.id }}">
-                    {% if not delete_unlocked %}
-                    <input type="password" name="delete_password" placeholder="Delete password" required>
-                    {% endif %}
-                    <button type="submit">Delete</button>
-                </form>
-                {% else %}
-                —
-                {% endif %}
-            </td>
         </tr>
         {% endfor %}
-
         </tbody>
     </table>
-
 </div>
 {% endfor %}
 {% else %}
