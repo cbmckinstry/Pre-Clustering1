@@ -11,13 +11,16 @@ import json
 
 app = Flask(__name__)
 
+# ------------------------------
+# Core config / sessions
+# ------------------------------
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
 redis_url = os.environ.get("REDIS_URL")
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-app.config["SESSION_KEY_PREFIX"] = "session:"
+app.config["SESSION_KEY_PREFIX"] = "session:"  # keep as-is unless you need to isolate sessions too
 
 if redis_url:
     app.config["SESSION_TYPE"] = "redis"
@@ -30,68 +33,73 @@ else:
 
 Session(app)
 
+# ------------------------------
+# Data logging (Redis + fallback)
+# ------------------------------
 DATA_LOG = []
 LOG_COUNTER = 0
 
 DATA_PASSWORD = os.environ.get("DATA_PASSWORD", "change-me")
-
 DATA_PASSWORD_VIEW = os.environ.get("DATA_PASSWORD_VIEW", DATA_PASSWORD)
 DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", DATA_PASSWORD)
 DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", DATA_PASSWORD)
 
+# IMPORTANT: namespace ONLY the data-log keys so sharing Redis won't collide with other apps.
+# Set this env var per app (recommended):
+#   DATA_KEY_PREFIX = "pre:data_log_v2"   (this app)
+#   DATA_KEY_PREFIX = "other:data_log_v2" (other app)
+DATA_KEY_PREFIX = os.environ.get("DATA_KEY_PREFIX", "data_log_v2").strip() or "data_log_v2"
+
+def _k(suffix: str) -> str:
+    # list key: "<prefix>"
+    # counter:  "<prefix>:id_counter"
+    return f"{DATA_KEY_PREFIX}{suffix}"
 
 def _get_redis():
     return app.config.get("SESSION_REDIS")
-
 
 def _next_local_id():
     global LOG_COUNTER
     LOG_COUNTER += 1
     return LOG_COUNTER
 
-
 def log_append(entry: dict):
     r = _get_redis()
-
     entry = dict(entry)
 
     if r is not None:
         if "id" not in entry:
-            entry["id"] = int(r.incr("data_log_v2:id_counter"))
-        r.rpush("data_log_v2", json.dumps(entry))
+            entry["id"] = int(r.incr(_k(":id_counter")))
+        r.rpush(_k(""), json.dumps(entry))
     else:
         if "id" not in entry:
             entry["id"] = _next_local_id()
         DATA_LOG.append(entry)
 
-
 def log_get_all():
     r = _get_redis()
     if r is not None:
-        raw = r.lrange("data_log_v2", 0, -1)
+        raw = r.lrange(_k(""), 0, -1)
         return [json.loads(x) for x in raw]
-    else:
-        return list(DATA_LOG)
-
+    return list(DATA_LOG)
 
 def log_replace_all(entries):
     r = _get_redis()
     if r is not None:
         pipe = r.pipeline()
-        pipe.delete("data_log_v2")
+        pipe.delete(_k(""))
         for e in entries:
-            pipe.rpush("data_log_v2", json.dumps(e))
+            pipe.rpush(_k(""), json.dumps(e))
         pipe.execute()
     else:
         global DATA_LOG
         DATA_LOG = list(entries)
 
-
 def log_clear_all():
     r = _get_redis()
     if r is not None:
-        r.delete("data_log_v2")
-        r.delete("data_log_v2:id_counter")
+        r.delete(_k(""))
+        r.delete(_k(":id_counter"))
     else:
         global DATA_LOG, LOG_COUNTER
         DATA_LOG.clear()
@@ -129,7 +137,10 @@ def lookup_city(ip: str):
         return None
 
 
-@app.route("/", methods=["GET", "POST"])
+# ============================================================
+# MAIN SITE (regular users) - WORKS AT "/"
+# ============================================================
+@app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
     user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
     user_agent = request.headers.get("User-Agent", "").lower()
@@ -155,9 +166,7 @@ def index():
             {
                 "ip": user_ip,
                 "geo": geo,
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime(
-                    "%Y-%m-%d,  %H:%M:%S"
-                ),
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
                 "event": "view",
                 "input": None,
             }
@@ -165,6 +174,7 @@ def index():
 
     if request.method == "POST":
         pers5 = pers6 = 0
+        vehlist_input = ""
         try:
             vehlist_input = request.form.get("vehlist", "").strip()
             pull_combinations = int(request.form.get("pull_combinations", 0))
@@ -174,24 +184,13 @@ def index():
             pers6 = int(request.form.get("pers6") or 0)
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-            print(
-                "User IP:",
-                user_ip,
-                "Vehicles:",
-                vehlist,
-                "5-person:",
-                pers5,
-                "6-person:",
-                pers6,
-            )
+            print("User IP:", user_ip, "Vehicles:", vehlist, "5-person:", pers5, "6-person:", pers6)
 
             log_append(
                 {
                     "ip": user_ip,
                     "geo": geo,
-                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime(
-                        "%Y-%m-%d,  %H:%M:%S"
-                    ),
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
                     "event": "submit",
                     "input": {
                         "vehlist": vehlist,
@@ -212,34 +211,31 @@ def index():
             backupsize = 5
             primary_group = pers6
 
-            results_1 = optimal_allocation(
-                veh2[:].copy(), primary_group, backup_group, 6, backupsize
-            )
+            results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
             results = trickle_down(results_1, backupsize)
             off = [backup_group - results[0][0], primary_group - results[0][1]]
+
             if not results or not isinstance(results, list) or len(results) < 2:
                 raise ValueError("Invalid results returned from calculations.")
-            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(
-                results, backupsize
-            )
+
+            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
 
             if sum(off) <= pers6 and backupsize == 5:
-                combos, listing = call_sixesFlipped(
-                    sorted_allocations, sorted_spaces, off.copy(), backupsize, None
-                )
+                combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
             else:
-                combos, listing = call_combine(
-                    sorted_allocations, sorted_spaces, off.copy(), backupsize, None
-                )
+                combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+
             listing1 = listing.copy()
             combos1 = combos.copy()
             combos3 = combos1.copy()
             listing3 = listing1.copy()
             rem_vehs1 = unused(sorted_allocations.copy(), combos.copy())
+
             if combos:
                 for elem in rem_vehs1:
                     combos1.append([elem])
                     listing1.append([0, 0])
+
                 combos2, newalloc = call_optimize(
                     sorted_allocations.copy(),
                     listing1,
@@ -273,7 +269,6 @@ def index():
 
             session["sorted_allocations"] = combined_sorted_data
             session["totalhelp"] = totalhelp
-
             session["alllist"] = alllist
             session["backupsize"] = backupsize
 
@@ -289,6 +284,7 @@ def index():
                 session["vehlist"] = sumAll(combos.copy(), vehlist)
                 session["pers6"] = pers6
                 session["pers5"] = pers5
+
             session["rem_vehs"] = rem_vehs
             session["results"] = [results[0], off]
 
@@ -348,7 +344,11 @@ def index():
         len=len,
     )
 
-@app.route("/data_login", methods=["GET", "POST"])
+
+# ============================================================
+# DATA CENTER (admin only) - ONLY under /pre/data*
+# ============================================================
+@app.route("/pre/data_login", methods=["GET", "POST"], strict_slashes=False)
 def data_login():
     error = None
     if request.method == "POST":
@@ -362,7 +362,7 @@ def data_login():
     return render_template("data_login.html", error=error)
 
 
-@app.route("/data")
+@app.route("/pre/data", strict_slashes=False)
 def data_view():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
@@ -376,7 +376,7 @@ def data_view():
     )
 
 
-@app.route("/delete_entry", methods=["POST"])
+@app.route("/pre/delete_entry", methods=["POST"], strict_slashes=False)
 def delete_entry():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
@@ -406,7 +406,8 @@ def delete_entry():
 
     return redirect(url_for("data_view"))
 
-@app.route("/wipe_data", methods=["POST"])
+
+@app.route("/pre/wipe_data", methods=["POST"], strict_slashes=False)
 def wipe_data():
     if not session.get("data_admin"):
         return redirect(url_for("data_login"))
