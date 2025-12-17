@@ -20,12 +20,15 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,  # Render is HTTPS
+    SESSION_COOKIE_SECURE=True,   # Render is HTTPS
 )
 
 redis_url = os.environ.get("REDIS_URL")
 
-app.config["SESSION_PERMANENT"] = False  # browser-session cookie (ends when browser closes)
+# IMPORTANT:
+# - SESSION_PERMANENT=False => session cookie dies when the BROWSER closes
+# - Tab-close logout is handled by JS calling /logout/<role>
+app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
 app.config["SESSION_KEY_PREFIX"] = os.environ.get("SESSION_KEY_PREFIX", "session:pre:")
 
@@ -43,65 +46,55 @@ Session(app)
 # ------------------------------
 # Role passwords (env vars)
 # ------------------------------
-# /data (can view/delete/wipe MAIN log)
 DATA_PASSWORD_VIEW = os.environ.get("DATA_PASSWORD_VIEW", os.environ.get("DATA_PASSWORD", "change-me"))
 DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", os.environ.get("DATA_PASSWORD", "change-me"))
 DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", os.environ.get("DATA_PASSWORD", "change-me"))
 
-# /trainer (view-only MAIN log)
 TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me-trainer")
-
-# /carson (view-only immutable ARCHIVE log) -- no time limit once authenticated
 CARSON_PASSWORD_VIEW = os.environ.get("CARSON_PASSWORD_VIEW", "change-me-carson")
 
 # ------------------------------
 # TTLs
 # ------------------------------
-ADMIN_TTL_SECONDS = int(os.environ.get("ADMIN_TTL_SECONDS", "120"))
-TRAINER_TTL_SECONDS = int(os.environ.get("TRAINER_TTL_SECONDS", "300"))
-
+# Delete "unlock" time limit stays
 DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "30"))
 
 def _now() -> float:
     return time.time()
 
 # ------------------------------
-# Auth helpers
+# Auth helpers (NO TIME LIMIT for view auth)
 # ------------------------------
+# These are "session lives until tab closes (logout beacon) or browser closes (session cookie)."
+
 def is_data_authed() -> bool:
-    return session.get("data_until", 0) > _now()
+    return bool(session.get("data_authed", False))
 
 def require_data() -> bool:
     if not is_data_authed():
-        session.pop("data_until", None)
+        session.pop("data_authed", None)
         session.pop("delete_unlocked_until", None)
         return False
     return True
 
-def is_delete_unlocked() -> bool:
-    return session.get("delete_unlocked_until", 0) > _now()
-
 def is_trainer_authed() -> bool:
-    return session.get("trainer_until", 0) > _now()
+    return bool(session.get("trainer_authed", False))
 
-# NO TIME LIMIT for carson (until browser session ends)
 def is_carson_authed() -> bool:
     return bool(session.get("carson_authed", False))
+
+# Delete unlock still TTL-based
+def is_delete_unlocked() -> bool:
+    return session.get("delete_unlocked_until", 0) > _now()
 
 # ------------------------------
 # Logging keys (Redis + fallback)
 # ------------------------------
-# MAIN log (mutable): /data + /trainer see this
 DATA_KEY_PREFIX = os.environ.get("DATA_KEY_PREFIX", "pre:data_log_v2").strip() or "pre:data_log_v2"
-
-# ARCHIVE log (immutable): /carson sees this; never wiped/deleted/edited
 ARCHIVE_KEY_PREFIX = os.environ.get("ARCHIVE_KEY_PREFIX", "pre:archive_v1").strip() or "pre:archive_v1"
 
-# HARD SAFETY CHECK: if these match, /carson will change when /data changes (BAD)
 if DATA_KEY_PREFIX == ARCHIVE_KEY_PREFIX:
-    raise RuntimeError(
-        "FATAL CONFIG ERROR: DATA_KEY_PREFIX and ARCHIVE_KEY_PREFIX must be different."
-    )
+    raise RuntimeError("FATAL CONFIG ERROR: DATA_KEY_PREFIX and ARCHIVE_KEY_PREFIX must be different.")
 
 DATA_LOG = []
 ARCHIVE_LOG = []
@@ -263,7 +256,6 @@ def index():
                 },
             })
 
-            # ---- your existing compute pipeline ----
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
             validate_inputs(vehlist, pers5, pers6)
@@ -404,6 +396,21 @@ def index():
     )
 
 # ==========================================================
+# Logout beacon endpoints (TAB CLOSE)
+# ==========================================================
+@app.route("/logout/<role>", methods=["POST"], strict_slashes=False)
+def logout_role(role: str):
+    # Called by navigator.sendBeacon on tab close / pagehide
+    if role == "data":
+        session.pop("data_authed", None)
+        session.pop("delete_unlocked_until", None)
+    elif role == "trainer":
+        session.pop("trainer_authed", None)
+    elif role == "carson":
+        session.pop("carson_authed", None)
+    return ("", 204)
+
+# ==========================================================
 # /data (EDITOR) — login + view + delete + wipe
 # ==========================================================
 @app.route("/data_login", methods=["GET", "POST"], strict_slashes=False)
@@ -412,7 +419,7 @@ def data_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == DATA_PASSWORD_VIEW:
-            session["data_until"] = _now() + ADMIN_TTL_SECONDS
+            session["data_authed"] = True          # no expiry
             session.pop("delete_unlocked_until", None)
             return redirect(url_for("data_view"))
         error = "Incorrect password."
@@ -485,7 +492,7 @@ def wipe_data():
     return redirect(url_for("data_view"))
 
 # ==========================================================
-# /trainer (VIEWER) — view-only MAIN log (changes with /data)
+# /trainer (VIEWER) — view-only MAIN log
 # ==========================================================
 @app.route("/trainer_login", methods=["GET", "POST"], strict_slashes=False)
 def trainer_login():
@@ -493,7 +500,7 @@ def trainer_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == TRAINER_PASSWORD_VIEW:
-            session["trainer_until"] = _now() + TRAINER_TTL_SECONDS
+            session["trainer_authed"] = True      # no expiry
             return redirect(url_for("trainer_view"))
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
@@ -501,14 +508,14 @@ def trainer_login():
 @app.route("/trainer", strict_slashes=False)
 def trainer_view():
     if not is_trainer_authed():
-        session.pop("trainer_until", None)
+        session.pop("trainer_authed", None)
         return redirect(url_for("trainer_login"))
 
     grouped_entries = build_grouped_entries(log_get_all_main())
     return render_template("trainer.html", grouped_entries=grouped_entries)
 
 # ==========================================================
-# /carson (IMMUTABLE VIEWER) — view-only ARCHIVE log (NO TIME LIMIT)
+# /carson (IMMUTABLE VIEWER) — view-only ARCHIVE log
 # ==========================================================
 @app.route("/carson_login", methods=["GET", "POST"], strict_slashes=False)
 def carson_login():
@@ -516,7 +523,7 @@ def carson_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == CARSON_PASSWORD_VIEW:
-            session["carson_authed"] = True  # <-- no expiry
+            session["carson_authed"] = True       # no expiry
             return redirect(url_for("carson_view"))
         error = "Incorrect password."
     return render_template("carson_login.html", error=error)

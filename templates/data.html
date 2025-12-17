@@ -114,5 +114,9 @@
 <p>No entries logged yet.</p>
 {% endif %}
 
+{# TAB-CLOSE LOGOUT: forces re-login next time tab opens #}
+{% set role = "data" %}
+{% include "_logout_beacon.html" %}
+
 </body>
 </html>
