@@ -419,9 +419,16 @@ def data_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == DATA_PASSWORD_VIEW:
-            session["data_authed"] = True          # no expiry
+            session["data_authed"] = True
             session.pop("delete_unlocked_until", None)
-            return redirect(url_for("data_view"))
+
+            # NEW: set tab-only flag so a NEW TAB must re-login
+            return render_template(
+                "set_tab_ok.html",
+                tab_key="tab_ok_data",
+                next_url=url_for("data_view"),
+            )
+
         error = "Incorrect password."
     return render_template("data_login.html", error=error)
 
@@ -500,8 +507,14 @@ def trainer_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == TRAINER_PASSWORD_VIEW:
-            session["trainer_authed"] = True      # no expiry
-            return redirect(url_for("trainer_view"))
+            session["trainer_authed"] = True
+
+            return render_template(
+                "set_tab_ok.html",
+                tab_key="tab_ok_trainer",
+                next_url=url_for("trainer_view"),
+            )
+
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
 
@@ -523,8 +536,14 @@ def carson_login():
     if request.method == "POST":
         pwd = request.form.get("password", "")
         if pwd == CARSON_PASSWORD_VIEW:
-            session["carson_authed"] = True       # no expiry
-            return redirect(url_for("carson_view"))
+            session["carson_authed"] = True
+
+            return render_template(
+                "set_tab_ok.html",
+                tab_key="tab_ok_carson",
+                next_url=url_for("carson_view"),
+            )
+
         error = "Incorrect password."
     return render_template("carson_login.html", error=error)
 

@@ -118,5 +118,18 @@
 {% set role = "data" %}
 {% include "_logout_beacon.html" %}
 
+<script>
+    (function () {
+        // This is tab-only storage. New tab == empty.
+        var key = "tab_ok_data";
+        if (!sessionStorage.getItem(key)) {
+            // Not authorized in THIS tab: clear server auth and send to login.
+            try { navigator.sendBeacon("/logout/data"); } catch (e) {}
+            window.location.replace("{{ url_for('data_login') }}");
+        }
+    })();
+</script>
+
+
 </body>
 </html>
