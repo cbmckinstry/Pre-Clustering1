@@ -395,6 +395,71 @@ def index():
         len=len,
     )
 
+@app.route("/matrices", methods=["POST"])
+def matrices():
+    try:
+        people_input = request.form.get("people", "").strip()
+        crews_input = request.form.get("crews", "").strip()
+        people = int(people_input) if people_input else 0
+        crews= int(crews_input) if crews_input else 0
+
+        matrices_result = compute_matrices(people, crews)
+        ranges_result = compute_ranges(people)
+
+        session["matrices_result"] = matrices_result
+        session["ranges_result"] = ranges_result
+        session["people"] = people
+        session["crews"] = crews
+
+    except Exception as e:
+        print("Error: "+str(e))
+        return render_template(
+            "index.html",
+            error_message=f"An error occurred: {str(e)}",
+            vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
+            pers5=session.get("pers5", ""),
+            pers6=session.get("pers6", ""),
+            results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
+            sorted_allocations=session.get("sorted_allocations"),
+            alllist=session.get("alllist"),
+            rem_vehs=session.get("rem_vehs"),
+            backupsize=session.get("backupsize"),
+            allocations_only=int(request.form.get("allocations_only", 0)),
+            pull_combinations=session.get("pull_combinations", 0),
+            matrices_result=session.get("matrices_result"),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=people_input,
+            crews=crews,
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
+
+    return render_template(
+        "index.html",
+        vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
+        pers5=session.get("pers5", ""),
+        pers6=session.get("pers6", ""),
+        results=session.get("results"),
+        totalhelp=session.get("totalhelp"),
+        sorted_allocations=session.get("sorted_allocations"),
+        alllist=session.get("alllist"),
+        rem_vehs=session.get("rem_vehs"),
+        backupsize=session.get("backupsize"),
+        allocations_only=int(request.form.get("allocations_only", 0)),
+        pull_combinations=session.get("pull_combinations", 0),
+        matrices_result=session.get("matrices_result"),
+        ranges_result=session.get("ranges_result"),
+        total_people=session.get("total_people", ""),
+        people=session.get("people", ""),
+        crews=session.get("crews", ""),
+        zip=zip,
+        enumerate=enumerate,
+        len=len,
+    )
+
 # ==========================================================
 # Logout beacon endpoints (TAB CLOSE)
 # ==========================================================
