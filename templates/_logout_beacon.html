@@ -1,0 +1,15 @@
+<script>
+    // Logs out this role when the tab closes / page navigates away.
+    // Note: not 100% guaranteed on crashes/network loss, but works for normal tab closes.
+    (function () {
+        var role = "{{ role|e }}";
+        function sendLogout() {
+            try {
+                navigator.sendBeacon("/logout/" + role);
+            } catch (e) {
+                // ignore
+            }
+        }
+        window.addEventListener("pagehide", sendLogout);
+    })();
+</script>
