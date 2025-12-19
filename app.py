@@ -9,8 +9,11 @@ from zoneinfo import ZoneInfo
 import requests
 import json
 import time
+from werkzeug.middleware.proxy_fix import ProxyFix
+
 
 app = Flask(__name__)
+app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # ------------------------------
 # Core config / sessions
@@ -216,7 +219,7 @@ def lookup_city(ip: str):
 # ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
-    user_ip = request.headers.get("X-Forwarded-For", request.remote_addr).split(",")[0].strip()
+    user_ip = request.remote_addr
     user_agent = request.headers.get("User-Agent", "").lower()
     is_bot = ("go-http-client/" in user_agent or "cron-job.org" in user_agent or user_agent.strip() == "")
 
