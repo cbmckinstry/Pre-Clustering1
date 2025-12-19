@@ -57,13 +57,19 @@ DATA_PASSWORD_DELETE = os.environ.get("DATA_PASSWORD_DELETE", os.environ.get("DA
 DATA_PASSWORD_WIPE = os.environ.get("DATA_PASSWORD_WIPE", os.environ.get("DATA_PASSWORD", "change-me"))
 DATA_PASSWORD_DELETE_IP = os.environ.get("DATA_PASSWORD_DELETE_IP", os.environ.get("DATA_PASSWORD", "change-me"))
 
-TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me-trainer")
-CARSON_PASSWORD_VIEW = os.environ.get("CARSON_PASSWORD_VIEW", "change-me-carson")
+TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
+ARCHIVE_PASSWORD_VIEW = os.environ.get("ARCHIVE_PASSWORD_VIEW", "change-me")
+
+# /carson passwords (INDEPENDENT ADMIN)
+CARSON_PASSWORD_VIEW = os.environ.get("CARSON_PASSWORD_VIEW", "change-me")
+CARSON_PASSWORD_DELETE = os.environ.get("CARSON_PASSWORD_DELETE", CARSON_PASSWORD_VIEW)
+CARSON_PASSWORD_WIPE = os.environ.get("CARSON_PASSWORD_WIPE", CARSON_PASSWORD_VIEW)
+CARSON_PASSWORD_DELETE_IP = os.environ.get("CARSON_PASSWORD_DELETE_IP", CARSON_PASSWORD_VIEW)
 
 # ------------------------------
 # TTLs
 # ------------------------------
-DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "30"))
+DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "15"))
 
 
 def _now() -> float:
@@ -89,12 +95,29 @@ def is_trainer_authed() -> bool:
     return bool(session.get("trainer_authed", False))
 
 
-def is_carson_authed() -> bool:
-    return bool(session.get("carson_authed", False))
+def is_archive_authed() -> bool:
+    return bool(session.get("archive_authed", False))
 
 
 def is_delete_unlocked() -> bool:
     return session.get("delete_unlocked_until", 0) > _now()
+
+
+# /carson auth helpers (INDEPENDENT)
+def is_carson_authed() -> bool:
+    return bool(session.get("carson_authed", False))
+
+
+def require_carson() -> bool:
+    if not is_carson_authed():
+        session.pop("carson_authed", None)
+        session.pop("carson_delete_unlocked_until", None)
+        return False
+    return True
+
+
+def is_carson_delete_unlocked() -> bool:
+    return session.get("carson_delete_unlocked_until", 0) > _now()
 
 
 # ------------------------------
@@ -102,14 +125,17 @@ def is_delete_unlocked() -> bool:
 # ------------------------------
 DATA_KEY_PREFIX = os.environ.get("DATA_KEY_PREFIX", "pre:data_log_v2").strip() or "pre:data_log_v2"
 ARCHIVE_KEY_PREFIX = os.environ.get("ARCHIVE_KEY_PREFIX", "pre:archive_v1").strip() or "pre:archive_v1"
+CARSON_KEY_PREFIX = os.environ.get("CARSON_KEY_PREFIX", "pre:carson_log_v1").strip() or "pre:carson_log_v1"
 
-if DATA_KEY_PREFIX == ARCHIVE_KEY_PREFIX:
-    raise RuntimeError("FATAL CONFIG ERROR: DATA_KEY_PREFIX and ARCHIVE_KEY_PREFIX must be different.")
+if len({DATA_KEY_PREFIX, ARCHIVE_KEY_PREFIX, CARSON_KEY_PREFIX}) != 3:
+    raise RuntimeError("FATAL CONFIG ERROR: DATA_KEY_PREFIX, ARCHIVE_KEY_PREFIX, CARSON_KEY_PREFIX must all be different.")
 
 DATA_LOG = []
 ARCHIVE_LOG = []
+CARSON_LOG = []
 LOG_COUNTER = 0
 ARCHIVE_COUNTER = 0
+CARSON_COUNTER = 0
 
 
 def _get_redis():
@@ -137,6 +163,12 @@ def _next_archive_id():
     global ARCHIVE_COUNTER
     ARCHIVE_COUNTER += 1
     return ARCHIVE_COUNTER
+
+
+def _next_carson_id():
+    global CARSON_COUNTER
+    CARSON_COUNTER += 1
+    return CARSON_COUNTER
 
 
 # ------------------------------
@@ -172,77 +204,136 @@ def get_client_ip():
 
 
 # ------------------------------
-# Log storage
+# Generic list storage helpers
 # ------------------------------
-def log_append(entry: dict):
-    """
-    Appends to BOTH:
-      - MAIN log (mutable)
-      - ARCHIVE log (immutable)
-    """
+def _list_append(prefix: str, entry: dict, local_list: list, local_next_id_fn):
     r = _get_redis()
     entry = dict(entry)
 
     if r is not None:
         if "id" not in entry:
-            entry["id"] = int(r.incr(_k(DATA_KEY_PREFIX, ":id_counter")))
-        r.rpush(_k(DATA_KEY_PREFIX, ""), json.dumps(entry))
-
-        archive_entry = dict(entry)
-        archive_entry["archive_id"] = int(r.incr(_k(ARCHIVE_KEY_PREFIX, ":id_counter")))
-        r.rpush(_k(ARCHIVE_KEY_PREFIX, ""), json.dumps(archive_entry))
+            entry["id"] = int(r.incr(_k(prefix, ":id_counter")))
+        r.rpush(_k(prefix, ""), json.dumps(entry))
     else:
         if "id" not in entry:
-            entry["id"] = _next_local_id()
-        DATA_LOG.append(entry)
+            entry["id"] = local_next_id_fn()
+        local_list.append(entry)
 
-        archive_entry = dict(entry)
-        archive_entry["archive_id"] = _next_archive_id()
-        ARCHIVE_LOG.append(archive_entry)
+    return entry
 
 
-def log_get_all_main():
+def _list_get_all(prefix: str, local_list: list):
     r = _get_redis()
     if r is not None:
-        raw = r.lrange(_k(DATA_KEY_PREFIX, ""), 0, -1)
+        raw = r.lrange(_k(prefix, ""), 0, -1)
         return [json.loads(x) for x in raw]
-    return list(DATA_LOG)
+    return list(local_list)
 
 
-def log_get_all_archive():
-    r = _get_redis()
-    if r is not None:
-        raw = r.lrange(_k(ARCHIVE_KEY_PREFIX, ""), 0, -1)
-        return [json.loads(x) for x in raw]
-    return list(ARCHIVE_LOG)
-
-
-def log_replace_all_main(entries):
+def _list_replace_all(prefix: str, entries, local_setter):
     r = _get_redis()
     if r is not None:
         pipe = r.pipeline()
-        pipe.delete(_k(DATA_KEY_PREFIX, ""))
+        pipe.delete(_k(prefix, ""))
         for e in entries:
-            pipe.rpush(_k(DATA_KEY_PREFIX, ""), json.dumps(e))
+            pipe.rpush(_k(prefix, ""), json.dumps(e))
         pipe.execute()
     else:
-        global DATA_LOG
-        DATA_LOG = list(entries)
+        local_setter(list(entries))
+
+
+def _list_clear(prefix: str, local_clear_fn, local_counter_reset_fn):
+    r = _get_redis()
+    if r is not None:
+        r.delete(_k(prefix, ""))
+        r.delete(_k(prefix, ":id_counter"))
+    else:
+        local_clear_fn()
+        local_counter_reset_fn()
+
+
+# ------------------------------
+# Log storage (DATA main + ARCHIVE immutable + CARSON main)
+# ------------------------------
+def log_append(entry: dict):
+    """
+    Your single logging call.
+
+    - Writes to DATA main (mutable)
+    - Writes to ARCHIVE (immutable / append-only)
+    - Writes to CARSON main (mutable, independent)
+
+    This matches:
+      /data edits affect /trainer (because both read DATA main)
+      /carson edits affect only CARSON main
+      /archive can never be changed (no endpoints modify it)
+    """
+    e_main = _list_append(DATA_KEY_PREFIX, entry, DATA_LOG, _next_local_id)
+
+    # Append-only archive copy (never replaced/cleared by any route)
+    archive_entry = dict(e_main)
+    if _get_redis() is not None:
+        archive_entry["archive_id"] = int(_get_redis().incr(_k(ARCHIVE_KEY_PREFIX, ":id_counter")))
+        _get_redis().rpush(_k(ARCHIVE_KEY_PREFIX, ""), json.dumps(archive_entry))
+    else:
+        archive_entry["archive_id"] = _next_archive_id()
+        ARCHIVE_LOG.append(archive_entry)
+
+    # Carson receives same events (independent mutable log)
+    _list_append(CARSON_KEY_PREFIX, entry, CARSON_LOG, _next_carson_id)
+
+
+def log_get_all_main():
+    return _list_get_all(DATA_KEY_PREFIX, DATA_LOG)
+
+
+def log_replace_all_main(entries):
+    global DATA_LOG
+    _list_replace_all(DATA_KEY_PREFIX, entries, lambda x: _set_data_log(x))
+
+
+def _set_data_log(entries):
+    global DATA_LOG
+    DATA_LOG = list(entries)
 
 
 def log_clear_main():
-    """
-    Clears ONLY the MAIN log keys.
-    Does NOT touch the ARCHIVE.
-    """
-    r = _get_redis()
-    if r is not None:
-        r.delete(_k(DATA_KEY_PREFIX, ""))
-        r.delete(_k(DATA_KEY_PREFIX, ":id_counter"))
-    else:
-        global DATA_LOG, LOG_COUNTER
-        DATA_LOG.clear()
-        LOG_COUNTER = 0
+    global DATA_LOG, LOG_COUNTER
+    _list_clear(DATA_KEY_PREFIX, lambda: DATA_LOG.clear(), lambda: _reset_data_counter())
+
+
+def _reset_data_counter():
+    global LOG_COUNTER
+    LOG_COUNTER = 0
+
+
+def log_get_all_archive():
+    return _list_get_all(ARCHIVE_KEY_PREFIX, ARCHIVE_LOG)
+
+
+# CARSON helpers
+def carson_get_all_main():
+    return _list_get_all(CARSON_KEY_PREFIX, CARSON_LOG)
+
+
+def carson_replace_all_main(entries):
+    global CARSON_LOG
+    _list_replace_all(CARSON_KEY_PREFIX, entries, lambda x: _set_carson_log(x))
+
+
+def _set_carson_log(entries):
+    global CARSON_LOG
+    CARSON_LOG = list(entries)
+
+
+def carson_clear_main():
+    global CARSON_LOG, CARSON_COUNTER
+    _list_clear(CARSON_KEY_PREFIX, lambda: CARSON_LOG.clear(), lambda: _reset_carson_counter())
+
+
+def _reset_carson_counter():
+    global CARSON_COUNTER
+    CARSON_COUNTER = 0
 
 
 def build_grouped_entries(entries):
@@ -283,9 +374,7 @@ def index():
 
     geo = lookup_city(user_ip)
 
-    # IMPORTANT CHANGE:
-    # Only log GET "view" if the IP looks like a real public client IP.
-    # This prevents proxy/edge IPs (e.g., 172.68.x.x) from polluting view logs.
+    # Log GET "view" only if public client IP.
     if request.method == "GET" and (not is_bot) and ip_ok:
         log_append(
             {
@@ -536,7 +625,7 @@ def matrices():
         alllist=session.get("alllist"),
         rem_vehs=session.get("rem_vehs"),
         backupsize=session.get("backupsize"),
-        allocations_only=int(request.form.get("allocations_only", 0)),
+        allocations_only=session.get("allocations_only", 0),
         pull_combinations=session.get("pull_combinations", 0),
         matrices_result=session.get("matrices_result"),
         ranges_result=session.get("ranges_result"),
@@ -554,19 +643,21 @@ def matrices():
 # ==========================================================
 @app.route("/logout/<role>", methods=["POST"], strict_slashes=False)
 def logout_role(role: str):
-    # Called by navigator.sendBeacon on tab close / pagehide
     if role == "data":
         session.pop("data_authed", None)
         session.pop("delete_unlocked_until", None)
     elif role == "trainer":
         session.pop("trainer_authed", None)
+    elif role == "archive":
+        session.pop("archive_authed", None)
     elif role == "carson":
         session.pop("carson_authed", None)
+        session.pop("carson_delete_unlocked_until", None)
     return ("", 204)
 
 
 # ==========================================================
-# /data (EDITOR) — login + view + delete + wipe
+# /data (EDITOR) — login + view + delete + wipe + delete-ip
 # ==========================================================
 @app.route("/data_login", methods=["GET", "POST"], strict_slashes=False)
 def data_login():
@@ -576,14 +667,7 @@ def data_login():
         if pwd == DATA_PASSWORD_VIEW:
             session["data_authed"] = True
             session.pop("delete_unlocked_until", None)
-
-            # Set tab-only flag so a NEW TAB must re-login
-            return render_template(
-                "set_tab_ok.html",
-                tab_key="tab_ok_data",
-                next_url=url_for("data_view"),
-            )
-
+            return render_template("set_tab_ok.html", tab_key="tab_ok_data", next_url=url_for("data_view"))
         error = "Incorrect password."
     return render_template("data_login.html", error=error)
 
@@ -653,7 +737,7 @@ def wipe_data():
             wipe_error="Incorrect wipe password.",
         )
 
-    log_clear_main()  # ONLY MAIN is cleared; ARCHIVE untouched
+    log_clear_main()
     return redirect(url_for("data_view"))
 
 
@@ -666,7 +750,6 @@ def delete_ip():
     if not ip_to_delete:
         return redirect(url_for("data_view"))
 
-    # requires its own password EVERY TIME (no session unlock)
     pwd = request.form.get("delete_ip_password", "")
     if pwd != DATA_PASSWORD_DELETE_IP:
         grouped_entries = build_grouped_entries(log_get_all_main())
@@ -687,7 +770,7 @@ def delete_ip():
 
 
 # ==========================================================
-# /trainer (VIEWER) — view-only MAIN log
+# /trainer (VIEWER) — view-only DATA main log
 # ==========================================================
 @app.route("/trainer_login", methods=["GET", "POST"], strict_slashes=False)
 def trainer_login():
@@ -696,12 +779,7 @@ def trainer_login():
         pwd = request.form.get("password", "")
         if pwd == TRAINER_PASSWORD_VIEW:
             session["trainer_authed"] = True
-            return render_template(
-                "set_tab_ok.html",
-                tab_key="tab_ok_trainer",
-                next_url=url_for("trainer_view"),
-            )
-
+            return render_template("set_tab_ok.html", tab_key="tab_ok_trainer", next_url=url_for("trainer_view"))
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
 
@@ -717,7 +795,32 @@ def trainer_view():
 
 
 # ==========================================================
-# /carson (IMMUTABLE VIEWER) — view-only ARCHIVE log
+# /archive (IMMUTABLE VIEWER) — view-only ARCHIVE log
+# ==========================================================
+@app.route("/archive_login", methods=["GET", "POST"], strict_slashes=False)
+def archive_login():
+    error = None
+    if request.method == "POST":
+        pwd = request.form.get("password", "")
+        if pwd == ARCHIVE_PASSWORD_VIEW:
+            session["archive_authed"] = True
+            return render_template("set_tab_ok.html", tab_key="tab_ok_archive", next_url=url_for("archive_view"))
+        error = "Incorrect password."
+    return render_template("archive_login.html", error=error)
+
+
+@app.route("/archive", strict_slashes=False)
+def archive_view():
+    if not is_archive_authed():
+        session.pop("archive_authed", None)
+        return redirect(url_for("archive_login"))
+
+    grouped_entries = build_grouped_entries(log_get_all_archive())
+    return render_template("archive.html", grouped_entries=grouped_entries)
+
+
+# ==========================================================
+# /carson (INDEPENDENT ADMIN) — login + view + delete + wipe + delete-ip
 # ==========================================================
 @app.route("/carson_login", methods=["GET", "POST"], strict_slashes=False)
 def carson_login():
@@ -726,24 +829,107 @@ def carson_login():
         pwd = request.form.get("password", "")
         if pwd == CARSON_PASSWORD_VIEW:
             session["carson_authed"] = True
-            return render_template(
-                "set_tab_ok.html",
-                tab_key="tab_ok_carson",
-                next_url=url_for("carson_view"),
-            )
-
+            session.pop("carson_delete_unlocked_until", None)
+            return render_template("set_tab_ok.html", tab_key="tab_ok_carson", next_url=url_for("carson_view"))
         error = "Incorrect password."
     return render_template("carson_login.html", error=error)
 
 
 @app.route("/carson", strict_slashes=False)
 def carson_view():
-    if not is_carson_authed():
-        session.pop("carson_authed", None)
+    if not require_carson():
         return redirect(url_for("carson_login"))
 
-    grouped_entries = build_grouped_entries(log_get_all_archive())
-    return render_template("carson.html", grouped_entries=grouped_entries)
+    grouped_entries = build_grouped_entries(carson_get_all_main())
+    return render_template(
+        "carson.html",
+        grouped_entries=grouped_entries,
+        delete_unlocked=is_carson_delete_unlocked(),
+        can_delete=True,
+        can_wipe=True,
+        delete_error=None,
+        wipe_error=None,
+    )
+
+
+@app.route("/carson_delete_entry", methods=["POST"], strict_slashes=False)
+def carson_delete_entry():
+    if not require_carson():
+        return redirect(url_for("carson_login"))
+
+    entry_id = request.form.get("entry_id", type=int)
+    if entry_id is None:
+        return redirect(url_for("carson_view"))
+
+    if not is_carson_delete_unlocked():
+        pwd = request.form.get("delete_password", "")
+        if pwd != CARSON_PASSWORD_DELETE:
+            grouped_entries = build_grouped_entries(carson_get_all_main())
+            return render_template(
+                "carson.html",
+                grouped_entries=grouped_entries,
+                delete_unlocked=is_carson_delete_unlocked(),
+                can_delete=True,
+                can_wipe=True,
+                delete_error="Incorrect delete password.",
+                wipe_error=None,
+            )
+        session["carson_delete_unlocked_until"] = _now() + DELETE_TTL_SECONDS
+
+    entries = carson_get_all_main()
+    filtered = [e for e in entries if e.get("id") != entry_id]
+    carson_replace_all_main(filtered)
+    return redirect(url_for("carson_view"))
+
+
+@app.route("/carson_wipe", methods=["POST"], strict_slashes=False)
+def carson_wipe():
+    if not require_carson():
+        return redirect(url_for("carson_login"))
+
+    pwd = request.form.get("wipe_password", "")
+    if pwd != CARSON_PASSWORD_WIPE:
+        grouped_entries = build_grouped_entries(carson_get_all_main())
+        return render_template(
+            "carson.html",
+            grouped_entries=grouped_entries,
+            delete_unlocked=is_carson_delete_unlocked(),
+            can_delete=True,
+            can_wipe=True,
+            delete_error=None,
+            wipe_error="Incorrect wipe password.",
+        )
+
+    carson_clear_main()
+    return redirect(url_for("carson_view"))
+
+
+@app.route("/carson_delete_ip", methods=["POST"], strict_slashes=False)
+def carson_delete_ip():
+    if not require_carson():
+        return redirect(url_for("carson_login"))
+
+    ip_to_delete = (request.form.get("ip") or "").strip()
+    if not ip_to_delete:
+        return redirect(url_for("carson_view"))
+
+    pwd = request.form.get("delete_ip_password", "")
+    if pwd != CARSON_PASSWORD_DELETE_IP:
+        grouped_entries = build_grouped_entries(carson_get_all_main())
+        return render_template(
+            "carson.html",
+            grouped_entries=grouped_entries,
+            delete_unlocked=is_carson_delete_unlocked(),
+            can_delete=True,
+            can_wipe=True,
+            delete_error=None,
+            wipe_error="Incorrect IP delete password.",
+        )
+
+    entries = carson_get_all_main()
+    filtered = [e for e in entries if e.get("ip", "Unknown IP") != ip_to_delete]
+    carson_replace_all_main(filtered)
+    return redirect(url_for("carson_view"))
 
 
 if __name__ == "__main__":
