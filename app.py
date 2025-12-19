@@ -10,6 +10,7 @@ import requests
 import json
 import time
 from werkzeug.middleware.proxy_fix import ProxyFix
+import ipaddress
 
 
 app = Flask(__name__)
@@ -128,6 +129,25 @@ def _next_archive_id():
     ARCHIVE_COUNTER += 1
     return ARCHIVE_COUNTER
 
+def is_public_ip(ip: str) -> bool:
+    try:
+        a = ipaddress.ip_address(ip)
+        return not (a.is_private or a.is_loopback or a.is_reserved or a.is_multicast or a.is_link_local)
+    except ValueError:
+        return False
+
+def get_client_ip():
+    xff = request.headers.get("X-Forwarded-For", "")
+    if xff:
+        parts = [p.strip() for p in xff.split(",") if p.strip()]
+        for ip in parts:                  # leftmost-first
+            if is_public_ip(ip):
+                return ip, xff
+        # if none public, fall back
+        return parts[0], xff
+    return request.remote_addr, ""
+
+
 def log_append(entry: dict):
     """
     Appends to BOTH:
@@ -219,7 +239,7 @@ def lookup_city(ip: str):
 # ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
-    user_ip = request.remote_addr
+    user_ip, xff_chain = get_client_ip()
     user_agent = request.headers.get("User-Agent", "").lower()
     is_bot = ("go-http-client/" in user_agent or "cron-job.org" in user_agent or user_agent.strip() == "")
 
@@ -228,6 +248,8 @@ def index():
     if request.method == "GET" and not is_bot:
         log_append({
             "ip": user_ip,
+            "xff": xff_chain,
+            "remote_addr": request.remote_addr,
             "geo": geo,
             "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
             "event": "view",
@@ -248,6 +270,8 @@ def index():
 
             log_append({
                 "ip": user_ip,
+                "xff": xff_chain,
+                "remote_addr": request.remote_addr,
                 "geo": geo,
                 "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
                 "event": "submit",
