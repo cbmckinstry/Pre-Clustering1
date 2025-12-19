@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_session import Session
-from Master import *
+from Master import *  # your existing logic
 import os
 import redis
 from pathlib import Path
@@ -9,11 +9,13 @@ from zoneinfo import ZoneInfo
 import requests
 import json
 import time
-from werkzeug.middleware.proxy_fix import ProxyFix
 import ipaddress
-
+from werkzeug.middleware.proxy_fix import ProxyFix
 
 app = Flask(__name__)
+
+# If you are behind a proxy (Render), this helps Flask understand forwarded proto/host.
+# NOTE: Your logging does NOT rely on ProxyFix; it relies on X-Forwarded-For parsing below.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 # ------------------------------
@@ -24,7 +26,7 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,   # Render is HTTPS
+    SESSION_COOKIE_SECURE=True,  # Render is HTTPS
 )
 
 redis_url = os.environ.get("REDIS_URL")
@@ -61,19 +63,19 @@ CARSON_PASSWORD_VIEW = os.environ.get("CARSON_PASSWORD_VIEW", "change-me-carson"
 # ------------------------------
 # TTLs
 # ------------------------------
-# Delete "unlock" time limit stays
 DELETE_TTL_SECONDS = int(os.environ.get("DELETE_TTL_SECONDS", "30"))
+
 
 def _now() -> float:
     return time.time()
 
+
 # ------------------------------
 # Auth helpers (NO TIME LIMIT for view auth)
 # ------------------------------
-# These are "session lives until tab closes (logout beacon) or browser closes (session cookie)."
-
 def is_data_authed() -> bool:
     return bool(session.get("data_authed", False))
+
 
 def require_data() -> bool:
     if not is_data_authed():
@@ -82,15 +84,18 @@ def require_data() -> bool:
         return False
     return True
 
+
 def is_trainer_authed() -> bool:
     return bool(session.get("trainer_authed", False))
+
 
 def is_carson_authed() -> bool:
     return bool(session.get("carson_authed", False))
 
-# Delete unlock still TTL-based
+
 def is_delete_unlocked() -> bool:
     return session.get("delete_unlocked_until", 0) > _now()
+
 
 # ------------------------------
 # Logging keys (Redis + fallback)
@@ -106,6 +111,7 @@ ARCHIVE_LOG = []
 LOG_COUNTER = 0
 ARCHIVE_COUNTER = 0
 
+
 def _get_redis():
     r = app.config.get("SESSION_REDIS")
     if r is None:
@@ -116,19 +122,26 @@ def _get_redis():
     except Exception:
         return None
 
+
 def _k(prefix: str, suffix: str) -> str:
     return f"{prefix}{suffix}"
+
 
 def _next_local_id():
     global LOG_COUNTER
     LOG_COUNTER += 1
     return LOG_COUNTER
 
+
 def _next_archive_id():
     global ARCHIVE_COUNTER
     ARCHIVE_COUNTER += 1
     return ARCHIVE_COUNTER
 
+
+# ------------------------------
+# IP helpers
+# ------------------------------
 def is_public_ip(ip: str) -> bool:
     try:
         a = ipaddress.ip_address(ip)
@@ -136,18 +149,31 @@ def is_public_ip(ip: str) -> bool:
     except ValueError:
         return False
 
+
 def get_client_ip():
+    """
+    Returns (client_ip, xff_chain, ip_ok)
+
+    - Prefer first PUBLIC IP in X-Forwarded-For chain.
+    - If none, fall back to remote_addr.
+    - ip_ok tells you whether the returned IP looks like a public client IP.
+    """
     xff = request.headers.get("X-Forwarded-For", "")
     if xff:
         parts = [p.strip() for p in xff.split(",") if p.strip()]
-        for ip in parts:                  # leftmost-first
+        for ip in parts:  # leftmost-first
             if is_public_ip(ip):
-                return ip, xff
-        # if none public, fall back
-        return parts[0], xff
-    return request.remote_addr, ""
+                return ip, xff, True
+        # XFF existed but no public IPs found
+        return (parts[0] if parts else request.remote_addr or ""), xff, False
+
+    ra = request.remote_addr or ""
+    return ra, "", is_public_ip(ra)
 
 
+# ------------------------------
+# Log storage
+# ------------------------------
 def log_append(entry: dict):
     """
     Appends to BOTH:
@@ -174,6 +200,7 @@ def log_append(entry: dict):
         archive_entry["archive_id"] = _next_archive_id()
         ARCHIVE_LOG.append(archive_entry)
 
+
 def log_get_all_main():
     r = _get_redis()
     if r is not None:
@@ -181,12 +208,14 @@ def log_get_all_main():
         return [json.loads(x) for x in raw]
     return list(DATA_LOG)
 
+
 def log_get_all_archive():
     r = _get_redis()
     if r is not None:
         raw = r.lrange(_k(ARCHIVE_KEY_PREFIX, ""), 0, -1)
         return [json.loads(x) for x in raw]
     return list(ARCHIVE_LOG)
+
 
 def log_replace_all_main(entries):
     r = _get_redis()
@@ -199,6 +228,7 @@ def log_replace_all_main(entries):
     else:
         global DATA_LOG
         DATA_LOG = list(entries)
+
 
 def log_clear_main():
     """
@@ -214,6 +244,7 @@ def log_clear_main():
         DATA_LOG.clear()
         LOG_COUNTER = 0
 
+
 def build_grouped_entries(entries):
     entries = list(reversed(entries))
     grouped = {}
@@ -221,6 +252,7 @@ def build_grouped_entries(entries):
         ip = e.get("ip", "Unknown IP")
         grouped.setdefault(ip, []).append(e)
     return grouped
+
 
 def lookup_city(ip: str):
     try:
@@ -234,27 +266,38 @@ def lookup_city(ip: str):
     except Exception:
         return None
 
+
 # ------------------------------
 # Main app route
 # ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
-    user_ip, xff_chain = get_client_ip()
+    user_ip, xff_chain, ip_ok = get_client_ip()
+
     user_agent = request.headers.get("User-Agent", "").lower()
-    is_bot = ("go-http-client/" in user_agent or "cron-job.org" in user_agent or user_agent.strip() == "")
+    is_bot = (
+            "go-http-client/" in user_agent
+            or "cron-job.org" in user_agent
+            or user_agent.strip() == ""
+    )
 
     geo = lookup_city(user_ip)
 
-    if request.method == "GET" and not is_bot:
-        log_append({
-            "ip": user_ip,
-            "xff": xff_chain,
-            "remote_addr": request.remote_addr,
-            "geo": geo,
-            "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
-            "event": "view",
-            "input": None,
-        })
+    # IMPORTANT CHANGE:
+    # Only log GET "view" if the IP looks like a real public client IP.
+    # This prevents proxy/edge IPs (e.g., 172.68.x.x) from polluting view logs.
+    if request.method == "GET" and (not is_bot) and ip_ok:
+        log_append(
+            {
+                "ip": user_ip,
+                "xff": xff_chain,
+                "remote_addr": request.remote_addr,
+                "geo": geo,
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
+                "event": "view",
+                "input": None,
+            }
+        )
 
     if request.method == "POST":
         pers5 = pers6 = 0
@@ -268,21 +311,23 @@ def index():
             pers6 = int(request.form.get("pers6") or 0)
             vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-            log_append({
-                "ip": user_ip,
-                "xff": xff_chain,
-                "remote_addr": request.remote_addr,
-                "geo": geo,
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
-                "event": "submit",
-                "input": {
-                    "vehlist": vehlist,
-                    "pers5": pers5,
-                    "pers6": pers6,
-                    "pull_combinations": pull_combinations,
-                    "use_combinations": use_combinations,
-                },
-            })
+            log_append(
+                {
+                    "ip": user_ip,
+                    "xff": xff_chain,
+                    "remote_addr": request.remote_addr,
+                    "geo": geo,
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d,  %H:%M:%S"),
+                    "event": "submit",
+                    "input": {
+                        "vehlist": vehlist,
+                        "pers5": pers5,
+                        "pers6": pers6,
+                        "pull_combinations": pull_combinations,
+                        "use_combinations": use_combinations,
+                    },
+                }
+            )
 
             veh2 = vehlist.copy()
             veh2.sort(reverse=True)
@@ -423,13 +468,14 @@ def index():
         len=len,
     )
 
+
 @app.route("/matrices", methods=["POST"])
 def matrices():
     try:
         people_input = request.form.get("people", "").strip()
         crews_input = request.form.get("crews", "").strip()
         people = int(people_input) if people_input else 0
-        crews= int(crews_input) if crews_input else 0
+        crews = int(crews_input) if crews_input else 0
 
         matrices_result = compute_matrices(people, crews)
         ranges_result = compute_ranges(people)
@@ -440,11 +486,18 @@ def matrices():
         session["crews"] = crews
 
     except Exception as e:
-        print("Error: "+str(e))
+        print("Error: " + str(e))
         return render_template(
             "index.html",
             error_message=f"An error occurred: {str(e)}",
-            vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
+            vehlist=",".join(
+                map(
+                    str,
+                    session.get("vehlist", [])
+                    if isinstance(session.get("vehlist", []), list)
+                    else [session.get("vehlist")],
+                )
+            ),
             pers5=session.get("pers5", ""),
             pers6=session.get("pers6", ""),
             results=session.get("results"),
@@ -467,7 +520,14 @@ def matrices():
 
     return render_template(
         "index.html",
-        vehlist = ",".join(map(str, session.get("vehlist", []) if isinstance(session.get("vehlist", []), list) else [session.get("vehlist")])),
+        vehlist=",".join(
+            map(
+                str,
+                session.get("vehlist", [])
+                if isinstance(session.get("vehlist", []), list)
+                else [session.get("vehlist")],
+            )
+        ),
         pers5=session.get("pers5", ""),
         pers6=session.get("pers6", ""),
         results=session.get("results"),
@@ -488,6 +548,7 @@ def matrices():
         len=len,
     )
 
+
 # ==========================================================
 # Logout beacon endpoints (TAB CLOSE)
 # ==========================================================
@@ -503,6 +564,7 @@ def logout_role(role: str):
         session.pop("carson_authed", None)
     return ("", 204)
 
+
 # ==========================================================
 # /data (EDITOR) — login + view + delete + wipe
 # ==========================================================
@@ -515,7 +577,7 @@ def data_login():
             session["data_authed"] = True
             session.pop("delete_unlocked_until", None)
 
-            # NEW: set tab-only flag so a NEW TAB must re-login
+            # Set tab-only flag so a NEW TAB must re-login
             return render_template(
                 "set_tab_ok.html",
                 tab_key="tab_ok_data",
@@ -524,6 +586,7 @@ def data_login():
 
         error = "Incorrect password."
     return render_template("data_login.html", error=error)
+
 
 @app.route("/data", strict_slashes=False)
 def data_view():
@@ -540,6 +603,7 @@ def data_view():
         delete_error=None,
         wipe_error=None,
     )
+
 
 @app.route("/delete_entry", methods=["POST"], strict_slashes=False)
 def delete_entry():
@@ -570,6 +634,7 @@ def delete_entry():
     log_replace_all_main(filtered)
     return redirect(url_for("data_view"))
 
+
 @app.route("/wipe_data", methods=["POST"], strict_slashes=False)
 def wipe_data():
     if not require_data():
@@ -591,6 +656,7 @@ def wipe_data():
     log_clear_main()  # ONLY MAIN is cleared; ARCHIVE untouched
     return redirect(url_for("data_view"))
 
+
 @app.route("/delete_ip", methods=["POST"], strict_slashes=False)
 def delete_ip():
     if not require_data():
@@ -600,7 +666,7 @@ def delete_ip():
     if not ip_to_delete:
         return redirect(url_for("data_view"))
 
-    # NEW: requires its own password EVERY TIME (no session unlock)
+    # requires its own password EVERY TIME (no session unlock)
     pwd = request.form.get("delete_ip_password", "")
     if pwd != DATA_PASSWORD_DELETE_IP:
         grouped_entries = build_grouped_entries(log_get_all_main())
@@ -614,11 +680,9 @@ def delete_ip():
             wipe_error="Incorrect IP delete password.",
         )
 
-    # Delete ONLY from MAIN log (data/trainer). Archive remains untouched.
     entries = log_get_all_main()
     filtered = [e for e in entries if e.get("ip", "Unknown IP") != ip_to_delete]
     log_replace_all_main(filtered)
-
     return redirect(url_for("data_view"))
 
 
@@ -632,7 +696,6 @@ def trainer_login():
         pwd = request.form.get("password", "")
         if pwd == TRAINER_PASSWORD_VIEW:
             session["trainer_authed"] = True
-
             return render_template(
                 "set_tab_ok.html",
                 tab_key="tab_ok_trainer",
@@ -642,6 +705,7 @@ def trainer_login():
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
 
+
 @app.route("/trainer", strict_slashes=False)
 def trainer_view():
     if not is_trainer_authed():
@@ -650,6 +714,7 @@ def trainer_view():
 
     grouped_entries = build_grouped_entries(log_get_all_main())
     return render_template("trainer.html", grouped_entries=grouped_entries)
+
 
 # ==========================================================
 # /carson (IMMUTABLE VIEWER) — view-only ARCHIVE log
@@ -661,7 +726,6 @@ def carson_login():
         pwd = request.form.get("password", "")
         if pwd == CARSON_PASSWORD_VIEW:
             session["carson_authed"] = True
-
             return render_template(
                 "set_tab_ok.html",
                 tab_key="tab_ok_carson",
@@ -671,6 +735,7 @@ def carson_login():
         error = "Incorrect password."
     return render_template("carson_login.html", error=error)
 
+
 @app.route("/carson", strict_slashes=False)
 def carson_view():
     if not is_carson_authed():
@@ -679,6 +744,7 @@ def carson_view():
 
     grouped_entries = build_grouped_entries(log_get_all_archive())
     return render_template("carson.html", grouped_entries=grouped_entries)
+
 
 if __name__ == "__main__":
     app.run()
