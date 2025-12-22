@@ -15,13 +15,12 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
-# Proxy awareness (Render / reverse proxies). Logging uses XFF parsing below.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,  # Render is HTTPS
+    SESSION_COOKIE_SECURE=True,
 )
 
 redis_url = os.environ.get("REDIS_URL")
@@ -161,7 +160,6 @@ def purge_null_entries_from_storage():
                 removed += 1
                 continue
         else:
-            # submit/test-submit
             if "vehlist" not in inp or "pers5" not in inp or "pers6" not in inp:
                 removed += 1
                 continue
@@ -251,22 +249,26 @@ def print_event(
         geo,
         xff_chain: str,
         remote_addr: str,
-        payload_str: str | None = None,
-):
-    ts = datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S")
+        payload_str: str | None = None, ):
     loc = _format_loc(geo)
 
-    print(f"\n{event.upper()} @ {ts}", flush=True)
+    print(f"\n{event.upper()}", flush=True)
     print(f"  IP: {user_ip}", flush=True)
     print(f"  Location: {loc}", flush=True)
+
+    if xff_chain:
+        print(f"  X-Forwarded-For: {xff_chain}", flush=True)
+    if remote_addr:
+        print(f"  Remote Addr: {remote_addr}", flush=True)
 
     if payload_str:
         print(payload_str, flush=True)
 
     print("-" * 40, flush=True)
 
+
 def build_grouped_entries(entries):
-    entries = list(reversed(entries))  # most recent first
+    entries = list(reversed(entries))
     grouped = {}
     for e in entries:
         ip = e.get("ip", "Unknown IP")
@@ -333,7 +335,6 @@ def index():
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        # log submits only
         if (not is_bot) and (not is_hidden_ip(user_ip)):
             log_entry = {
                 "ip": user_ip,
@@ -472,7 +473,6 @@ def test_page():
     if request.method == "GET":
         session["return_after_matrices"] = "/test"
 
-        # PRINT on GET (do NOT require ip_ok so localhost prints)
         if (not is_bot) and (not is_hidden_ip(user_ip)):
             print_event(
                 event="view-test",
