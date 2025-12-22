@@ -1,9 +1,7 @@
 from __future__ import annotations
-
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_session import Session
-from Master import *  # your existing logic
-
+from Master import *
 import os
 import redis
 from pathlib import Path
@@ -155,20 +153,37 @@ def purge_hidden_ips_from_storage():
 
 def purge_null_entries_from_storage():
     """
-    Minimal: remove log rows that have missing/NULL/empty inputs.
+    Remove log rows that don't have meaningful inputs for their event.
+    - submit: must have vehlist and pers5/pers6 keys
+    - matrices: must have people/crews
     """
     entries = log_get_all_raw()
 
     cleaned = []
     removed = 0
+
     for e in entries:
         if not isinstance(e, dict):
             removed += 1
             continue
-        inp = e.get("input", None)
-        if inp is None or (isinstance(inp, dict) and len(inp) == 0):
+
+        inp = e.get("input")
+        if not isinstance(inp, dict) or len(inp) == 0:
             removed += 1
             continue
+
+        ev = e.get("event")
+
+        if ev == "matrices":
+            if inp.get("people") is None or inp.get("crews") is None:
+                removed += 1
+                continue
+        else:
+            # submit/test-submit
+            if "vehlist" not in inp or "pers5" not in inp or "pers6" not in inp:
+                removed += 1
+                continue
+
         cleaned.append(e)
 
     if removed:
@@ -242,27 +257,34 @@ def _format_loc(geo):
     return f"{city}, {region}, {country}"
 
 
-def format_inputs_pretty(payload: dict) -> str:
-    vehlist = payload.get("vehlist", [])
-    pers5 = payload.get("pers5", None)
-    pers6 = payload.get("pers6", None)
-    pull = payload.get("pull_combinations", 0)
-    use = payload.get("use_combinations", 0)
+def format_inputs_pretty(inp: dict) -> str:
     return (
-        f"vehlist={vehlist} | "
-        f"pers5={pers5} | pers6={pers6} | "
-        f"pull_combinations={pull} | use_combinations={use}"
+        f"\n  Vehicle List: {inp.get('vehlist', 'NULL')}"
+        f"\n  5-Person: {inp.get('pers5', 'NULL')}"
+        f"\n  6-Person: {inp.get('pers6', 'NULL')}"
+        f"\n  Pull Combos: {inp.get('pull_combinations', 'NULL')}"
+        f"\n  Use Combos: {inp.get('use_combinations', 'NULL')}"
     )
 
-
-def print_event(event: str, user_ip: str, geo, xff_chain: str, remote_addr: str, payload_str: str | None = None):
+def print_event(
+        event: str,
+        user_ip: str,
+        geo,
+        xff_chain: str,
+        remote_addr: str,
+        payload_str: str | None = None,
+):
     ts = datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S")
     loc = _format_loc(geo)
-    msg = f"{event.upper()} | ip= {user_ip} | loc= {loc} | xff= {xff_chain} | ra= {remote_addr}"
-    if payload_str:
-        msg += f" | {payload_str}"
-    print(msg, flush=True)
 
+    print(f"\n{event.upper()} @ {ts}", flush=True)
+    print(f"  IP: {user_ip}", flush=True)
+    print(f"  Location: {loc}", flush=True)
+
+    if payload_str:
+        print(payload_str, flush=True)
+
+    print("-" * 40, flush=True)
 
 def build_grouped_entries(entries):
     entries = list(reversed(entries))  # most recent first
@@ -535,15 +557,13 @@ def test_page():
 
         # PRINT on POST (do NOT require ip_ok so localhost prints)
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            pretty = format_inputs_pretty(
-                {
-                    "vehlist": vehlist,
-                    "pers5": pers5,
-                    "pers6": pers6,
-                    "pull_combinations": pull_combinations,
-                    "use_combinations": use_combinations,
-                }
-            )
+            pretty = format_inputs_pretty({
+                "vehlist": vehlist,
+                "pers5": pers5,
+                "pers6": pers6,
+                "pull_combinations": pull_combinations,
+                "use_combinations": use_combinations,
+            })
             print_event(
                 event="user-test",
                 user_ip=user_ip,
@@ -659,11 +679,33 @@ def test_page():
 # ------------------------------
 @app.route("/matrices", methods=["POST"])
 def matrices():
+    user_ip, xff_chain, ip_ok = get_client_ip()
+    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
+    geo = lookup_city(user_ip)
+
     try:
         people_input = request.form.get("people", "").strip()
         crews_input = request.form.get("crews", "").strip()
+
         people = int(people_input) if people_input else 0
         crews = int(crews_input) if crews_input else 0
+
+        # ---- LOG matrices submit (same log as trainer) ----
+        # (Do NOT require ip_ok so localhost logs, same idea as /test printing)
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            log_entry = {
+                "ip": user_ip,
+                "xff": xff_chain,
+                "remote_addr": request.remote_addr,
+                "geo": geo,
+                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S"),
+                "event": "matrices",
+                "input": {
+                    "people": people,
+                    "crews": crews,
+                },
+            }
+            log_append(log_entry)
 
         matrices_result = compute_matrices(people, crews)
         ranges_result = compute_ranges(people)
