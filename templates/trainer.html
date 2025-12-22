@@ -47,19 +47,19 @@
         <tr>
             <td>{{ e.timestamp }}</td>
             <td class="input-box">
-                {% if not inp %}
+                {% set inp = e.input if e.input is defined else None %}
+
+                {% if not inp or not (inp is mapping) %}
                 NULL
-                {% elif inp is mapping %}
-                <span class="label">Single Sites:</span>{{ inp.get("int1", "NULL") }}
-                &nbsp;&nbsp;<span class="label">Double Sites:</span>{{ inp.get("int2", "NULL") }}
-                &nbsp;&nbsp;<span class="label">Triple Sites:</span>{{ inp.get("int3", "NULL") }}
-                &nbsp;&nbsp;<span class="label">Cars:</span>{{ inp.get("int4", "NULL") }}
-                &nbsp;&nbsp;<span class="label">Vans:</span>{{ inp.get("int5", "NULL") }}
-                &nbsp;&nbsp;<span class="label">Bus Capacities:</span>{{ inp.get("int_list", "NULL") }}
                 {% else %}
-                {{ inp }}
+                <span class="label">Vehicle List:</span>{{ inp.get("vehlist", "NULL") }}
+                &nbsp;&nbsp;<span class="label">5-Person:</span>{{ inp.get("pers5", "NULL") }}
+                &nbsp;&nbsp;<span class="label">6-Person:</span>{{ inp.get("pers6", "NULL") }}
+                &nbsp;&nbsp;<span class="label">Pull Combos:</span>{{ inp.get("pull_combinations", "NULL") }}
+                &nbsp;&nbsp;<span class="label">Use Combos:</span>{{ inp.get("use_combinations", "NULL") }}
                 {% endif %}
             </td>
+
         </tr>
         {% endfor %}
         </tbody>
