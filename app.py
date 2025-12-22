@@ -335,7 +335,7 @@ def index():
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        if (not is_bot) and (not is_hidden_ip(user_ip)):
+        if not is_bot:
             log_entry = {
                 "ip": user_ip,
                 "xff": xff_chain,
