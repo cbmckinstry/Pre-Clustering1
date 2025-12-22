@@ -193,7 +193,7 @@
     </div>
 
     <div class="right-column">
-        <form method="POST" action="/">
+        <form method="POST" action="{{ request.path }}">
             <h2>Vehicle Combinations and Allocations</h2>
             {% if error_message and request.path == '/' %}
                 <div class="error-message">{{ error_message }}</div>
