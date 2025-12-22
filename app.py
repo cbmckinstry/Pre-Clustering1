@@ -18,18 +18,12 @@ app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 # Proxy awareness (Render / reverse proxies). Logging uses XFF parsing below.
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-# ------------------------------
-# Security: cookie hardening
-# ------------------------------
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
     SESSION_COOKIE_SECURE=True,  # Render is HTTPS
 )
 
-# ------------------------------
-# Sessions (Redis if available)
-# ------------------------------
 redis_url = os.environ.get("REDIS_URL")
 
 app.config["SESSION_PERMANENT"] = False
@@ -49,14 +43,9 @@ else:
 
 Session(app)
 
-# ------------------------------
-# Trainer password (view-only)
-# ------------------------------
 TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
 
-# ------------------------------
-# Hidden IPs (do not log / do not print / do not show)
-# ------------------------------
+
 HIDDEN_IPS_RAW = os.environ.get("HIDDEN_IPS", "").strip()
 HIDDEN_IPS = {x.strip() for x in HIDDEN_IPS_RAW.split(",") if x.strip()}
 
@@ -65,10 +54,6 @@ def is_hidden_ip(ip: str) -> bool:
     return ip in HIDDEN_IPS
 
 
-# ------------------------------
-# Logging keys (Redis + fallback)
-# Only ONE log: trainer log (submits only)
-# ------------------------------
 DATA_KEY_PREFIX = (os.environ.get("DATA_KEY_PREFIX", "pre:trainer_log_v1").strip() or "pre:trainer_log_v1")
 LOG_KEY = DATA_KEY_PREFIX
 ID_KEY = f"{DATA_KEY_PREFIX}:id_counter"
@@ -152,11 +137,6 @@ def purge_hidden_ips_from_storage():
 
 
 def purge_null_entries_from_storage():
-    """
-    Remove log rows that don't have meaningful inputs for their event.
-    - submit: must have vehlist and pers5/pers6 keys
-    - matrices: must have people/crews
-    """
     entries = log_get_all_raw()
 
     cleaned = []
@@ -191,13 +171,10 @@ def purge_null_entries_from_storage():
         print(f"PURGE-NULL removed={removed}", flush=True)
 
 
-# Purge at startup (safe no-op)
 purge_hidden_ips_from_storage()
 purge_null_entries_from_storage()
 
-# ------------------------------
-# IP + bot + geo helpers
-# ------------------------------
+
 def is_public_ip(ip: str) -> bool:
     try:
         a = ipaddress.ip_address(ip)
@@ -304,9 +281,6 @@ def _safe_return_path(path: str | None) -> str:
     return path if path in allowed else "/"
 
 
-# ------------------------------
-# /
-# ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
     user_ip, xff_chain, ip_ok = get_client_ip()
@@ -346,7 +320,6 @@ def index():
             len=len,
         )
 
-    # POST
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
@@ -377,7 +350,6 @@ def index():
             }
             log_append(log_entry)
 
-        # ---- your existing compute pipeline (unchanged) ----
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -489,9 +461,6 @@ def index():
         )
 
 
-# ------------------------------
-# /test
-# ------------------------------
 @app.route("/test", methods=["GET", "POST"], strict_slashes=False)
 def test_page():
     user_ip, xff_chain, ip_ok = get_client_ip()
@@ -543,7 +512,6 @@ def test_page():
             len=len,
         )
 
-    # POST
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
@@ -555,7 +523,6 @@ def test_page():
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        # PRINT on POST (do NOT require ip_ok so localhost prints)
         if (not is_bot) and (not is_hidden_ip(user_ip)):
             pretty = format_inputs_pretty({
                 "vehlist": vehlist,
@@ -573,7 +540,6 @@ def test_page():
                 payload_str=pretty,
             )
 
-        # ---- same compute pipeline ----
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -674,9 +640,6 @@ def test_page():
         )
 
 
-# ------------------------------
-# /matrices (shared)
-# ------------------------------
 @app.route("/matrices", methods=["POST"])
 def matrices():
     user_ip, xff_chain, ip_ok = get_client_ip()
@@ -690,8 +653,6 @@ def matrices():
         people = int(people_input) if people_input else 0
         crews = int(crews_input) if crews_input else 0
 
-        # ---- LOG matrices submit (same log as trainer) ----
-        # (Do NOT require ip_ok so localhost logs, same idea as /test printing)
         if (not is_bot) and (not is_hidden_ip(user_ip)):
             log_entry = {
                 "ip": user_ip,
@@ -721,18 +682,12 @@ def matrices():
     return redirect(_safe_return_path(session.get("return_after_matrices")))
 
 
-# ------------------------------
-# Logout beacon endpoint (TAB CLOSE) — trainer only
-# ------------------------------
 @app.route("/logout/trainer", methods=["POST"], strict_slashes=False)
 def logout_trainer():
     session.pop("trainer_authed", None)
     return ("", 204)
 
 
-# ------------------------------
-# /trainer (VIEW-ONLY)
-# ------------------------------
 @app.route("/trainer_login", methods=["GET", "POST"], strict_slashes=False)
 def trainer_login():
     error = None

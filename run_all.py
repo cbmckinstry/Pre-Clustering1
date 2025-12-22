@@ -6,25 +6,18 @@ import sys
 import shutil
 from pathlib import Path
 
-# -----------------------------------------------------
-# CONFIG
-# -----------------------------------------------------
 PROJECT_DIR = Path(__file__).resolve().parent
 JAVA_CLASS = "Combine"
 PY4J_JAR = PROJECT_DIR / "py4j0.10.9.9.jar"
 APP_MODULE = "app.py"
 PYTHON = sys.executable
 
-# Render sets this automatically
 IS_RENDER = os.environ.get("RENDER", "false").lower() == "true"
 
 os.chdir(PROJECT_DIR)
 print(f"[*] Working directory: {os.getcwd()}")
 
 
-# -----------------------------------------------------
-# Ensure Java/Javac exists
-# -----------------------------------------------------
 def ensure_java():
     if IS_RENDER:
         print("[*] Render environment detected")
@@ -41,7 +34,6 @@ def ensure_java():
             subprocess.check_call("mkdir -p /tmp/java", shell=True)
             subprocess.check_call("tar -xzf java.tar.gz -C /tmp/java --strip-components=1", shell=True)
 
-        # Just for logging
         subprocess.call("java -version", shell=True)
     else:
         print("[*] Local environment detected")
@@ -51,9 +43,6 @@ def ensure_java():
         subprocess.call(["java", "-version"])
 
 
-# -----------------------------------------------------
-# Compile Combine.java
-# -----------------------------------------------------
 def compile_java():
     java_file = f"{JAVA_CLASS}.java"
     class_file = f"{JAVA_CLASS}.class"
@@ -77,9 +66,6 @@ def compile_java():
         print("[*] Java already compiled; skipping compilation.")
 
 
-# -----------------------------------------------------
-# Start Java GatewayServer
-# -----------------------------------------------------
 def start_java_gateway():
     print("[*] Starting Java GatewayServer...")
     java_cmd = [
@@ -94,9 +80,6 @@ def start_java_gateway():
     return proc
 
 
-# -----------------------------------------------------
-# Start web app: Gunicorn on Render, Flask locally
-# -----------------------------------------------------
 def start_web_app():
     if IS_RENDER:
         print("[*] Starting Gunicorn on Render...")
@@ -106,9 +89,6 @@ def start_web_app():
         subprocess.check_call([PYTHON, APP_MODULE])
 
 
-# -----------------------------------------------------
-# MAIN
-# -----------------------------------------------------
 if __name__ == "__main__":
     java_proc = None
     try:
