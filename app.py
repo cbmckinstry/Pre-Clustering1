@@ -44,6 +44,7 @@ else:
 Session(app)
 
 TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
+MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
 
 
 HIDDEN_IPS_RAW = os.environ.get("HIDDEN_IPS", "").strip()
@@ -89,6 +90,7 @@ def log_append(entry: dict):
         if "id" not in entry:
             entry["id"] = int(r.incr(ID_KEY))
         r.rpush(LOG_KEY, json.dumps(entry))
+        r.ltrim(LOG_KEY, -MAX_LOG_ENTRIES, -1)
     else:
         if "id" not in entry:
             entry["id"] = _next_local_id()
