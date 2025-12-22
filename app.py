@@ -476,174 +476,211 @@ def index():
 def test_page():
     user_ip, xff_chain, ip_ok = get_client_ip()
     is_bot = is_request_bot(request.headers.get("User-Agent", ""))
-
     geo = lookup_city(user_ip)
 
     # Remember where matrices should return to
     if request.method == "GET":
         session["return_after_matrices"] = "/test"
 
-    if request.method == "POST":
-        pers5 = pers6 = 0
-        vehlist_input = ""
-        try:
-            vehlist_input = request.form.get("vehlist", "").strip()
-            pull_combinations = int(request.form.get("pull_combinations", 0))
-            use_combinations = int(request.form.get("use_combinations", 0))
+        # EXACTLY like clustering: print on GET when not bot + ip_ok + not hidden
+        if (not is_bot) and ip_ok and (not is_hidden_ip(user_ip)):
+            print_event(
+                event="view-test",
+                user_ip=user_ip,
+                geo=geo,
+                xff_chain=xff_chain,
+                remote_addr=request.remote_addr,
+                payload_str=None,
+            )
 
-            pers5 = int(request.form.get("pers5") or 0)
-            pers6 = int(request.form.get("pers6") or 0)
-            vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
+        # Show the page at /test (do NOT redirect to /)
+        return render_template(
+            "index.html",
+            vehlist=",".join(
+                map(
+                    str,
+                    session.get("vehlist", [])
+                    if isinstance(session.get("vehlist", []), list)
+                    else [session.get("vehlist")],
+                )
+            ),
+            pers5=session.get("pers5", ""),
+            pers6=session.get("pers6", ""),
+            results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
+            sorted_allocations=session.get("sorted_allocations"),
+            rem_vehs=session.get("rem_vehs"),
+            allocations_only=session.get("allocations_only", 0),
+            pull_combinations=session.get("pull_combinations", 0),
+            error_message=None,
+            backupsize=session.get("backupsize"),
+            alllist=session.get("alllist"),
+            matrices_result=session.get("matrices_result"),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=session.get("people", ""),
+            crews=session.get("crews", ""),
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
 
-            # PRINT only (no stored log)
-            if (not is_bot) and (not is_hidden_ip(user_ip)):
-                payload = {
+    # POST
+    pers5 = pers6 = 0
+    vehlist_input = ""
+    try:
+        vehlist_input = request.form.get("vehlist", "").strip()
+        pull_combinations = int(request.form.get("pull_combinations", 0))
+        use_combinations = int(request.form.get("use_combinations", 0))
+
+        pers5 = int(request.form.get("pers5") or 0)
+        pers6 = int(request.form.get("pers6") or 0)
+        vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
+
+        # EXACTLY like clustering: print on POST as user-test with pretty payload
+        if (not is_bot) and ip_ok and (not is_hidden_ip(user_ip)):
+            pretty = format_inputs_pretty(
+                {
                     "vehlist": vehlist,
                     "pers5": pers5,
                     "pers6": pers6,
                     "pull_combinations": pull_combinations,
                     "use_combinations": use_combinations,
                 }
-                print_event(
-                    event="submit-test",
-                    user_ip=user_ip,
-                    geo=geo,
-                    xff_chain=xff_chain,
-                    remote_addr=request.remote_addr,
-                    payload_str=format_inputs_pretty(payload),
-                )
-
-            # ---- same compute pipeline as / (unchanged) ----
-            veh2 = vehlist.copy()
-            veh2.sort(reverse=True)
-            validate_inputs(vehlist, pers5, pers6)
-
-            backup_group = pers5
-            backupsize = 5
-            primary_group = pers6
-
-            results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
-            results = trickle_down(results_1, backupsize)
-            off = [backup_group - results[0][0], primary_group - results[0][1]]
-
-            if not results or not isinstance(results, list) or len(results) < 2:
-                raise ValueError("Invalid results returned from calculations.")
-
-            sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
-
-            if sum(off) <= pers6 and backupsize == 5:
-                combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
-            else:
-                combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
-
-            listing1 = listing.copy()
-            combos1 = combos.copy()
-            combos3 = combos1.copy()
-            listing3 = listing1.copy()
-            rem_vehs1 = unused(sorted_allocations.copy(), combos.copy())
-
-            if combos:
-                for elem in rem_vehs1:
-                    combos1.append([elem])
-                    listing1.append([0, 0])
-
-                combos2, newalloc = call_optimize(
-                    sorted_allocations.copy(),
-                    listing1,
-                    backupsize,
-                    combos1,
-                    sorted_spaces,
-                )
-                combos3 = combos2
-                listing3 = newalloc
-
-            combos, listing = cleanup(combos3, sorted_spaces, listing3)
-            damage = harm(combos.copy(), sorted_allocations.copy())
-            totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
-
-            combos = person_calc(combos.copy(), sorted_sizes.copy())
-            alllist = alltogether(combos, listing, damage)
-
-            less = nonzero(sorted_spaces, sorted_sizes)
-            rem_vehs2 = unused1(less[1], combos.copy())
-            rem_vehs = quant(rem_vehs2)
-
-            restored_vehs, restored_all, restored_spaces = restore_order(
-                vehlist[:].copy(), sorted_sizes, sorted_allocations, sorted_spaces
+            )
+            print_event(
+                event="user-test",
+                user_ip=user_ip,
+                geo=geo,
+                xff_chain=xff_chain,
+                remote_addr=request.remote_addr,
+                payload_str=pretty,
             )
 
-            combined_sorted_data = [
-                [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]
-                for i in range(len(sorted_sizes))
-            ]
+        # ---- same compute pipeline as / (unchanged) ----
+        veh2 = vehlist.copy()
+        veh2.sort(reverse=True)
+        validate_inputs(vehlist, pers5, pers6)
 
-            # Update session so /test page renders like normal
-            session["sorted_allocations"] = combined_sorted_data
-            session["totalhelp"] = totalhelp
-            session["alllist"] = alllist
-            session["backupsize"] = backupsize
-            session["vehlist"] = vehlist
-            session["pers5"] = pers5
-            session["pers6"] = pers6
-            session["rem_vehs"] = rem_vehs
-            session["results"] = [results[0], off]
+        backup_group = pers5
+        backupsize = 5
+        primary_group = pers6
 
-        except Exception as e:
-            return render_template(
-                "index.html",
-                error_message=f"An error occurred: {str(e)}",
-                vehlist=vehlist_input,
-                pers5=pers5,
-                pers6=pers6,
-                results=None,
-                totalhelp=None,
-                sorted_allocations=None,
-                rem_vehs=None,
-                alllist=None,
-                backupsize=None,
-                matrices_result=session.get("matrices_result"),
-                allocations_only=int(request.form.get("allocations_only", 0)),
-                ranges_result=session.get("ranges_result"),
-                total_people=session.get("total_people", ""),
-                people=session.get("people", ""),
-                crews=session.get("crews", ""),
-                zip=zip,
-                enumerate=enumerate,
-                len=len,
+        results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
+        results = trickle_down(results_1, backupsize)
+        off = [backup_group - results[0][0], primary_group - results[0][1]]
+
+        if not results or not isinstance(results, list) or len(results) < 2:
+            raise ValueError("Invalid results returned from calculations.")
+
+        sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
+
+        if sum(off) <= pers6 and backupsize == 5:
+            combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+        else:
+            combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+
+        listing1 = listing.copy()
+        combos1 = combos.copy()
+        combos3 = combos1.copy()
+        listing3 = listing1.copy()
+        rem_vehs1 = unused(sorted_allocations.copy(), combos.copy())
+
+        if combos:
+            for elem in rem_vehs1:
+                combos1.append([elem])
+                listing1.append([0, 0])
+
+            combos2, newalloc = call_optimize(
+                sorted_allocations.copy(),
+                listing1,
+                backupsize,
+                combos1,
+                sorted_spaces,
             )
+            combos3 = combos2
+            listing3 = newalloc
 
-    # GET (and also after a POST success): show the same UI on /test
-    return render_template(
-        "index.html",
-        vehlist=",".join(
-            map(
-                str,
-                session.get("vehlist", [])
-                if isinstance(session.get("vehlist", []), list)
-                else [session.get("vehlist")],
-            )
-        ),
-        pers5=session.get("pers5", ""),
-        pers6=session.get("pers6", ""),
-        results=session.get("results"),
-        totalhelp=session.get("totalhelp"),
-        sorted_allocations=session.get("sorted_allocations"),
-        rem_vehs=session.get("rem_vehs"),
-        allocations_only=session.get("allocations_only", 0),
-        pull_combinations=session.get("pull_combinations", 0),
-        error_message=None,
-        backupsize=session.get("backupsize"),
-        alllist=session.get("alllist"),
-        matrices_result=session.get("matrices_result"),
-        ranges_result=session.get("ranges_result"),
-        total_people=session.get("total_people", ""),
-        people=session.get("people", ""),
-        crews=session.get("crews", ""),
-        zip=zip,
-        enumerate=enumerate,
-        len=len,
-    )
+        combos, listing = cleanup(combos3, sorted_spaces, listing3)
+        damage = harm(combos.copy(), sorted_allocations.copy())
+        totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
 
+        combos = person_calc(combos.copy(), sorted_sizes.copy())
+        alllist = alltogether(combos, listing, damage)
+
+        less = nonzero(sorted_spaces, sorted_sizes)
+        rem_vehs2 = unused1(less[1], combos.copy())
+        rem_vehs = quant(rem_vehs2)
+
+        restored_vehs, restored_all, restored_spaces = restore_order(
+            vehlist[:].copy(), sorted_sizes, sorted_allocations, sorted_spaces
+        )
+
+        combined_sorted_data = [
+            [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]
+            for i in range(len(sorted_sizes))
+        ]
+
+        # Update session so page renders like normal
+        session["sorted_allocations"] = combined_sorted_data
+        session["totalhelp"] = totalhelp
+        session["alllist"] = alllist
+        session["backupsize"] = backupsize
+        session["vehlist"] = vehlist
+        session["pers5"] = pers5
+        session["pers6"] = pers6
+        session["rem_vehs"] = rem_vehs
+        session["results"] = [results[0], off]
+
+        # IMPORTANT: render /test page (do NOT redirect to /)
+        return render_template(
+            "index.html",
+            vehlist=",".join(map(str, vehlist)),
+            pers5=pers5,
+            pers6=pers6,
+            results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
+            sorted_allocations=session.get("sorted_allocations"),
+            rem_vehs=session.get("rem_vehs"),
+            allocations_only=session.get("allocations_only", 0),
+            pull_combinations=pull_combinations,
+            error_message=None,
+            backupsize=session.get("backupsize"),
+            alllist=session.get("alllist"),
+            matrices_result=session.get("matrices_result"),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=session.get("people", ""),
+            crews=session.get("crews", ""),
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
+
+    except Exception as e:
+        # Render on /test (no redirect)
+        return render_template(
+            "index.html",
+            error_message=f"An error occurred: {str(e)}",
+            vehlist=vehlist_input,
+            pers5=pers5,
+            pers6=pers6,
+            results=None,
+            totalhelp=None,
+            sorted_allocations=None,
+            rem_vehs=None,
+            alllist=None,
+            backupsize=None,
+            matrices_result=session.get("matrices_result"),
+            allocations_only=int(request.form.get("allocations_only", 0)),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=session.get("people", ""),
+            crews=session.get("crews", ""),
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
 
 # ------------------------------
 # Matrices route (shared)
