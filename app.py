@@ -1,7 +1,8 @@
 from __future__ import annotations
+
 from flask import Flask, render_template, request, session, redirect, url_for
 from flask_session import Session
-from Master import *
+from Master import *  # your existing logic
 import os
 import redis
 from pathlib import Path
@@ -15,20 +16,25 @@ from werkzeug.middleware.proxy_fix import ProxyFix
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 
+# Render / reverse proxies
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
+# ------------------------------
+# Cookie hardening
+# ------------------------------
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=True,  # Render is HTTPS
 )
 
+# ------------------------------
+# Sessions (Redis if available)
+# ------------------------------
 redis_url = os.environ.get("REDIS_URL")
 
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-
-# IMPORTANT: isolate session keys between apps sharing Redis
 app.config["SESSION_KEY_PREFIX"] = os.environ.get("SESSION_KEY_PREFIX", "session:pre:")
 
 if redis_url:
@@ -42,10 +48,14 @@ else:
 
 Session(app)
 
+# ------------------------------
+# Trainer password (view-only)
+# ------------------------------
 TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
-MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
 
-
+# ------------------------------
+# Hidden IPs (do not log / do not print / do not show)
+# ------------------------------
 HIDDEN_IPS_RAW = os.environ.get("HIDDEN_IPS", "").strip()
 HIDDEN_IPS = {x.strip() for x in HIDDEN_IPS_RAW.split(",") if x.strip()}
 
@@ -54,6 +64,9 @@ def is_hidden_ip(ip: str) -> bool:
     return ip in HIDDEN_IPS
 
 
+# ------------------------------
+# Logging storage (ONE log: trainer log)
+# ------------------------------
 DATA_KEY_PREFIX = (os.environ.get("DATA_KEY_PREFIX", "pre:trainer_log_v1").strip() or "pre:trainer_log_v1")
 LOG_KEY = DATA_KEY_PREFIX
 ID_KEY = f"{DATA_KEY_PREFIX}:id_counter"
@@ -80,6 +93,7 @@ def _next_local_id():
 
 
 def log_append(entry: dict):
+    """Append to trainer log (skips hidden IPs)."""
     entry = dict(entry)
     if is_hidden_ip(entry.get("ip", "")):
         return
@@ -89,7 +103,6 @@ def log_append(entry: dict):
         if "id" not in entry:
             entry["id"] = int(r.incr(ID_KEY))
         r.rpush(LOG_KEY, json.dumps(entry))
-        r.ltrim(LOG_KEY, -MAX_LOG_ENTRIES, -1)
     else:
         if "id" not in entry:
             entry["id"] = _next_local_id()
@@ -138,8 +151,12 @@ def purge_hidden_ips_from_storage():
 
 
 def purge_null_entries_from_storage():
+    """
+    Minimal: remove log rows that have missing/NULL/empty inputs.
+    Also removes rows where required submit keys are missing (vehlist/pers5/pers6),
+    because those show up as NULL in trainer.
+    """
     entries = log_get_all_raw()
-
     cleaned = []
     removed = 0
 
@@ -148,19 +165,14 @@ def purge_null_entries_from_storage():
             removed += 1
             continue
 
-        inp = e.get("input")
-        if not isinstance(inp, dict) or len(inp) == 0:
+        inp = e.get("input", None)
+        if inp is None or (isinstance(inp, dict) and len(inp) == 0):
             removed += 1
             continue
 
-        ev = e.get("event")
-
-        if ev == "matrices":
-            if inp.get("people") is None or inp.get("crews") is None:
-                removed += 1
-                continue
-        else:
-            if "vehlist" not in inp or "pers5" not in inp or "pers6" not in inp:
+        # For submit events, require the standard keys so trainer doesn't show NULLs
+        if e.get("event") == "submit" and isinstance(inp, dict):
+            if ("vehlist" not in inp) or ("pers5" not in inp) or ("pers6" not in inp):
                 removed += 1
                 continue
 
@@ -174,18 +186,24 @@ def purge_null_entries_from_storage():
 purge_hidden_ips_from_storage()
 purge_null_entries_from_storage()
 
-
+# ------------------------------
+# IP + bot + geo helpers
+# ------------------------------
 def is_public_ip(ip: str) -> bool:
     try:
         a = ipaddress.ip_address(ip)
-        return not (
-                a.is_private or a.is_loopback or a.is_reserved or a.is_multicast or a.is_link_local
-        )
+        return not (a.is_private or a.is_loopback or a.is_reserved or a.is_multicast or a.is_link_local)
     except ValueError:
         return False
 
 
 def get_client_ip():
+    """
+    Returns (client_ip, xff_chain, ip_ok)
+
+    - Prefer first PUBLIC IP in X-Forwarded-For chain.
+    - If none, fall back to remote_addr.
+    """
     xff = request.headers.get("X-Forwarded-For", "")
     if xff:
         parts = [p.strip() for p in xff.split(",") if p.strip()]
@@ -216,11 +234,7 @@ def lookup_city(ip: str):
         data = resp.json()
         if data.get("status") != "success":
             return None
-        return {
-            "city": data.get("city"),
-            "region": data.get("regionName"),
-            "country": data.get("country"),
-        }
+        return {"city": data.get("city"), "region": data.get("regionName"), "country": data.get("country")}
     except Exception:
         return None
 
@@ -234,41 +248,26 @@ def _format_loc(geo):
     return f"{city}, {region}, {country}"
 
 
-def format_inputs_pretty(inp: dict) -> str:
-    return (
-        f"\n  Vehicle List: {inp.get('vehlist', 'NULL')}"
-        f"\n  5-Person: {inp.get('pers5', 'NULL')}"
-        f"\n  6-Person: {inp.get('pers6', 'NULL')}"
-        f"\n  Pull Combos: {inp.get('pull_combinations', 'NULL')}"
-        f"\n  Use Combos: {inp.get('use_combinations', 'NULL')}"
-    )
-
-def print_event(
-        event: str,
-        user_ip: str,
-        geo,
-        xff_chain: str,
-        remote_addr: str,
-        payload_str: str | None = None, ):
+def print_event(event: str, user_ip: str, geo, payload_lines: list[str] | None = None):
+    """
+    Pretty stdout printing for Render logs.
+    NOTE: requires gunicorn --capture-output (you have it).
+    """
+    ts = datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S")
     loc = _format_loc(geo)
 
-    print(f"\n{event.upper()}", flush=True)
+    print("", flush=True)
+    print(f"{event.upper()} @ {ts}", flush=True)
     print(f"  IP: {user_ip}", flush=True)
     print(f"  Location: {loc}", flush=True)
-
-    if xff_chain:
-        print(f"  X-Forwarded-For: {xff_chain}", flush=True)
-    if remote_addr:
-        print(f"  Remote Addr: {remote_addr}", flush=True)
-
-    if payload_str:
-        print(payload_str, flush=True)
-
-    print("-" * 40, flush=True)
+    if payload_lines:
+        for line in payload_lines:
+            print(f"  {line}", flush=True)
+    print("-" * 48, flush=True)
 
 
 def build_grouped_entries(entries):
-    entries = list(reversed(entries))
+    entries = list(reversed(entries))  # most recent first
     grouped = {}
     for e in entries:
         ip = e.get("ip", "Unknown IP")
@@ -276,6 +275,9 @@ def build_grouped_entries(entries):
     return grouped
 
 
+# ------------------------------
+# Auth helpers (trainer only)
+# ------------------------------
 def is_trainer_authed() -> bool:
     return bool(session.get("trainer_authed", False))
 
@@ -285,6 +287,11 @@ def _safe_return_path(path: str | None) -> str:
     return path if path in allowed else "/"
 
 
+# ------------------------------
+# /
+# - Logs submits (+ matrices from /)
+# - Prints on GET + POST
+# ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
     user_ip, xff_chain, ip_ok = get_client_ip()
@@ -293,6 +300,11 @@ def index():
 
     if request.method == "GET":
         session["return_after_matrices"] = "/"
+
+        # Print on GET (allow localhost; just block bots + hidden)
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            print_event("view", user_ip, geo)
+
         return render_template(
             "index.html",
             vehlist=",".join(
@@ -324,6 +336,7 @@ def index():
             len=len,
         )
 
+    # POST
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
@@ -335,24 +348,42 @@ def index():
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        if not is_bot:
-            log_entry = {
-                "ip": user_ip,
-                "xff": xff_chain,
-                "remote_addr": request.remote_addr,
-                "geo": geo,
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S"),
-                "event": "submit",
-                "input": {
-                    "vehlist": vehlist,
-                    "pers5": pers5,
-                    "pers6": pers6,
-                    "pull_combinations": pull_combinations,
-                    "use_combinations": use_combinations,
-                },
-            }
-            log_append(log_entry)
+        # Pretty print on POST
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            print_event(
+                "submit",
+                user_ip,
+                geo,
+                payload_lines=[
+                    f"Vehicle List: {vehlist}",
+                    f"5-Person: {pers5}",
+                    f"6-Person: {pers6}",
+                    f"Pull Combos: {pull_combinations}",
+                    f"Use Combos: {use_combinations}",
+                ],
+            )
 
+        # Log submits (ONLY for /, never /test)
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            log_append(
+                {
+                    "ip": user_ip,
+                    "xff": xff_chain,
+                    "remote_addr": request.remote_addr,
+                    "geo": geo,
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S"),
+                    "event": "submit",
+                    "input": {
+                        "vehlist": vehlist,
+                        "pers5": pers5,
+                        "pers6": pers6,
+                        "pull_combinations": pull_combinations,
+                        "use_combinations": use_combinations,
+                    },
+                }
+            )
+
+        # ---- your existing compute pipeline (unchanged) ----
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -464,6 +495,11 @@ def index():
         )
 
 
+# ------------------------------
+# /test
+# - NEVER logs anything (including matrices)
+# - Prints on GET + POST
+# ------------------------------
 @app.route("/test", methods=["GET", "POST"], strict_slashes=False)
 def test_page():
     user_ip, xff_chain, ip_ok = get_client_ip()
@@ -474,14 +510,7 @@ def test_page():
         session["return_after_matrices"] = "/test"
 
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            print_event(
-                event="view-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr,
-                payload_str=None,
-            )
+            print_event("view-test", user_ip, geo)
 
         return render_template(
             "index.html",
@@ -514,6 +543,7 @@ def test_page():
             len=len,
         )
 
+    # POST (compute allowed, but NO LOGGING)
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
@@ -526,22 +556,20 @@ def test_page():
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            pretty = format_inputs_pretty({
-                "vehlist": vehlist,
-                "pers5": pers5,
-                "pers6": pers6,
-                "pull_combinations": pull_combinations,
-                "use_combinations": use_combinations,
-            })
             print_event(
-                event="user-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr,
-                payload_str=pretty,
+                "user-test",
+                user_ip,
+                geo,
+                payload_lines=[
+                    f"Vehicle List: {vehlist}",
+                    f"5-Person: {pers5}",
+                    f"6-Person: {pers6}",
+                    f"Pull Combos: {pull_combinations}",
+                    f"Use Combos: {use_combinations}",
+                ],
             )
 
+        # ---- same compute pipeline ----
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -642,33 +670,47 @@ def test_page():
         )
 
 
+# ------------------------------
+# /matrices
+# - LOGS ONLY when user came from "/" (NOT from "/test")
+# ------------------------------
 @app.route("/matrices", methods=["POST"])
 def matrices():
     user_ip, xff_chain, ip_ok = get_client_ip()
     is_bot = is_request_bot(request.headers.get("User-Agent", ""))
     geo = lookup_city(user_ip)
 
+    origin = session.get("return_after_matrices", "/")
+    origin = origin if origin in ("/", "/test") else "/"
+
     try:
         people_input = request.form.get("people", "").strip()
         crews_input = request.form.get("crews", "").strip()
-
         people = int(people_input) if people_input else 0
         crews = int(crews_input) if crews_input else 0
 
+        # Always print (helpful for debugging)
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            log_entry = {
-                "ip": user_ip,
-                "xff": xff_chain,
-                "remote_addr": request.remote_addr,
-                "geo": geo,
-                "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S"),
-                "event": "matrices",
-                "input": {
-                    "people": people,
-                    "crews": crews,
-                },
-            }
-            log_append(log_entry)
+            print_event(
+                "matrices",
+                user_ip,
+                geo,
+                payload_lines=[f"People: {people}", f"Crews: {crews}", f"Origin: {origin}"],
+            )
+
+        # Log ONLY if origin is "/" (never from /test)
+        if origin == "/" and (not is_bot) and (not is_hidden_ip(user_ip)):
+            log_append(
+                {
+                    "ip": user_ip,
+                    "xff": xff_chain,
+                    "remote_addr": request.remote_addr,
+                    "geo": geo,
+                    "timestamp": datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S"),
+                    "event": "matrices",
+                    "input": {"people": people, "crews": crews},
+                }
+            )
 
         matrices_result = compute_matrices(people, crews)
         ranges_result = compute_ranges(people)
@@ -679,17 +721,23 @@ def matrices():
         session["crews"] = crews
 
     except Exception as e:
-        print("Error: " + str(e), flush=True)
+        print(f"ERROR in /matrices: {e}", flush=True)
 
-    return redirect(_safe_return_path(session.get("return_after_matrices")))
+    return redirect(_safe_return_path(origin))
 
 
+# ------------------------------
+# Logout beacon endpoint (TAB CLOSE) — trainer only
+# ------------------------------
 @app.route("/logout/trainer", methods=["POST"], strict_slashes=False)
 def logout_trainer():
     session.pop("trainer_authed", None)
     return ("", 204)
 
 
+# ------------------------------
+# /trainer (VIEW-ONLY)
+# ------------------------------
 @app.route("/trainer_login", methods=["GET", "POST"], strict_slashes=False)
 def trainer_login():
     error = None
@@ -697,11 +745,7 @@ def trainer_login():
         pwd = request.form.get("password", "")
         if pwd == TRAINER_PASSWORD_VIEW:
             session["trainer_authed"] = True
-            return render_template(
-                "set_tab_ok.html",
-                tab_key="tab_ok_trainer",
-                next_url=url_for("trainer_view"),
-            )
+            return render_template("set_tab_ok.html", tab_key="tab_ok_trainer", next_url=url_for("trainer_view"))
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
 
