@@ -9,6 +9,8 @@ from datetime import datetime
 from zoneinfo import ZoneInfo
 import requests
 import ipaddress
+import redis
+import json
 from werkzeug.middleware.proxy_fix import ProxyFix
 
 # ------------------------------
@@ -18,7 +20,6 @@ app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
 
-# Detect Render (best effort) to set secure cookies only on HTTPS deployments.
 IS_RENDER = bool(os.environ.get("RENDER")) or bool(os.environ.get("RENDER_SERVICE_ID"))
 COOKIE_SECURE = True if IS_RENDER else False
 
@@ -28,19 +29,21 @@ app.config.update(
     SESSION_COOKIE_SECURE=COOKIE_SECURE,
 )
 
-# Sessions (filesystem only; NO Redis)
+redis_url = os.environ.get("REDIS_URL", "").strip()
+
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-app.config["SESSION_TYPE"] = "filesystem"
-session_dir = Path(app.instance_path) / "flask_session"
-session_dir.mkdir(parents=True, exist_ok=True)
-app.config["SESSION_FILE_DIR"] = str(session_dir)
-Session(app)
+app.config["SESSION_KEY_PREFIX"] = os.environ.get("SESSION_KEY_PREFIX", "session:clustering:")
 
-# ------------------------------
-# Version marker (so you can confirm Render is running THIS file)
-# ------------------------------
-print("APP VERSION: trainer-only-inputs v4", flush=True)
+if redis_url:
+    app.config["SESSION_TYPE"] = "redis"
+    app.config["SESSION_REDIS"] = redis.Redis.from_url(redis_url)
+else:
+    app.config["SESSION_TYPE"] = "filesystem"
+    session_dir = Path(app.instance_path) / "flask_session"
+    session_dir.mkdir(parents=True, exist_ok=True)
+    app.config["SESSION_FILE_DIR"] = str(session_dir)
+Session(app)
 
 # ------------------------------
 # Trainer auth
@@ -59,14 +62,15 @@ HIDDEN_IPS = {x.strip() for x in HIDDEN_IPS_RAW.split(",") if x.strip()}
 def is_hidden_ip(ip: str) -> bool:
     return ip in HIDDEN_IPS
 
+LOG_KEY_PREFIX = os.environ.get("LOG_KEY_PREFIX", "logs:preclustering:")
+LOG_LIST_KEY = LOG_KEY_PREFIX + "trainer_log"
+LOG_COUNTER_KEY = LOG_KEY_PREFIX + "trainer_id"
+
+rdb = redis.Redis.from_url(redis_url, decode_responses=True) if redis_url else None
 MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
-DATA_LOG: list[dict] = []
-LOG_COUNTER = 0
 
 def _next_local_id() -> int:
-    global LOG_COUNTER
-    LOG_COUNTER += 1
-    return LOG_COUNTER
+    return int(rdb.incr(LOG_COUNTER_KEY)) if rdb else 1
 
 def log_append(entry: dict):
     entry = dict(entry)
@@ -74,15 +78,25 @@ def log_append(entry: dict):
     if is_hidden_ip(ip):
         return
 
-    if "id" not in entry:
-        entry["id"] = _next_local_id()
+    entry.setdefault("id", _next_local_id())
 
-    DATA_LOG.append(entry)
-    if len(DATA_LOG) > MAX_LOG_ENTRIES:
-        del DATA_LOG[:-MAX_LOG_ENTRIES]
+    if not rdb:
+        return  # no persistence without redis
+
+    rdb.rpush(LOG_LIST_KEY, json.dumps(entry))
+    rdb.ltrim(LOG_LIST_KEY, -MAX_LOG_ENTRIES, -1)
 
 def log_get_all() -> list[dict]:
-    return list(DATA_LOG)
+    if not rdb:
+        return []
+    raw = rdb.lrange(LOG_LIST_KEY, 0, -1)
+    out = []
+    for s in raw:
+        try:
+            out.append(json.loads(s))
+        except Exception:
+            pass
+    return out
 
 def build_grouped_entries(entries: list[dict]) -> dict[str, list[dict]]:
     # newest-first display
