@@ -88,6 +88,7 @@ def start_web_app():
         print("[*] Starting Flask dev server locally...")
         subprocess.check_call([PYTHON, APP_MODULE])
 
+
 if __name__ == "__main__":
     java_proc = None
     try:

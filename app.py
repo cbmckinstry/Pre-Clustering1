@@ -4,190 +4,112 @@ from flask import Flask, render_template, request, session, redirect, url_for
 from flask_session import Session
 from Master import *
 import os
-import redis
 from pathlib import Path
 from datetime import datetime
 from zoneinfo import ZoneInfo
 import requests
-import json
 import ipaddress
 from werkzeug.middleware.proxy_fix import ProxyFix
 
+# ------------------------------
+# App
+# ------------------------------
 app = Flask(__name__)
 app.config["SECRET_KEY"] = os.environ.get("SECRET_KEY", "dev-secret-change-me")
-
 app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1, x_host=1, x_prefix=1)
+
+# Detect Render (best effort) to set secure cookies only on HTTPS deployments.
+IS_RENDER = bool(os.environ.get("RENDER")) or bool(os.environ.get("RENDER_SERVICE_ID"))
+COOKIE_SECURE = True if IS_RENDER else False
 
 app.config.update(
     SESSION_COOKIE_HTTPONLY=True,
     SESSION_COOKIE_SAMESITE="Lax",
-    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SECURE=COOKIE_SECURE,
 )
 
-redis_url = os.environ.get("REDIS_URL")
-
+# Sessions (filesystem only; NO Redis)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_USE_SIGNER"] = True
-app.config["SESSION_KEY_PREFIX"] = os.environ.get("SESSION_KEY_PREFIX", "session:pre:")
-
-if redis_url:
-    app.config["SESSION_TYPE"] = "redis"
-    app.config["SESSION_REDIS"] = redis.from_url(redis_url)
-else:
-    app.config["SESSION_TYPE"] = "filesystem"
-    session_dir = Path(app.instance_path) / "flask_session"
-    session_dir.mkdir(parents=True, exist_ok=True)
-    app.config["SESSION_FILE_DIR"] = str(session_dir)
-
+app.config["SESSION_TYPE"] = "filesystem"
+session_dir = Path(app.instance_path) / "flask_session"
+session_dir.mkdir(parents=True, exist_ok=True)
+app.config["SESSION_FILE_DIR"] = str(session_dir)
 Session(app)
 
-TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
-MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
+# ------------------------------
+# Version marker (so you can confirm Render is running THIS file)
+# ------------------------------
+print("APP VERSION: trainer-only-inputs v4", flush=True)
 
+# ------------------------------
+# Trainer auth
+# ------------------------------
+TRAINER_PASSWORD_VIEW = os.environ.get("TRAINER_PASSWORD_VIEW", "change-me")
+
+def is_trainer_authed() -> bool:
+    return bool(session.get("trainer_authed", False))
+
+# ------------------------------
+# Hidden IPs
+# ------------------------------
 HIDDEN_IPS_RAW = os.environ.get("HIDDEN_IPS", "").strip()
 HIDDEN_IPS = {x.strip() for x in HIDDEN_IPS_RAW.split(",") if x.strip()}
-
 
 def is_hidden_ip(ip: str) -> bool:
     return ip in HIDDEN_IPS
 
-
-DATA_KEY_PREFIX = (os.environ.get("DATA_KEY_PREFIX", "pre:trainer_log_v1").strip() or "pre:trainer_log_v1")
-LOG_KEY = DATA_KEY_PREFIX
-ID_KEY = f"{DATA_KEY_PREFIX}:id_counter"
-
-DATA_LOG = []
+# ------------------------------
+# In-memory log storage (for /trainer)
+#   NOTE: resets on restart; NOT Redis; NOT persisted.
+#   Also: we only store POST "/" inputs (event="input")
+# ------------------------------
+MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
+DATA_LOG: list[dict] = []
 LOG_COUNTER = 0
 
-
-def _get_redis():
-    r = app.config.get("SESSION_REDIS")
-    if r is None:
-        return None
-    try:
-        r.ping()
-        return r
-    except Exception:
-        return None
-
-
-def _next_local_id():
+def _next_local_id() -> int:
     global LOG_COUNTER
     LOG_COUNTER += 1
     return LOG_COUNTER
 
-
 def log_append(entry: dict):
     entry = dict(entry)
-    if is_hidden_ip(entry.get("ip", "")):
+    ip = entry.get("ip", "")
+    if is_hidden_ip(ip):
         return
 
-    r = _get_redis()
-    if r is not None:
-        if "id" not in entry:
-            entry["id"] = int(r.incr(ID_KEY))
-        r.rpush(LOG_KEY, json.dumps(entry))
-        r.ltrim(LOG_KEY, -MAX_LOG_ENTRIES, -1)
-    else:
-        if "id" not in entry:
-            entry["id"] = _next_local_id()
-        DATA_LOG.append(entry)
+    if "id" not in entry:
+        entry["id"] = _next_local_id()
 
+    DATA_LOG.append(entry)
+    if len(DATA_LOG) > MAX_LOG_ENTRIES:
+        del DATA_LOG[:-MAX_LOG_ENTRIES]
 
-def log_get_all_raw():
-    r = _get_redis()
-    if r is not None:
-        raw = r.lrange(LOG_KEY, 0, -1)
-        return [json.loads(x) for x in raw]
+def log_get_all() -> list[dict]:
     return list(DATA_LOG)
 
-
-def filter_out_hidden_entries(entries):
-    if not HIDDEN_IPS:
-        return list(entries)
-    return [e for e in entries if e.get("ip") not in HIDDEN_IPS]
-
-
-def log_get_all():
-    return filter_out_hidden_entries(log_get_all_raw())
-
-
-def log_replace_all(entries):
-    r = _get_redis()
-    if r is not None:
-        pipe = r.pipeline()
-        pipe.delete(LOG_KEY)
-        for e in entries:
-            pipe.rpush(LOG_KEY, json.dumps(e))
-        pipe.execute()
-    else:
-        global DATA_LOG
-        DATA_LOG = list(entries)
-
-
-def purge_hidden_ips_from_storage():
-    if not HIDDEN_IPS:
-        return
-    entries = log_get_all_raw()
-    filtered = filter_out_hidden_entries(entries)
-    if len(filtered) != len(entries):
-        log_replace_all(filtered)
-        print(f"PURGE-HIDDEN removed={len(entries) - len(filtered)}", flush=True)
-
-
-def purge_null_entries_from_storage():
-    entries = log_get_all_raw()
-
-    cleaned = []
-    removed = 0
-
+def build_grouped_entries(entries: list[dict]) -> dict[str, list[dict]]:
+    # newest-first display
+    entries = list(reversed(entries))
+    grouped: dict[str, list[dict]] = {}
     for e in entries:
-        if not isinstance(e, dict):
-            removed += 1
-            continue
+        ip = e.get("ip", "Unknown IP")
+        grouped.setdefault(ip, []).append(e)
+    return grouped
 
-        inp = e.get("input")
-        if not isinstance(inp, dict) or len(inp) == 0:
-            removed += 1
-            continue
-
-        ev = e.get("event")
-
-        if ev == "matrices":
-            if inp.get("people") is None or inp.get("crews") is None:
-                removed += 1
-                continue
-
-        elif ev in ("view", "view-test"):
-            if not inp.get("path"):
-                removed += 1
-                continue
-
-        else:
-            if "vehlist" not in inp or "pers5" not in inp or "pers6" not in inp:
-                removed += 1
-                continue
-
-        cleaned.append(e)
-
-    if removed:
-        log_replace_all(cleaned)
-        print(f"PURGE-NULL removed={removed}", flush=True)
-
-
-purge_hidden_ips_from_storage()
-purge_null_entries_from_storage()
-
+# ------------------------------
+# Helpers: time, ip, bot, geo, printing
+# ------------------------------
+def _now_ts() -> str:
+    return datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S")
 
 def is_public_ip(ip: str) -> bool:
     try:
         a = ipaddress.ip_address(ip)
-        return not (
-                a.is_private or a.is_loopback or a.is_reserved or a.is_multicast or a.is_link_local
-        )
+        return not (a.is_private or a.is_loopback or a.is_reserved or a.is_multicast or a.is_link_local)
     except ValueError:
         return False
-
 
 def get_client_ip():
     xff = request.headers.get("X-Forwarded-For", "")
@@ -195,12 +117,9 @@ def get_client_ip():
         parts = [p.strip() for p in xff.split(",") if p.strip()]
         for ip in parts:
             if is_public_ip(ip):
-                return ip, xff, True
-        return (parts[0] if parts else (request.remote_addr or "")), xff, False
-
-    ra = request.remote_addr or ""
-    return ra, "", is_public_ip(ra)
-
+                return ip, xff
+        return (parts[0] if parts else (request.remote_addr or "")), xff
+    return request.remote_addr or "", ""
 
 def is_request_bot(user_agent: str) -> bool:
     ua = (user_agent or "").lower()
@@ -211,7 +130,6 @@ def is_request_bot(user_agent: str) -> bool:
             or ua.strip() == ""
     )
 
-
 def lookup_city(ip: str):
     try:
         if ip.startswith("127.") or ip == "::1":
@@ -220,14 +138,9 @@ def lookup_city(ip: str):
         data = resp.json()
         if data.get("status") != "success":
             return None
-        return {
-            "city": data.get("city"),
-            "region": data.get("regionName"),
-            "country": data.get("country"),
-        }
+        return {"city": data.get("city"), "region": data.get("regionName"), "country": data.get("country")}
     except Exception:
         return None
-
 
 def _format_loc(geo):
     if not geo:
@@ -237,74 +150,51 @@ def _format_loc(geo):
     country = geo.get("country") or "Unknown country"
     return f"{city}, {region}, {country}"
 
+def print_event(event: str, user_ip: str, geo, xff_chain: str, remote_addr: str, payload_lines: list[str] | None):
+    """
+    This prints to stdout (Render logs).
+    Per your rules:
+      - Print on GET "/" (VIEW), except redirect-GET after POST "/"
+      - Print on GET "/test" (VIEW-TEST), except redirect-GET after POST "/test"
+      - Print on POST "/test" only (SUBMIT-TEST)
+      - Do NOT print on POST "/" or POST "/matrices"
+    """
+    if is_hidden_ip(user_ip):
+        return
 
-def print_event(
-        event: str,
-        user_ip: str,
-        geo,
-        xff_chain: str,
-        remote_addr: str,
-        payload_str: str | None = None,
-):
-    loc = _format_loc(geo)
-
-    print(f"\n{event.upper()}", flush=True)
+    print(f"\n{event.upper()} @ {_now_ts()}", flush=True)
     print(f"  IP: {user_ip}", flush=True)
-    print(f"  Location: {loc}", flush=True)
+    print(f"  Location: {_format_loc(geo)}", flush=True)
 
     if xff_chain:
         print(f"  X-Forwarded-For: {xff_chain}", flush=True)
     if remote_addr:
         print(f"  Remote Addr: {remote_addr}", flush=True)
 
-    if payload_str:
-        print(payload_str, flush=True)
+    if payload_lines:
+        print("", flush=True)
+        for line in payload_lines:
+            print(line, flush=True)
 
     print("-" * 40, flush=True)
-
-
-def build_grouped_entries(entries):
-    entries = list(reversed(entries))
-    grouped = {}
-    for e in entries:
-        ip = e.get("ip", "Unknown IP")
-        grouped.setdefault(ip, []).append(e)
-    return grouped
-
-
-def is_trainer_authed() -> bool:
-    return bool(session.get("trainer_authed", False))
-
 
 def _safe_return_path(path: str | None) -> str:
     allowed = {"/", "/test"}
     return path if path in allowed else "/"
 
-
-def _now_ts() -> str:
-    return datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S")
-
-
-def _format_submit_payload(vehlist, pers5, pers6, pull_combinations, use_combinations) -> str:
-    return (
-        f"\n  Vehicle List: {vehlist}"
-        f"\n  5-Person: {pers5}"
-        f"\n  6-Person: {pers6}"
-        f"\n  Pull Combos: {pull_combinations}"
-        f"\n  Use Combos: {use_combinations}"
-    )
-
-
+# ------------------------------
+# Routes
+# ------------------------------
 @app.route("/", methods=["GET", "POST"], strict_slashes=False)
 def index():
-    user_ip, xff_chain, ip_ok = get_client_ip()
+    user_ip, xff_chain = get_client_ip()
     is_bot = is_request_bot(request.headers.get("User-Agent", ""))
     geo = lookup_city(user_ip)
 
     if request.method == "GET":
         session["return_after_matrices"] = "/"
 
-        # PRINT on GET "/", but NOT on the redirect GET after POST "/"
+        # Print VIEW on real page views, but not on redirect-GET after a POST "/"
         suppress = bool(session.pop("suppress_next_view_print", False))
         if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
             print_event(
@@ -312,24 +202,9 @@ def index():
                 user_ip=user_ip,
                 geo=geo,
                 xff_chain=xff_chain,
-                remote_addr=request.remote_addr,
-                payload_str=None,
+                remote_addr=request.remote_addr or "",
+                payload_lines=None,  # no "Path:" noise
             )
-
-        # LOG view only once per browser session (avoid spam in trainer)
-        if (not is_bot) and (not is_hidden_ip(user_ip)) and (not session.get("view_logged", False)):
-            log_append(
-                {
-                    "ip": user_ip,
-                    "xff": xff_chain,
-                    "remote_addr": request.remote_addr,
-                    "geo": geo,
-                    "timestamp": _now_ts(),
-                    "event": "view",
-                    "input": {"path": request.path or "/"},
-                }
-            )
-            session["view_logged"] = True
 
         return render_template(
             "index.html",
@@ -362,243 +237,35 @@ def index():
             len=len,
         )
 
-    # POST "/": LOG submit, NO PRINTING
+    # POST "/": DO NOT PRINT. Store ONLY this input in /trainer as event="input".
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
         vehlist_input = request.form.get("vehlist", "").strip()
         pull_combinations = int(request.form.get("pull_combinations", 0))
         use_combinations = int(request.form.get("use_combinations", 0))
-
         pers5 = int(request.form.get("pers5") or 0)
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        if not is_bot:
-            log_append(
-                {
-                    "ip": user_ip,
-                    "xff": xff_chain,
-                    "remote_addr": request.remote_addr,
-                    "geo": geo,
-                    "timestamp": _now_ts(),
-                    "event": "submit",
-                    "input": {
-                        "vehlist": vehlist,
-                        "pers5": pers5,
-                        "pers6": pers6,
-                        "pull_combinations": pull_combinations,
-                        "use_combinations": use_combinations,
-                    },
-                }
-            )
-
-        veh2 = vehlist.copy()
-        veh2.sort(reverse=True)
-        validate_inputs(vehlist, pers5, pers6)
-
-        backup_group = pers5
-        backupsize = 5
-        primary_group = pers6
-
-        results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
-        results = trickle_down(results_1, backupsize)
-        off = [backup_group - results[0][0], primary_group - results[0][1]]
-
-        if not results or not isinstance(results, list) or len(results) < 2:
-            raise ValueError("Invalid results returned from calculations.")
-
-        sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
-
-        if sum(off) <= pers6 and backupsize == 5:
-            combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
-        else:
-            combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
-
-        listing1 = listing.copy()
-        combos1 = combos.copy()
-        combos3 = combos1.copy()
-        listing3 = listing1.copy()
-        rem_vehs1 = unused(sorted_allocations.copy(), combos.copy())
-
-        if combos:
-            for elem in rem_vehs1:
-                combos1.append([elem])
-                listing1.append([0, 0])
-
-            combos2, newalloc = call_optimize(
-                sorted_allocations.copy(),
-                listing1,
-                backupsize,
-                combos1,
-                sorted_spaces,
-            )
-            combos3 = combos2
-            listing3 = newalloc
-
-        combos, listing = cleanup(combos3, sorted_spaces, listing3)
-        damage = harm(combos.copy(), sorted_allocations.copy())
-        totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
-
-        combos = person_calc(combos.copy(), sorted_sizes.copy())
-        alllist = alltogether(combos, listing, damage)
-
-        less = nonzero(sorted_spaces, sorted_sizes)
-        rem_vehs2 = unused1(less[1], combos.copy())
-        rem_vehs = quant(rem_vehs2)
-
-        restored_vehs, restored_all, restored_spaces = restore_order(
-            vehlist[:].copy(), sorted_sizes, sorted_allocations, sorted_spaces
-        )
-
-        combined_sorted_data = [
-            [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]
-            for i in range(len(sorted_sizes))
-        ]
-
-        session["sorted_allocations"] = combined_sorted_data
-        session["totalhelp"] = totalhelp
-        session["alllist"] = alllist
-        session["backupsize"] = backupsize
-
-        if pull_combinations == 0 and use_combinations == 0:
-            session["vehlist"] = vehlist
-            session["pers5"] = pers5
-            session["pers6"] = pers6
-        elif pull_combinations != 0:
-            session["vehlist"] = allone(combos.copy())
-            session["pers6"] = totalhelp[1]
-            session["pers5"] = totalhelp[0]
-        elif use_combinations != 0:
-            session["vehlist"] = sumAll(combos.copy(), vehlist)
-            session["pers6"] = pers6
-            session["pers5"] = pers5
-
-        session["rem_vehs"] = rem_vehs
-        session["results"] = [results[0], off]
-
-        # Do not print VIEW on the redirect GET after submit
-        session["suppress_next_view_print"] = True
-        return redirect(url_for("index"))
-
-    except Exception as e:
-        return render_template(
-            "index.html",
-            error_message=f"An error occurred: {str(e)}",
-            vehlist=vehlist_input,
-            pers5=pers5,
-            pers6=pers6,
-            results=None,
-            totalhelp=None,
-            sorted_allocations=None,
-            rem_vehs=None,
-            alllist=None,
-            backupsize=None,
-            matrices_result=session.get("matrices_result"),
-            allocations_only=int(request.form.get("allocations_only", 0)),
-            ranges_result=session.get("ranges_result"),
-            total_people=session.get("total_people", ""),
-            people=session.get("people", ""),
-            crews=session.get("crews", ""),
-            zip=zip,
-            enumerate=enumerate,
-            len=len,
-        )
-
-
-@app.route("/test", methods=["GET", "POST"], strict_slashes=False)
-def test_page():
-    user_ip, xff_chain, ip_ok = get_client_ip()
-    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
-    geo = lookup_city(user_ip)
-
-    if request.method == "GET":
-        session["return_after_matrices"] = "/test"
-
-        # PRINT on GET "/test", but NOT on the redirect GET after POST "/test"
-        suppress = bool(session.pop("suppress_next_view_test_print", False))
-        if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
-            print_event(
-                event="view-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr,
-                payload_str=None,
-            )
-
-        # LOG view-test only once per browser session (avoid spam in trainer)
-        if (not is_bot) and (not is_hidden_ip(user_ip)) and (not session.get("view_test_logged", False)):
-            log_append(
-                {
-                    "ip": user_ip,
-                    "xff": xff_chain,
-                    "remote_addr": request.remote_addr,
-                    "geo": geo,
-                    "timestamp": _now_ts(),
-                    "event": "view-test",
-                    "input": {"path": request.path or "/test"},
-                }
-            )
-            session["view_test_logged"] = True
-
-        return render_template(
-            "index.html",
-            vehlist=",".join(
-                map(
-                    str,
-                    session.get("vehlist", [])
-                    if isinstance(session.get("vehlist", []), list)
-                    else [session.get("vehlist")],
-                )
-            ),
-            pers5=session.get("pers5", ""),
-            pers6=session.get("pers6", ""),
-            results=session.get("results"),
-            totalhelp=session.get("totalhelp"),
-            sorted_allocations=session.get("sorted_allocations"),
-            rem_vehs=session.get("rem_vehs"),
-            allocations_only=session.get("allocations_only", 0),
-            pull_combinations=session.get("pull_combinations", 0),
-            error_message=None,
-            backupsize=session.get("backupsize"),
-            alllist=session.get("alllist"),
-            matrices_result=session.get("matrices_result"),
-            ranges_result=session.get("ranges_result"),
-            total_people=session.get("total_people", ""),
-            people=session.get("people", ""),
-            crews=session.get("crews", ""),
-            zip=zip,
-            enumerate=enumerate,
-            len=len,
-        )
-
-    # POST "/test": PRINT ONLY, DO NOT LOG
-    pers5 = pers6 = 0
-    vehlist_input = ""
-    try:
-        vehlist_input = request.form.get("vehlist", "").strip()
-        pull_combinations = int(request.form.get("pull_combinations", 0))
-        use_combinations = int(request.form.get("use_combinations", 0))
-
-        pers5 = int(request.form.get("pers5") or 0)
-        pers6 = int(request.form.get("pers6") or 0)
-        vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
-
-        # Print SUBMIT-TEST, but do NOT log anything for /test submissions
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            payload = _format_submit_payload(vehlist, pers5, pers6, pull_combinations, use_combinations)
-            print_event(
-                event="submit-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr,
-                payload_str=payload,
-            )
+            log_append({
+                "ip": user_ip,
+                "xff": xff_chain,
+                "remote_addr": request.remote_addr,
+                "geo": geo,
+                "timestamp": _now_ts(),
+                "event": "input",
+                "input": {
+                    "vehlist": vehlist,
+                    "pers5": pers5,
+                    "pers6": pers6,
+                    "pull_combinations": pull_combinations,
+                    "use_combinations": use_combinations,
+                },
+            })
 
-        # --- NO log_append here on purpose ---
-
+        # ----- computation unchanged -----
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -672,7 +339,187 @@ def test_page():
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
 
-        # Do not print VIEW-TEST on the redirect GET after submit-test
+        # prevent redirect-GET from printing VIEW
+        session["suppress_next_view_print"] = True
+        return redirect(url_for("index"))
+
+    except Exception as e:
+        return render_template(
+            "index.html",
+            error_message=f"An error occurred: {str(e)}",
+            vehlist=vehlist_input,
+            pers5=pers5,
+            pers6=pers6,
+            results=None,
+            totalhelp=None,
+            sorted_allocations=None,
+            rem_vehs=None,
+            alllist=None,
+            backupsize=None,
+            matrices_result=session.get("matrices_result"),
+            allocations_only=int(request.form.get("allocations_only", 0)),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=session.get("people", ""),
+            crews=session.get("crews", ""),
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
+
+@app.route("/test", methods=["GET", "POST"], strict_slashes=False)
+def test_page():
+    user_ip, xff_chain = get_client_ip()
+    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
+    geo = lookup_city(user_ip)
+
+    if request.method == "GET":
+        session["return_after_matrices"] = "/test"
+
+        suppress = bool(session.pop("suppress_next_view_test_print", False))
+        if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
+            print_event(
+                event="view-test",
+                user_ip=user_ip,
+                geo=geo,
+                xff_chain=xff_chain,
+                remote_addr=request.remote_addr or "",
+                payload_lines=None,  # no "Path:" noise
+            )
+
+        return render_template(
+            "index.html",
+            vehlist=",".join(
+                map(
+                    str,
+                    session.get("vehlist", [])
+                    if isinstance(session.get("vehlist", []), list)
+                    else [session.get("vehlist")],
+                )
+            ),
+            pers5=session.get("pers5", ""),
+            pers6=session.get("pers6", ""),
+            results=session.get("results"),
+            totalhelp=session.get("totalhelp"),
+            sorted_allocations=session.get("sorted_allocations"),
+            rem_vehs=session.get("rem_vehs"),
+            allocations_only=session.get("allocations_only", 0),
+            pull_combinations=session.get("pull_combinations", 0),
+            error_message=None,
+            backupsize=session.get("backupsize"),
+            alllist=session.get("alllist"),
+            matrices_result=session.get("matrices_result"),
+            ranges_result=session.get("ranges_result"),
+            total_people=session.get("total_people", ""),
+            people=session.get("people", ""),
+            crews=session.get("crews", ""),
+            zip=zip,
+            enumerate=enumerate,
+            len=len,
+        )
+
+    # POST "/test": PRINT SUBMIT-TEST, DO NOT STORE in trainer
+    pers5 = pers6 = 0
+    vehlist_input = ""
+    try:
+        vehlist_input = request.form.get("vehlist", "").strip()
+        pull_combinations = int(request.form.get("pull_combinations", 0))
+        use_combinations = int(request.form.get("use_combinations", 0))
+        pers5 = int(request.form.get("pers5") or 0)
+        pers6 = int(request.form.get("pers6") or 0)
+        vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
+
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            print_event(
+                event="submit-test",
+                user_ip=user_ip,
+                geo=geo,
+                xff_chain=xff_chain,
+                remote_addr=request.remote_addr or "",
+                payload_lines=[
+                    f"  Vehicle List: {vehlist}",
+                    f"  5-Person: {pers5}",
+                    f"  6-Person: {pers6}",
+                    f"  Pull Combos: {pull_combinations}",
+                    f"  Use Combos: {use_combinations}",
+                ],
+            )
+
+        # computation unchanged
+        veh2 = vehlist.copy()
+        veh2.sort(reverse=True)
+        validate_inputs(vehlist, pers5, pers6)
+
+        backup_group = pers5
+        backupsize = 5
+        primary_group = pers6
+
+        results_1 = optimal_allocation(veh2[:].copy(), primary_group, backup_group, 6, backupsize)
+        results = trickle_down(results_1, backupsize)
+        off = [backup_group - results[0][0], primary_group - results[0][1]]
+
+        if not results or not isinstance(results, list) or len(results) < 2:
+            raise ValueError("Invalid results returned from calculations.")
+
+        sorted_allocations, sorted_spaces, sorted_sizes, number = sort_closestalg_output(results, backupsize)
+
+        if sum(off) <= pers6 and backupsize == 5:
+            combos, listing = call_sixesFlipped(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+        else:
+            combos, listing = call_combine(sorted_allocations, sorted_spaces, off.copy(), backupsize, None)
+
+        listing1 = listing.copy()
+        combos1 = combos.copy()
+        combos3 = combos1.copy()
+        listing3 = listing1.copy()
+        rem_vehs1 = unused(sorted_allocations.copy(), combos.copy())
+
+        if combos:
+            for elem in rem_vehs1:
+                combos1.append([elem])
+                listing1.append([0, 0])
+
+            combos2, newalloc = call_optimize(
+                sorted_allocations.copy(),
+                listing1,
+                backupsize,
+                combos1,
+                sorted_spaces,
+            )
+            combos3 = combos2
+            listing3 = newalloc
+
+        combos, listing = cleanup(combos3, sorted_spaces, listing3)
+        damage = harm(combos.copy(), sorted_allocations.copy())
+        totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
+
+        combos = person_calc(combos.copy(), sorted_sizes.copy())
+        alllist = alltogether(combos, listing, damage)
+
+        less = nonzero(sorted_spaces, sorted_sizes)
+        rem_vehs2 = unused1(less[1], combos.copy())
+        rem_vehs = quant(rem_vehs2)
+
+        restored_vehs, restored_all, restored_spaces = restore_order(
+            vehlist[:].copy(), sorted_sizes, sorted_allocations, sorted_spaces
+        )
+
+        combined_sorted_data = [
+            [restored_vehs[i], restored_all[i], restored_spaces[i], number[i]]
+            for i in range(len(sorted_sizes))
+        ]
+
+        session["sorted_allocations"] = combined_sorted_data
+        session["totalhelp"] = totalhelp
+        session["alllist"] = alllist
+        session["backupsize"] = backupsize
+        session["vehlist"] = vehlist
+        session["pers5"] = pers5
+        session["pers6"] = pers6
+        session["rem_vehs"] = rem_vehs
+        session["results"] = [results[0], off]
+
+        # prevent redirect-GET from printing VIEW-TEST
         session["suppress_next_view_test_print"] = True
         return redirect(url_for("test_page"))
 
@@ -700,58 +547,31 @@ def test_page():
             len=len,
         )
 
-
 @app.route("/matrices", methods=["POST"])
 def matrices():
-    user_ip, xff_chain, ip_ok = get_client_ip()
-    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
-    geo = lookup_city(user_ip)
-
+    # Per your rules: NO PRINTING here.
     return_path = _safe_return_path(session.get("return_after_matrices"))
-
     try:
         people_input = request.form.get("people", "").strip()
         crews_input = request.form.get("crews", "").strip()
-
         people = int(people_input) if people_input else 0
         crews = int(crews_input) if crews_input else 0
 
-        if (not is_bot) and (not is_hidden_ip(user_ip)):
-            # LOG ONLY (NO PRINTING)
-            log_append(
-                {
-                    "ip": user_ip,
-                    "xff": xff_chain,
-                    "remote_addr": request.remote_addr,
-                    "geo": geo,
-                    "timestamp": _now_ts(),
-                    "event": "matrices",
-                    "input": {
-                        "people": people,
-                        "crews": crews,
-                    },
-                }
-            )
-
-        matrices_result = compute_matrices(people, crews)
-        ranges_result = compute_ranges(people)
-
-        session["matrices_result"] = matrices_result
-        session["ranges_result"] = ranges_result
+        session["matrices_result"] = compute_matrices(people, crews)
+        session["ranges_result"] = compute_ranges(people)
         session["people"] = people
         session["crews"] = crews
-
-    except Exception as e:
-        print("Error: " + str(e), flush=True)
-
+    except Exception:
+        pass
     return redirect(return_path)
 
-
+# ------------------------------
+# Trainer routes (NOT CUT)
+# ------------------------------
 @app.route("/logout/trainer", methods=["POST"], strict_slashes=False)
 def logout_trainer():
     session.pop("trainer_authed", None)
     return ("", 204)
-
 
 @app.route("/trainer_login", methods=["GET", "POST"], strict_slashes=False)
 def trainer_login():
@@ -768,7 +588,6 @@ def trainer_login():
         error = "Incorrect password."
     return render_template("trainer_login.html", error=error)
 
-
 @app.route("/trainer", strict_slashes=False)
 def trainer_view():
     if not is_trainer_authed():
@@ -777,7 +596,6 @@ def trainer_view():
 
     grouped_entries = build_grouped_entries(log_get_all())
     return render_template("trainer.html", grouped_entries=grouped_entries)
-
 
 if __name__ == "__main__":
     app.run()
