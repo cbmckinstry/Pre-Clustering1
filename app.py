@@ -69,8 +69,15 @@ LOG_COUNTER_KEY = LOG_KEY_PREFIX + "trainer_id"
 rdb = redis.Redis.from_url(redis_url, decode_responses=True) if redis_url else None
 MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
 
+DATA_LOG_FALLBACK: list[dict] = []
+LOG_COUNTER_FALLBACK = 0
+
 def _next_local_id() -> int:
-    return int(rdb.incr(LOG_COUNTER_KEY)) if rdb else 1
+    global LOG_COUNTER_FALLBACK
+    if rdb:
+        return int(rdb.incr(LOG_COUNTER_KEY))
+    LOG_COUNTER_FALLBACK += 1
+    return LOG_COUNTER_FALLBACK
 
 def log_append(entry: dict):
     entry = dict(entry)
@@ -80,23 +87,26 @@ def log_append(entry: dict):
 
     entry.setdefault("id", _next_local_id())
 
-    if not rdb:
-        return  # no persistence without redis
-
-    rdb.rpush(LOG_LIST_KEY, json.dumps(entry))
-    rdb.ltrim(LOG_LIST_KEY, -MAX_LOG_ENTRIES, -1)
+    if rdb:
+        rdb.rpush(LOG_LIST_KEY, json.dumps(entry))
+        rdb.ltrim(LOG_LIST_KEY, -MAX_LOG_ENTRIES, -1)
+    else:
+        # local fallback: in-memory logs
+        DATA_LOG_FALLBACK.append(entry)
+        if len(DATA_LOG_FALLBACK) > MAX_LOG_ENTRIES:
+            del DATA_LOG_FALLBACK[:-MAX_LOG_ENTRIES]
 
 def log_get_all() -> list[dict]:
-    if not rdb:
-        return []
-    raw = rdb.lrange(LOG_LIST_KEY, 0, -1)
-    out = []
-    for s in raw:
-        try:
-            out.append(json.loads(s))
-        except Exception:
-            pass
-    return out
+    if rdb:
+        raw = rdb.lrange(LOG_LIST_KEY, 0, -1)
+        out = []
+        for s in raw:
+            try:
+                out.append(json.loads(s))
+            except Exception:
+                pass
+        return out
+    return list(DATA_LOG_FALLBACK)
 
 def build_grouped_entries(entries: list[dict]) -> dict[str, list[dict]]:
     # newest-first display
@@ -558,22 +568,26 @@ def matrices():
         session["crews"] = crews
 
         if (not is_bot) and (not is_hidden_ip(user_ip)):
-            log_append({
-                "ip": user_ip,
-                "xff": xff_chain,
-                "remote_addr": request.remote_addr,
-                "geo": geo,
-                "timestamp": _now_ts(),
-                "event": "matrices",
-                "input": {
-                    "people": people,
-                    "crews": crews,
-                    "return_path": return_path,
-                },
-            })
-
-        if return_path == "/test":
-            session["pending_matrices_test_print"] = _build_matrices_payload_lines(people, crews)
+            if return_path == "/test":
+                # TEST → print only
+                session["pending_matrices_test_print"] = _build_matrices_payload_lines(
+                    people, crews
+                )
+            else:
+                # NORMAL → log only
+                log_append({
+                    "ip": user_ip,
+                    "xff": xff_chain,
+                    "remote_addr": request.remote_addr,
+                    "geo": geo,
+                    "timestamp": _now_ts(),
+                    "event": "matrices",
+                    "input": {
+                        "people": people,
+                        "crews": crews,
+                        "return_path": return_path,
+                    },
+                })
 
     except Exception:
         pass
