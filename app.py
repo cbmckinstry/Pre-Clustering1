@@ -98,6 +98,13 @@ def build_grouped_entries(entries: list[dict]) -> dict[str, list[dict]]:
         grouped.setdefault(ip, []).append(e)
     return grouped
 
+def _build_matrices_payload_lines(people: int, crews: int) -> list[str]:
+    return [
+        f"  People: {people}",
+        f"  Crews: {crews}",
+    ]
+
+
 # ------------------------------
 # Helpers: time, ip, bot, geo, printing
 # ------------------------------
@@ -151,14 +158,7 @@ def _format_loc(geo):
     return f"{city}, {region}, {country}"
 
 def print_event(event: str, user_ip: str, geo, xff_chain: str, remote_addr: str, payload_lines: list[str] | None):
-    """
-    This prints to stdout (Render logs).
-    Per your rules:
-      - Print on GET "/" (VIEW), except redirect-GET after POST "/"
-      - Print on GET "/test" (VIEW-TEST), except redirect-GET after POST "/test"
-      - Print on POST "/test" only (SUBMIT-TEST)
-      - Do NOT print on POST "/" or POST "/matrices"
-    """
+
     if is_hidden_ip(user_ip):
         return
 
@@ -196,7 +196,7 @@ def index():
 
         # Print VIEW on real page views, but not on redirect-GET after a POST "/"
         suppress = bool(session.pop("suppress_next_view_print", False))
-        if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
+        """if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
             print_event(
                 event="view",
                 user_ip=user_ip,
@@ -205,6 +205,7 @@ def index():
                 remote_addr=request.remote_addr or "",
                 payload_lines=None,  # no "Path:" noise
             )
+            """
 
         return render_template(
             "index.html",
@@ -377,15 +378,29 @@ def test_page():
         session["return_after_matrices"] = "/test"
 
         suppress = bool(session.pop("suppress_next_view_test_print", False))
-        if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
+        """ if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
             print_event(
                 event="view-test",
                 user_ip=user_ip,
                 geo=geo,
                 xff_chain=xff_chain,
                 remote_addr=request.remote_addr or "",
-                payload_lines=None,  # no "Path:" noise
+                payload_lines=None,
             )
+            
+            """
+
+        pending = session.pop("pending_matrices_test_print", None)
+        if pending and (not is_bot) and (not is_hidden_ip(user_ip)):
+            print_event(
+                event="matrices-test",
+                user_ip=user_ip,
+                geo=geo,
+                xff_chain=xff_chain,
+                remote_addr=request.remote_addr or "",
+                payload_lines=pending,
+            )
+
 
         return render_template(
             "index.html",
@@ -551,6 +566,11 @@ def test_page():
 def matrices():
     # Per your rules: NO PRINTING here.
     return_path = _safe_return_path(session.get("return_after_matrices"))
+
+    user_ip, xff_chain = get_client_ip()
+    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
+    geo = lookup_city(user_ip)
+
     try:
         people_input = request.form.get("people", "").strip()
         crews_input = request.form.get("crews", "").strip()
@@ -561,9 +581,30 @@ def matrices():
         session["ranges_result"] = compute_ranges(people)
         session["people"] = people
         session["crews"] = crews
+
+        if (not is_bot) and (not is_hidden_ip(user_ip)):
+            log_append({
+                "ip": user_ip,
+                "xff": xff_chain,
+                "remote_addr": request.remote_addr,
+                "geo": geo,
+                "timestamp": _now_ts(),
+                "event": "matrices",
+                "input": {
+                    "people": people,
+                    "crews": crews,
+                    "return_path": return_path,
+                },
+            })
+
+        if return_path == "/test":
+            session["pending_matrices_test_print"] = _build_matrices_payload_lines(people, crews)
+
     except Exception:
         pass
+
     return redirect(return_path)
+
 
 # ------------------------------
 # Trainer routes (NOT CUT)
@@ -596,6 +637,47 @@ def trainer_view():
 
     grouped_entries = build_grouped_entries(log_get_all())
     return render_template("trainer.html", grouped_entries=grouped_entries)
+
+@app.route("/view_once", methods=["POST"], strict_slashes=False)
+def view_once():
+    user_ip, xff_chain = get_client_ip()
+    is_bot = is_request_bot(request.headers.get("User-Agent", ""))
+    geo = lookup_city(user_ip)
+
+    # Never print for bots/hidden IPs
+    if is_bot or is_hidden_ip(user_ip):
+        return ("", 204)
+
+    data = request.get_json(silent=True) or {}
+    tab_id = (data.get("tab_id") or "").strip()
+
+    # basic validation
+    if not tab_id or len(tab_id) > 80:
+        return ("", 204)
+
+    # Store a per-tab "already printed" marker in the session.
+    # Note: Flask session is shared across tabs, so the key must be tab_id.
+    seen = session.get("view_once_seen_tabs", {})
+
+    if not seen.get(tab_id):
+        # Optional: include page info in the label if you want, but still only print once.
+        # page = (data.get("page") or "").strip()
+        # event_label = "view" if page in {"", "/"} else f"view{page}"
+        event_label = "view"
+
+        print_event(
+            event=event_label,
+            user_ip=user_ip,
+            geo=geo,
+            xff_chain=xff_chain,
+            remote_addr=request.remote_addr or "",
+            payload_lines=None,
+        )
+
+        seen[tab_id] = True
+        session["view_once_seen_tabs"] = seen
+
+    return ("", 204)
 
 if __name__ == "__main__":
     app.run()

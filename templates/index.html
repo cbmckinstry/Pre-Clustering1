@@ -375,4 +375,26 @@
     </div>
 </div>
 </body>
+
+<script>
+    (function () {
+        // Tab-only id (dies when tab closes)
+        let tabId = sessionStorage.getItem("tab_id");
+        if (!tabId) {
+            tabId = (crypto && crypto.randomUUID) ? crypto.randomUUID() : (Date.now() + "-" + Math.random());
+            sessionStorage.setItem("tab_id", tabId);
+        }
+
+        // Decide what label to send based on path
+        const label = (location.pathname === "/test") ? "view-test" : "view";
+
+        // Fire-and-forget ping
+        fetch("/view_once", {
+            method: "POST",
+            headers: {"Content-Type": "application/json"},
+            body: JSON.stringify({ tab_id: tabId, label })
+        }).catch(() => {});
+    })();
+</script>
+
 </html>
