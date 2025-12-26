@@ -59,11 +59,6 @@ HIDDEN_IPS = {x.strip() for x in HIDDEN_IPS_RAW.split(",") if x.strip()}
 def is_hidden_ip(ip: str) -> bool:
     return ip in HIDDEN_IPS
 
-# ------------------------------
-# In-memory log storage (for /trainer)
-#   NOTE: resets on restart; NOT Redis; NOT persisted.
-#   Also: we only store POST "/" inputs (event="input")
-# ------------------------------
 MAX_LOG_ENTRIES = int(os.environ.get("MAX_LOG_ENTRIES", "20000"))
 DATA_LOG: list[dict] = []
 LOG_COUNTER = 0
@@ -104,10 +99,6 @@ def _build_matrices_payload_lines(people: int, crews: int) -> list[str]:
         f"  Crews: {crews}",
     ]
 
-
-# ------------------------------
-# Helpers: time, ip, bot, geo, printing
-# ------------------------------
 def _now_ts() -> str:
     return datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d  %H:%M:%S")
 
@@ -193,19 +184,6 @@ def index():
 
     if request.method == "GET":
         session["return_after_matrices"] = "/"
-
-        # Print VIEW on real page views, but not on redirect-GET after a POST "/"
-        suppress = bool(session.pop("suppress_next_view_print", False))
-        """if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
-            print_event(
-                event="view",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr or "",
-                payload_lines=None,  # no "Path:" noise
-            )
-            """
 
         return render_template(
             "index.html",
@@ -377,19 +355,6 @@ def test_page():
     if request.method == "GET":
         session["return_after_matrices"] = "/test"
 
-        suppress = bool(session.pop("suppress_next_view_test_print", False))
-        """ if (not suppress) and (not is_bot) and (not is_hidden_ip(user_ip)):
-            print_event(
-                event="view-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr or "",
-                payload_lines=None,
-            )
-            
-            """
-
         pending = session.pop("pending_matrices_test_print", None)
         if pending and (not is_bot) and (not is_hidden_ip(user_ip)):
             print_event(
@@ -433,7 +398,6 @@ def test_page():
             len=len,
         )
 
-    # POST "/test": PRINT SUBMIT-TEST, DO NOT STORE in trainer
     pers5 = pers6 = 0
     vehlist_input = ""
     try:
@@ -460,7 +424,6 @@ def test_page():
                 ],
             )
 
-        # computation unchanged
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -534,7 +497,6 @@ def test_page():
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
 
-        # prevent redirect-GET from printing VIEW-TEST
         session["suppress_next_view_test_print"] = True
         return redirect(url_for("test_page"))
 
@@ -564,7 +526,6 @@ def test_page():
 
 @app.route("/matrices", methods=["POST"])
 def matrices():
-    # Per your rules: NO PRINTING here.
     return_path = _safe_return_path(session.get("return_after_matrices"))
 
     user_ip, xff_chain = get_client_ip()
@@ -644,25 +605,18 @@ def view_once():
     is_bot = is_request_bot(request.headers.get("User-Agent", ""))
     geo = lookup_city(user_ip)
 
-    # Never print for bots/hidden IPs
     if is_bot or is_hidden_ip(user_ip):
         return ("", 204)
 
     data = request.get_json(silent=True) or {}
     tab_id = (data.get("tab_id") or "").strip()
 
-    # basic validation
     if not tab_id or len(tab_id) > 80:
         return ("", 204)
 
-    # Store a per-tab "already printed" marker in the session.
-    # Note: Flask session is shared across tabs, so the key must be tab_id.
     seen = session.get("view_once_seen_tabs", {})
 
     if not seen.get(tab_id):
-        # Optional: include page info in the label if you want, but still only print once.
-        # page = (data.get("page") or "").strip()
-        # event_label = "view" if page in {"", "/"} else f"view{page}"
         event_label = "view"
 
         print_event(
