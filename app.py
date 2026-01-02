@@ -360,9 +360,20 @@ def index():
         session["totalhelp"] = totalhelp
         session["alllist"] = alllist
         session["backupsize"] = backupsize
-        session["vehlist"] = vehlist
-        session["pers5"] = pers5
-        session["pers6"] = pers6
+
+        if pull_combinations==0 and use_combinations==0:
+            session["vehlist"] = vehlist
+            session["pers5"] = pers5
+            session["pers6"] = pers6
+        elif pull_combinations!=0:
+            session["vehlist"] = allone(combos.copy())
+            session["pers6"] = totalhelp[1]
+            session["pers5"] = totalhelp[0]
+        elif use_combinations!=0:
+            session["vehlist"]=sumAll(combos.copy(),vehlist)
+            session["pers6"] = pers6
+            session["pers5"] = pers5
+
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
 
@@ -539,9 +550,20 @@ def test_page():
         session["totalhelp"] = totalhelp
         session["alllist"] = alllist
         session["backupsize"] = backupsize
-        session["vehlist"] = vehlist
-        session["pers5"] = pers5
-        session["pers6"] = pers6
+
+        if pull_combinations==0 and use_combinations==0:
+            session["vehlist"] = vehlist
+            session["pers5"] = pers5
+            session["pers6"] = pers6
+        elif pull_combinations!=0:
+            session["vehlist"] = allone(combos.copy())
+            session["pers6"] = totalhelp[1]
+            session["pers5"] = totalhelp[0]
+        elif use_combinations!=0:
+            session["vehlist"]=sumAll(combos.copy(),vehlist)
+            session["pers6"] = pers6
+            session["pers5"] = pers5
+
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
 
