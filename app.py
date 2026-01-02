@@ -143,6 +143,30 @@ def get_client_ip():
         return (parts[0] if parts else (request.remote_addr or "")), xff
     return request.remote_addr or "", ""
 
+def purge_hidden_ips_from_redis():
+    if not rdb:
+        return
+
+    raw = rdb.lrange(LOG_LIST_KEY, 0, -1)
+    kept = []
+    for s in raw:
+        try:
+            e = json.loads(s)
+            if is_hidden_ip(e.get("ip", "")):
+                continue
+            kept.append(s)
+        except Exception:
+            # if it’s malformed, you can choose to drop it or keep it
+            kept.append(s)
+
+    pipe = rdb.pipeline()
+    pipe.delete(LOG_LIST_KEY)
+    if kept:
+        pipe.rpush(LOG_LIST_KEY, *kept)
+        pipe.ltrim(LOG_LIST_KEY, -MAX_LOG_ENTRIES, -1)
+    pipe.execute()
+purge_hidden_ips_from_redis()
+
 def is_request_bot(user_agent: str) -> bool:
     ua = (user_agent or "").lower()
     return (
