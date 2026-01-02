@@ -1,26 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
-            const pullCombinations = document.getElementById("pull_combinations");
-            const useCombinations = document.getElementById("use_combinations");
-
-            function handleCheckboxChange(event) {
-                if (event.target.checked) {
-
-                     if (event.target === pullCombinations) {
-                        useCombinations.checked = false;
-                    } else if (event.target === useCombinations) {
-                        pullCombinations.checked = false;
-                    }
-                }
-            }
-
-            pullCombinations.addEventListener("change", handleCheckboxChange);
-            useCombinations.addEventListener("change", handleCheckboxChange);
-        });
-    </script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pre-Clustering Tool</title>
@@ -217,11 +197,6 @@
                     Only Combos
                 </label>
 
-                <label class="checkbox-label">
-                    <input type="checkbox" id="use_combinations" name="use_combinations" value="1"
-                            {% if use_combinations == 1 %} checked {% endif %}>
-                    Use Combos
-                </label>
             </div>
 
             <style>

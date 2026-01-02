@@ -270,7 +270,6 @@ def index():
     try:
         vehlist_input = request.form.get("vehlist", "").strip()
         pull_combinations = int(request.form.get("pull_combinations", 0))
-        use_combinations = int(request.form.get("use_combinations", 0))
         pers5 = int(request.form.get("pers5") or 0)
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
@@ -288,7 +287,6 @@ def index():
                     "pers5": pers5,
                     "pers6": pers6,
                     "pull_combinations": pull_combinations,
-                    "use_combinations": use_combinations,
                 },
             })
 
@@ -361,7 +359,7 @@ def index():
         session["alllist"] = alllist
         session["backupsize"] = backupsize
 
-        if pull_combinations==0 and use_combinations==0:
+        if pull_combinations==0:
             session["vehlist"] = vehlist
             session["pers5"] = pers5
             session["pers6"] = pers6
@@ -369,10 +367,6 @@ def index():
             session["vehlist"] = allone(combos.copy())
             session["pers6"] = totalhelp[1]
             session["pers5"] = totalhelp[0]
-        elif use_combinations!=0:
-            session["vehlist"]=sumAll(combos.copy(),vehlist)
-            session["pers6"] = pers6
-            session["pers5"] = pers5
 
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
@@ -462,7 +456,6 @@ def test_page():
     try:
         vehlist_input = request.form.get("vehlist", "").strip()
         pull_combinations = int(request.form.get("pull_combinations", 0))
-        use_combinations = int(request.form.get("use_combinations", 0))
         pers5 = int(request.form.get("pers5") or 0)
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
@@ -479,7 +472,6 @@ def test_page():
                     f"  5-Person: {pers5}",
                     f"  6-Person: {pers6}",
                     f"  Pull Combos: {pull_combinations}",
-                    f"  Use Combos: {use_combinations}",
                 ],
             )
 
@@ -551,7 +543,7 @@ def test_page():
         session["alllist"] = alllist
         session["backupsize"] = backupsize
 
-        if pull_combinations==0 and use_combinations==0:
+        if pull_combinations==0:
             session["vehlist"] = vehlist
             session["pers5"] = pers5
             session["pers6"] = pers6
@@ -559,10 +551,6 @@ def test_page():
             session["vehlist"] = allone(combos.copy())
             session["pers6"] = totalhelp[1]
             session["pers5"] = totalhelp[0]
-        elif use_combinations!=0:
-            session["vehlist"]=sumAll(combos.copy(),vehlist)
-            session["pers6"] = pers6
-            session["pers5"] = pers5
 
         session["rem_vehs"] = rem_vehs
         session["results"] = [results[0], off]
