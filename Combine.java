@@ -371,14 +371,11 @@ public class Combine {
                         if (used6.contains(o)) continue;
                         if (filteredSpaces.get(o) < 4) continue;
 
-                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
-
-                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
-
-                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
-                                allSum >= (12) &&
-                                allSum - minElem < (12) &&
-                                (six6 > 1)) {
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o)
+                                && ((filteredSpaces.get(o)==4 && filteredSpaces.get(k)==4 &&
+                                filteredSpaces.get(j)==3 && filteredSpaces.get(i)==1) ||
+                                (filteredSpaces.get(o)==5 && filteredSpaces.get(k)==3 &&
+                                        filteredSpaces.get(j)==2 && filteredSpaces.get(i)==2))) {
 
                             six6 -= 2;
                             used6.add(i);
@@ -430,7 +427,6 @@ public class Combine {
 
                         int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
                         int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
-
                         if (!used9.contains(i) && !used9.contains(j) && !used9.contains(k) && !used9.contains(o) &&
                                 allSum >= (6) &&
                                 allSum - minElem < (6) &&
@@ -2066,14 +2062,14 @@ public class Combine {
             if (filteredSpaces.get(i)>1) break;
             for (int j = i - 1; j >= 2; j--) {
                 if (used6.contains(j)) continue;
-                if (filteredSpaces.get(j)<2) continue;
+                if (filteredSpaces.get(j)<3) continue;
                 if (filteredSpaces.get(j)>3) break;
                 for (int k = j - 1; k >= 1; k--) {
                     if (used6.contains(k)) continue;
-                    if (filteredSpaces.get(k)<3) continue;
+                    if (filteredSpaces.get(k)<4) continue;
                     for (int o = k - 1; o >= 0; o--) {
                         if (used6.contains(o)) continue;
-                        if (filteredSpaces.get(o) < 3) continue;
+                        if (filteredSpaces.get(o) < 4) continue;
 
                         int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
 
@@ -2120,27 +2116,23 @@ public class Combine {
             if (five6 <= 1) break;
             if (used6.contains(i)) continue;
             if (filteredSpaces.get(i)>2) break;
-            if (filteredSpaces.get(i)<2) continue;
             for (int j = i - 1; j >= 2; j--) {
                 if (used6.contains(j)) continue;
                 if (filteredSpaces.get(j)<2) continue;
-                if (filteredSpaces.get(j)>2) break;
+                if (filteredSpaces.get(j)>3) break;
                 for (int k = j - 1; k >= 1; k--) {
                     if (used6.contains(k)) continue;
                     if (filteredSpaces.get(k)<2) continue;
-                    if (filteredSpaces.get(k)>2) break;
+                    if (filteredSpaces.get(k)>3) break;
                     for (int o = k - 1; o >= 0; o--) {
                         if (used6.contains(o)) continue;
-                        if (filteredSpaces.get(o) < 4) continue;
+                        if (filteredSpaces.get(o) < 3) continue;
 
-                        int allSum = filteredSpaces.get(i) + filteredSpaces.get(k) + filteredSpaces.get(j) + filteredSpaces.get(o);
-
-                        int minElem = Math.min(Math.min(Math.min(filteredSpaces.get(i), filteredSpaces.get(k)), filteredSpaces.get(j)), filteredSpaces.get(o));
-
-                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o) &&
-                                allSum >= (10) &&
-                                allSum - minElem < (10) &&
-                                (five6 > 1)) {
+                        if (!used6.contains(i) && !used6.contains(j) && !used6.contains(k) && !used6.contains(o)
+                                && ((filteredSpaces.get(o)==4 && filteredSpaces.get(k)==2 &&
+                                filteredSpaces.get(j)==2 && filteredSpaces.get(i)==2) ||
+                                (filteredSpaces.get(o)==3 && filteredSpaces.get(k)==3 &&
+                                        filteredSpaces.get(j)==3 && filteredSpaces.get(i)==1))) {
 
                             five6 -= 2;
                             used6.add(i);
