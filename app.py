@@ -334,7 +334,8 @@ def index():
             combos3 = combos2
             listing3 = newalloc
 
-        combos, listing = cleanup(combos3, sorted_spaces, listing3)
+        combosx, listingx = cleanup(combos3, sorted_spaces, listing3)
+        combos, listing = cleanup_4to2(combosx,sorted_spaces,listingx)
         damage = harm(combos.copy(), sorted_allocations.copy())
         totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
 
@@ -518,7 +519,8 @@ def test_page():
             combos3 = combos2
             listing3 = newalloc
 
-        combos, listing = cleanup(combos3, sorted_spaces, listing3)
+        combosx, listingx = cleanup(combos3, sorted_spaces, listing3)
+        combos, listing = cleanup_4to2(combosx,sorted_spaces,listingx)
         damage = harm(combos.copy(), sorted_allocations.copy())
         totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
 

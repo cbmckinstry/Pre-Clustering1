@@ -219,7 +219,6 @@ def can_do(combo1, combo2, remaining, init1, init2):
 
     return None
 
-
 def cleanup(combos, remaining, init):
     final = []
     final_init = []
@@ -265,3 +264,140 @@ def cleanup(combos, remaining, init):
         for f in range(len(final[e])):
             final[e][f]+=1
     return final, final_init
+
+def cleanup_4to2(combos, remaining, init):
+    final = []
+    final_init = []
+
+    just4 = []
+    init4 = []
+    just2 = []
+    init2 = []
+
+    used4 = set()
+    used2 = set()
+
+    combos1 = [lst.copy() for lst in combos]
+    for e in range(len(combos1)):
+        for f in range(len(combos1[e])):
+            combos1[e][f] -= 1
+
+    # Split by size
+    for i in range(len(combos1)):
+        if len(combos1[i]) == 4:
+            just4.append(combos1[i])
+            init4.append(init[i])
+        elif len(combos1[i]) == 2:
+            just2.append(combos1[i])
+            init2.append(init[i])
+        else:
+            final.append(combos1[i])
+            final_init.append(init[i])
+
+    if not just4 or not just2:
+        all_groups = final + just4 + just2
+        all_init = final_init + init4 + init2
+
+        for e in range(len(all_groups)):
+            for f in range(len(all_groups[e])):
+                all_groups[e][f] += 1
+
+        return all_groups, all_init
+
+    # Optional: sort by remaining weight (same heuristic as your 3+3 cleanup)
+    sort4 = [sum(remaining[i] for i in idxs) for idxs in just4]
+    sort2 = [sum(remaining[i] for i in idxs) for idxs in just2]
+
+    just4 = [x for _, x in sorted(zip(sort4, just4))]
+    init4 = [x for _, x in sorted(zip(sort4, init4))]
+    just2 = [x for _, x in sorted(zip(sort2, just2))]
+    init2 = [x for _, x in sorted(zip(sort2, init2))]
+
+    # Try pairing one 4 with one 2
+    for i in range(len(just4)):
+        if i in used4:
+            continue
+        for j in range(len(just2)):
+            if j in used2:
+                continue
+
+            trial = can_do_4to2(
+                just4[i], just2[j],
+                remaining,
+                init4[i], init2[j]
+            )
+
+            if trial is not None:
+                used4.add(i)
+                used2.add(j)
+                final.extend(trial[0])       # two size-3 groups
+                final_init.extend(trial[1])
+                break
+
+    # Add unused groups back unchanged
+    for i in range(len(just4)):
+        if i not in used4:
+            final.append(just4[i])
+            final_init.append(init4[i])
+
+    for j in range(len(just2)):
+        if j not in used2:
+            final.append(just2[j])
+            final_init.append(init2[j])
+
+    # Restore indices
+    for e in range(len(final)):
+        for f in range(len(final[e])):
+            final[e][f] += 1
+
+    return final, final_init
+
+from itertools import combinations
+
+REQS = [(0, 2), (2, 0), (1, 1)]
+
+
+def can_do_4to2(combo4, combo2, remaining, init4, init2):
+    total = (
+        init4[0] + init2[0],
+        init4[1] + init2[1]
+    )
+
+    # generate valid requirement pairs (order-independent)
+    req_pairs = []
+    for r1 in REQS:
+        r2 = (total[0] - r1[0], total[1] - r1[1])
+        if r2 in REQS:
+            pair = sorted([r1, r2])
+            if pair not in req_pairs:
+                req_pairs.append(pair)
+
+    # enumerate all 6 structural splits
+    for c in range(2):
+        c_elem = combo2[c]
+        other_c = combo2[1 - c]
+
+        for a, b in combinations(range(4), 2):
+            d, e = [i for i in range(4) if i not in (a, b)]
+
+            groups = [
+                [combo4[a], combo4[b], c_elem],
+                [combo4[d], combo4[e], other_c]
+            ]
+
+            sums = [sum(remaining[i] for i in g) for g in groups]
+
+            # test all valid requirement assignments
+            for (r1, r2) in req_pairs:
+                required = [
+                    5 * r1[0] + 6 * r1[1],
+                    5 * r2[0] + 6 * r2[1]
+                ]
+
+                paired = sorted(zip(sums, required, groups))
+                sums_sorted, req_sorted, groups_sorted = zip(*paired)
+
+                if all(sums_sorted[i] >= req_sorted[i] for i in range(2)):
+                    return list(groups_sorted), [list(r1), list(r2)]
+
+    return None
