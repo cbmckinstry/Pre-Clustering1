@@ -266,6 +266,7 @@ def cleanup(combos, sorted_spaces, listing):
 
     new3, new3init = [],[]
     used4,used3 = set(),set()
+    progressFlag = False
     if size4 and size3:
         for m in range(len(size4)):
             if m in used4:
@@ -301,7 +302,7 @@ def cleanup(combos, sorted_spaces, listing):
                                 new3init.append([placed5s,placed6s])
                                 size3[n]=[]; init3[n]=[];size4[m]=[];init4[m]=[];actual3[n]=[]
                                 other.extend(comb); init_other.extend(init)
-                                placedFlag=True
+                                placedFlag, progressFlag = True, True
         size3.extend(new3); init3.extend(new3init)
         size3 = [x for x in size3 if x!=[]]
         init3 = [x for x in init3 if x!=[]]
@@ -370,7 +371,7 @@ def cleanup(combos, sorted_spaces, listing):
                                     new3init.append([placed5s,placed6s])
                                     size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]; size3[o]=[];init3[o]=[]
                                     other.extend(comb); init_other.extend(init)
-                                    placedFlag=True
+                                    placedFlag, progressFlag = True,True
         size3.extend(new3); init3.extend(new3init)
         size3 = [x for x in size3 if x!=[]]
         init3 = [x for x in init3 if x!=[]]
@@ -381,4 +382,4 @@ def cleanup(combos, sorted_spaces, listing):
     size3 = [[x+1 for x in combo]for combo in size3]
     other = [[x+1 for x in combo]for combo in other]
 
-    return size4+size3+other, init4+init3+init_other
+    return size4+size3+other, init4+init3+init_other, progressFlag
