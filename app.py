@@ -334,8 +334,7 @@ def index():
             combos3 = combos2
             listing3 = newalloc
 
-        combosx, listingx = cleanup(combos3, sorted_spaces, listing3)
-        combos, listing = cleanup_4to2(combosx,sorted_spaces,listingx)
+        combos, listing = cleanup(combos3, sorted_spaces, listing3)
         damage = harm(combos.copy(), sorted_allocations.copy())
         totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
 
@@ -461,21 +460,6 @@ def test_page():
         pers6 = int(request.form.get("pers6") or 0)
         vehlist = [int(x.strip()) for x in vehlist_input.split(",") if x.strip()]
 
-        if (not is_bot) and (not is_hidden_ip(user_ip)):
-            print_event(
-                event="submit-test",
-                user_ip=user_ip,
-                geo=geo,
-                xff_chain=xff_chain,
-                remote_addr=request.remote_addr or "",
-                payload_lines=[
-                    f"  Vehicle List: {vehlist}",
-                    f"  5-Person: {pers5}",
-                    f"  6-Person: {pers6}",
-                    f"  Pull Combos: {pull_combinations}",
-                ],
-            )
-
         veh2 = vehlist.copy()
         veh2.sort(reverse=True)
         validate_inputs(vehlist, pers5, pers6)
@@ -519,8 +503,7 @@ def test_page():
             combos3 = combos2
             listing3 = newalloc
 
-        combosx, listingx = cleanup(combos3, sorted_spaces, listing3)
-        combos, listing = cleanup_4to2(combosx,sorted_spaces,listingx)
+        combos, listing = cleanup(combos3, sorted_spaces, listing3)
         damage = harm(combos.copy(), sorted_allocations.copy())
         totalhelp = combosSum(combos.copy(), sorted_allocations.copy(), off.copy())
 

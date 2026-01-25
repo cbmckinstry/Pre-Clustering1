@@ -170,234 +170,215 @@ def restore_order(original, shuffled, list_of_lists, list_of_ints):
 
     return restored_shuffled, restored_list_of_lists, restored_list_of_ints
 
-def can_do(combo1, combo2, remaining, init1, init2):
-    trials = []
-    indices = []
+def combine(space, shortfall, indices, backup_size=5):
+    paired = list(zip(space, indices))
+    paired.sort(key=lambda t: t[0], reverse=True)
+    space, indices = map(list, zip(*paired)) if paired else ([], [])
 
-    for a in range(len(combo1)):
-        for b in range(len(combo1)):
-            if b == a:
-                continue
-            for c in range(len(combo1)):
-                if c == a or c == b:
-                    continue
-                if sum(init1)+sum(init2)!=3:
-                    continue
+    if sum(space) < backup_size * shortfall[0] + 6 * shortfall[1]:
+        return None, None
 
-                triple = [
-                    [remaining[combo1[a]], remaining[combo2[0]]],
-                    [remaining[combo1[b]], remaining[combo2[1]]],
-                    [remaining[combo1[c]], remaining[combo2[2]]]
-                ]
-                index_set = [
-                    [combo1[a], combo2[0]],
-                    [combo1[b], combo2[1]],
-                    [combo1[c], combo2[2]]
-                ]
+    six = shortfall[1]
+    backup = shortfall[0]
+    used=set()
+    combos = []
+    init = []
 
-                trials.append(triple)
-                indices.append(index_set)
-
-    summed_trials = [[sum(pair) for pair in trial] for trial in trials]
-
-    sorted_summed = []
-    sorted_indices = []
-    for sums, ids in zip(summed_trials, indices):
-        paired = sorted(zip(sums, ids))
-        nums_sorted, ids_sorted = zip(*paired)
-        sorted_summed.append(list(nums_sorted))
-        sorted_indices.append(list(ids_sorted))
-
-    num_fives = init1[0] + init2[0]
-    num_sixes = init1[1] + init2[1]
-    required = [5] * num_fives + [6] * num_sixes
-
-    for i in range(len(sorted_summed)):
-        if all(sorted_summed[i][j] >= required[j] for j in range(3)):
-            result_init = [[1, 0] if x == 5 else [0, 1] for x in required]
-            return [sorted_indices[i], result_init]
-
-    return None
-
-def cleanup(combos, remaining, init):
-    final = []
-    final_init = []
-    just3 = []
-    init3 = []
-    used = set()
-    combos1 = [lst.copy() for lst in combos]
-    for e in range(len(combos1)):
-        for f in range(len(combos1[e])):
-            combos1[e][f]-=1
-    for i in range(len(combos1)):
-        if len(combos1[i]) == 3:
-            just3.append(combos1[i])
-            init3.append(init[i])
-        else:
-            final.append(combos1[i])
-            final_init.append(init[i])
-    if not just3:
-        return combos, init
-    sort_keys = [sum(remaining[i] for i in idxs) for idxs in just3]
-    combined = list(zip(sort_keys, just3, init3))
-    combined.sort(key=lambda x: x[0])
-    _, just3, init3 = zip(*combined)
-    just3 = list(just3)
-    init3 = list(init3)
-    for i in range(len(just3) - 1):
-        if i in used:
+    for m in range(len(space) - 2, -1, -1):
+        if six == 0:
+            break
+        if m in used:
             continue
-        for j in range(i + 1, len(just3)):
-            if j in used:
-                continue
-            trial = can_do(just3[i], just3[j], remaining, init3[i], init3[j])
-            if trial is not None and i not in used and j not in used:
-                used.add(i)
-                used.add(j)
-                final.extend(trial[0])
-                final_init.extend(trial[1])
-    for p in range(len(just3)):
-        if p not in used:
-            final.append(just3[p])
-            final_init.append(init3[p])
-    for e in range(len(final)):
-        for f in range(len(final[e])):
-            final[e][f]+=1
-    return final, final_init
 
-def cleanup_4to2(combos, remaining, init):
-    final = []
-    final_init = []
-
-    just4 = []
-    init4 = []
-    just2 = []
-    init2 = []
-
-    used4 = set()
-    used2 = set()
-
-    combos1 = [lst.copy() for lst in combos]
-    for e in range(len(combos1)):
-        for f in range(len(combos1[e])):
-            combos1[e][f] -= 1
-
-    # Split by size
-    for i in range(len(combos1)):
-        if len(combos1[i]) == 4:
-            just4.append(combos1[i])
-            init4.append(init[i])
-        elif len(combos1[i]) == 2:
-            just2.append(combos1[i])
-            init2.append(init[i])
-        else:
-            final.append(combos1[i])
-            final_init.append(init[i])
-
-    if not just4 or not just2:
-        all_groups = final + just4 + just2
-        all_init = final_init + init4 + init2
-
-        for e in range(len(all_groups)):
-            for f in range(len(all_groups[e])):
-                all_groups[e][f] += 1
-
-        return all_groups, all_init
-
-    # Optional: sort by remaining weight (same heuristic as your 3+3 cleanup)
-    sort4 = [sum(remaining[i] for i in idxs) for idxs in just4]
-    sort2 = [sum(remaining[i] for i in idxs) for idxs in just2]
-
-    just4 = [x for _, x in sorted(zip(sort4, just4))]
-    init4 = [x for _, x in sorted(zip(sort4, init4))]
-    just2 = [x for _, x in sorted(zip(sort2, just2))]
-    init2 = [x for _, x in sorted(zip(sort2, init2))]
-
-    # Try pairing one 4 with one 2
-    for i in range(len(just4)):
-        if i in used4:
-            continue
-        for j in range(len(just2)):
-            if j in used2:
-                continue
-
-            trial = can_do_4to2(
-                just4[i], just2[j],
-                remaining,
-                init4[i], init2[j]
-            )
-
-            if trial is not None:
-                used4.add(i)
-                used2.add(j)
-                final.extend(trial[0])       # two size-3 groups
-                final_init.extend(trial[1])
+        for n in range(len(space) - 1, m, -1):
+            if six == 0:
                 break
+            if n in used:
+                continue
 
-    # Add unused groups back unchanged
-    for i in range(len(just4)):
-        if i not in used4:
-            final.append(just4[i])
-            final_init.append(init4[i])
+            if space[m] + space[n] >= 6 and m not in used and n not in used:
+                used.add(m)
+                used.add(n)
+                combos.append([indices[m], indices[n]])
+                six -= 1
+                init.append([0, 1])
 
-    for j in range(len(just2)):
-        if j not in used2:
-            final.append(just2[j])
-            final_init.append(init2[j])
+                if backup == 0 and six == 0:
+                    return combos, init
+    for m in range(len(space) - 2, -1, -1):
+        if backup == 0:
+            break
+        if m in used:
+            continue
+        for n in range(len(space) - 1, m, -1):
+            if backup == 0:
+                break
+            if n in used:
+                continue
 
-    # Restore indices
-    for e in range(len(final)):
-        for f in range(len(final[e])):
-            final[e][f] += 1
+            if space[m] + space[n] >= 5 and m not in used and n not in used:
+                used.add(m)
+                used.add(n)
+                combos.append([indices[m], indices[n]])
+                backup -= 1
+                init.append([1, 0])
 
-    return final, final_init
+                if backup == 0 and six == 0:
+                    return combos, init
 
-from itertools import combinations
+    return None, None
 
-REQS = [(0, 2), (2, 0), (1, 1)]
+def sort_by_sum(combos, sorted_spaces, listing, actualCombos, one_based=False):
+    if not combos:
+        return [], [], []
+
+    offset = 1 if one_based else 0
+
+    paired = list(zip(combos, listing, actualCombos))
+    paired.sort(key=lambda p: sum(sorted_spaces[idx - offset] for idx in p[0]))
+
+    sorted_combos, sorted_listing, sorted_actual = zip(*paired)
+    return list(sorted_combos), list(sorted_listing), list(sorted_actual)
 
 
-def can_do_4to2(combo4, combo2, remaining, init4, init2):
-    total = (
-        init4[0] + init2[0],
-        init4[1] + init2[1]
-    )
+def cleanup(combos, sorted_spaces, listing):
+    size4, size3, other = [], [], []
+    init4, init3, init_other = [], [], []
+    actualCombos, actual4, actual3 = [],[],[]
 
-    # generate valid requirement pairs (order-independent)
-    req_pairs = []
-    for r1 in REQS:
-        r2 = (total[0] - r1[0], total[1] - r1[1])
-        if r2 in REQS:
-            pair = sorted([r1, r2])
-            if pair not in req_pairs:
-                req_pairs.append(pair)
+    for i in range(len(combos)):
+        inner=[]
+        for j in range(len(combos[i])):
+            combos[i][j]-=1
+            inner.append(sorted_spaces[combos[i][j]])
+        actualCombos.append(inner)
 
-    # enumerate all 6 structural splits
-    for c in range(2):
-        c_elem = combo2[c]
-        other_c = combo2[1 - c]
+    for c, l, ac in zip(combos, listing, actualCombos):
+        if len(c) == 4:
+            size4.append(c); init4.append(l); actual4.append(ac)
+        elif len(c) == 3:
+            size3.append(c); init3.append(l); actual3.append(ac)
+        else:
+            other.append(c); init_other.append(l)
 
-        for a, b in combinations(range(4), 2):
-            d, e = [i for i in range(4) if i not in (a, b)]
+    size4, init4, actual4 = sort_by_sum(size4, sorted_spaces, init4, actual4)
+    size3, init3, actual3 = sort_by_sum(size3, sorted_spaces, init3, actual3)
 
-            groups = [
-                [combo4[a], combo4[b], c_elem],
-                [combo4[d], combo4[e], other_c]
-            ]
+    new3, new3init = [],[]
+    used4,used3 = set(),set()
+    if size4 and size3:
+        for m in range(len(size4)):
+            if m in used4:
+                continue
+            for n in range(len(size3)):
+                if n in used3 or m in used4:
+                    continue
+                total5s, total6s = init4[m][0]+init3[n][0],init4[m][1]+init3[n][1]
+                placedFlag = False
 
-            sums = [sum(remaining[i] for i in g) for g in groups]
+                for a in range(len(size3[n])):
+                    if placedFlag:
+                        break
+                    for b in range(0,len(size4[m])-2):
+                        if placedFlag:
+                            break
+                        for c in range(b+1,len(size4[m])-1):
+                            if placedFlag:
+                                break
+                            placed6s = min((actual4[m][c]+actual4[m][b]+actual3[n][a])//6,total6s)
+                            placed5s = min((actual4[m][c]+actual4[m][b]+actual3[n][a]-6*placed6s)//5,total5s)
+                            remaining = [total5s-placed5s,total6s-placed6s]
+                            spacesL, indL = actual4[m].copy(), size4[m].copy()
+                            spacesL.pop(c); indL.pop(c); spacesL.pop(b); indL.pop(b)
+                            spacesR, indR = actual3[n].copy(), size3[n].copy()
+                            spacesR.pop(a); indR.pop(a)
+                            spaces, ind = spacesL+spacesR, indL+indR
+                            comb, init = combine(spaces,remaining,ind)
+                            if comb and m not in used4 and n not in used3:
+                                new3.append([size4[m][b],size4[m][c],size3[n][a]])
+                                actual3.append([actual4[m][b],actual4[m][c],actual3[n][a]])
+                                used3.add(n);used4.add(m)
+                                new3init.append([placed5s,placed6s])
+                                size3[n]=[]; init3[n]=[];size4[m]=[];init4[m]=[];actual3[n]=[]
+                                other.extend(comb); init_other.extend(init)
+                                placedFlag=True
+        size3.extend(new3); init3.extend(new3init)
+        size3 = [x for x in size3 if x!=[]]
+        init3 = [x for x in init3 if x!=[]]
+        size4 = [x for x in size4 if x!=[]]
+        init4 = [x for x in init4 if x!=[]]
+        actual3 = [x for x in actual3 if x!=[]]
 
-            # test all valid requirement assignments
-            for (r1, r2) in req_pairs:
-                required = [
-                    5 * r1[0] + 6 * r1[1],
-                    5 * r2[0] + 6 * r2[1]
-                ]
+    used3.clear()
+    if len(size3)>=2:
+        for m in range(0,len(size3)-1):
+            if m in used3:
+                continue
+            for n in range(m+1,len(size3)):
+                if n in used3 or m in used3:
+                    continue
+                total5s, total6s = init3[m][0]+init3[n][0],init3[m][1]+init3[n][1]
+                spaces = actual3[m].copy()+actual3[n].copy()
+                ind = size3[m].copy()+size3[n].copy()
+                comb, init = combine(spaces,[total5s,total6s],ind)
+                if comb and m not in used4 and n not in used3:
+                    used3.add(n);used3.add(m)
+                    size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]
+                    other.extend(comb); init_other.extend(init)
 
-                paired = sorted(zip(sums, required, groups))
-                sums_sorted, req_sorted, groups_sorted = zip(*paired)
+        size3 = [x for x in size3 if x!=[]]
+        init3 = [x for x in init3 if x!=[]]
 
-                if all(sums_sorted[i] >= req_sorted[i] for i in range(2)):
-                    return list(groups_sorted), [list(r1), list(r2)]
+    used3.clear()
+    if len(size3)>=3:
+        for m in range(0,len(size3)-2):
+            if m in used4:
+                continue
+            for n in range(m+1,len(size3)-1):
+                if n in used3 or m in used3:
+                    continue
+                for o in range(n+1,len(size3)):
+                    if n in used3 or m in used3 or o in used3:
+                        continue
+                    total5s, total6s = init3[m][0]+init3[n][0]+init3[o][0],init3[m][1]+init3[n][1]+init3[o][1]
+                    placedFlag = False
 
-    return None
+                    for a in range(len(size3[m])):
+                        if placedFlag:
+                            break
+                        for b in range(len(size3[n])):
+                            if placedFlag:
+                                break
+                            for c in range(len(size3[o])):
+                                if placedFlag:
+                                    break
+                                placed6s = min((actual3[m][a]+actual3[n][b]+actual3[o][c])//6,total6s)
+                                placed5s = min((actual3[m][a]+actual3[n][b]+actual3[o][c]-6*placed6s)//5,total5s)
+                                remaining = [total5s-placed5s,total6s-placed6s]
+                                spacesL, indL = actual3[m].copy(), size3[m].copy()
+                                spacesL.pop(a); indL.pop(a)
+                                spacesM, indM = actual3[n].copy(), size3[n].copy()
+                                spacesM.pop(b); indM.pop(b)
+                                spacesR, indR = actual3[o].copy(), size3[o].copy()
+                                spacesR.pop(c); indR.pop(c)
+                                spaces, ind = spacesL+spacesM+spacesR, indL+indM+indR
+                                comb, init = combine(spaces,remaining,ind)
+                                if comb and m not in used3 and n not in used3 and o not in used3:
+                                    new3.append([size3[m][a],size3[n][b],size3[o][c]])
+                                    actual3.append([actual3[m][a],actual3[n][b],actual3[o][c]])
+                                    used3.add(n);used4.add(m);used3.add(o)
+                                    new3init.append([placed5s,placed6s])
+                                    size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]; size3[o]=[];init3[o]=[]
+                                    other.extend(comb); init_other.extend(init)
+                                    placedFlag=True
+        size3.extend(new3); init3.extend(new3init)
+        size3 = [x for x in size3 if x!=[]]
+        init3 = [x for x in init3 if x!=[]]
+        size4 = [x for x in size4 if x!=[]]
+        init4 = [x for x in init4 if x!=[]]
+
+    size4 = [[x+1 for x in combo]for combo in size4]
+    size3 = [[x+1 for x in combo]for combo in size3]
+    other = [[x+1 for x in combo]for combo in other]
+
+    return size4+size3+other, init4+init3+init_other
