@@ -364,7 +364,7 @@ def cleanup(combos, sorted_spaces, listing):
                                 if comb and m not in used3 and n not in used3 and o not in used3:
                                     new3.append([size3[m][a],size3[n][b],size3[o][c]])
                                     actual3.append([actual3[m][a],actual3[n][b],actual3[o][c]])
-                                    used3.add(n);used4.add(m);used3.add(o)
+                                    used3.add(n);used3.add(m);used3.add(o)
                                     new3init.append([placed5s,placed6s])
                                     size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]; size3[o]=[];init3[o]=[]
                                     other.extend(comb); init_other.extend(init)
