@@ -263,7 +263,6 @@ def cleanup(combos, sorted_spaces, listing):
 
     size4, init4, actual4 = sort_by_sum(size4, sorted_spaces, init4, actual4)
     size3, init3, actual3 = sort_by_sum(size3, sorted_spaces, init3, actual3)
-
     new3, new3init = [],[]
     used4,used3 = set(),set()
     progressFlag = False
@@ -309,7 +308,6 @@ def cleanup(combos, sorted_spaces, listing):
         size4 = [x for x in size4 if x!=[]]
         init4 = [x for x in init4 if x!=[]]
         actual3 = [x for x in actual3 if x!=[]]
-
     used3.clear()
     if len(size3)>=2:
         for m in range(0,len(size3)-1):
@@ -329,11 +327,10 @@ def cleanup(combos, sorted_spaces, listing):
 
         size3 = [x for x in size3 if x!=[]]
         init3 = [x for x in init3 if x!=[]]
-
     used3.clear()
     if len(size3)>=3:
         for m in range(0,len(size3)-2):
-            if m in used4:
+            if m in used3:
                 continue
             for n in range(m+1,len(size3)-1):
                 if n in used3 or m in used3:
