@@ -299,7 +299,7 @@ def cleanup(combos, sorted_spaces, listing):
                                 actual3.append([actual4[m][b],actual4[m][c],actual3[n][a]])
                                 used3.add(n);used4.add(m)
                                 new3init.append([placed5s,placed6s])
-                                size3[n]=[]; init3[n]=[];size4[m]=[];init4[m]=[];actual3[n]=[]
+                                size3[n]=[]; init3[n]=[];size4[m]=[];init4[m]=[];actual3[n]=[];actual4[m]=[]
                                 other.extend(comb); init_other.extend(init)
                                 placedFlag, progressFlag = True, True
         size3.extend(new3); init3.extend(new3init)
@@ -308,6 +308,7 @@ def cleanup(combos, sorted_spaces, listing):
         size4 = [x for x in size4 if x!=[]]
         init4 = [x for x in init4 if x!=[]]
         actual3 = [x for x in actual3 if x!=[]]
+        actual4 = [x for x in actual4 if x!=[]]
     used3.clear()
     if len(size3)>=2:
         for m in range(0,len(size3)-1):
@@ -327,6 +328,24 @@ def cleanup(combos, sorted_spaces, listing):
 
         size3 = [x for x in size3 if x!=[]]
         init3 = [x for x in init3 if x!=[]]
+    used4.clear()
+    if len(size4)>=2:
+        for m in range(0,len(size4)-1):
+            if m in used4:
+                continue
+            for n in range(m+1,len(size4)):
+                if n in used4 or m in used4:
+                    continue
+                total5s, total6s = init4[m][0]+init4[n][0],init4[m][1]+init4[n][1]
+                spaces = actual4[m].copy()+actual4[n].copy()
+                ind = size4[m].copy()+size4[n].copy()
+                comb, init = combine(spaces,[total5s,total6s],ind)
+                if comb and m not in used4 and n not in used3:
+                    used4.add(n);used4.add(m)
+                    size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[]
+                    other.extend(comb); init_other.extend(init)
+        size4 = [x for x in size4 if x!=[]]
+        init4 = [x for x in init4 if x!=[]]
     used3.clear()
     if len(size3)>=3:
         for m in range(0,len(size3)-2):
