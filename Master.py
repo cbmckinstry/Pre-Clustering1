@@ -309,6 +309,50 @@ def cleanup(combos, sorted_spaces, listing):
         init4 = [x for x in init4 if x!=[]]
         actual3 = [x for x in actual3 if x!=[]]
         actual4 = [x for x in actual4 if x!=[]]
+    new4, new4init = [],[]
+    used4 = set()
+    if len(size4)>2:
+        for m in range(0,len(size4)-1):
+            if m in used4:
+                continue
+            for n in range(m+1,len(size4)):
+                if n in used4 or m in used4:
+                    continue
+                total5s, total6s = init4[m][0]+init4[n][0],init4[m][1]+init4[n][1]
+                placedFlag = False
+                for a in range(0,len(size4[m])-1):
+                    if placedFlag:
+                        break
+                    for b in range(a+1,len(size4[m])):
+                        if placedFlag:
+                            break
+                        for c in range(0,len(size4[n])-1):
+                            if placedFlag:
+                                break
+                            for d in range(c+1,len(size4[n])):
+                                if placedFlag:
+                                    break
+                                placed6s = min((actual4[m][a]+actual4[m][b]+actual4[n][c]+actual4[n][d])//6,total6s)
+                                placed5s = min((actual4[m][a]+actual4[m][b]+actual4[n][c]+actual4[n][d]-6*placed6s)//5,total5s)
+                                remaining = [total5s-placed5s,total6s-placed6s]
+                                spacesL, indL = actual4[m].copy(), size4[m].copy()
+                                spacesL.pop(b); indL.pop(b); spacesL.pop(a); indL.pop(a)
+                                spacesR, indR = actual4[n].copy(), size4[n].copy()
+                                spacesR.pop(d); indR.pop(d); spacesR.pop(c); indR.pop(c)
+                                spaces, ind = spacesL+spacesR, indL+indR
+                                comb, init = combine(spaces,remaining,ind)
+                                if comb and m not in used4 and n not in used4:
+                                    new4.append([size4[m][a],size4[m][b],size4[n][c],size4[n][d]])
+                                    actual4.append([actual4[m][a],actual4[m][b],actual4[n][c],actual4[n][d]])
+                                    used4.add(n);used4.add(m)
+                                    new4init.append([placed5s,placed6s])
+                                    size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[];actual4[n]=[];actual4[m]=[]
+                                    other.extend(comb); init_other.extend(init)
+                                    placedFlag, progressFlag = True, True
+        size4.extend(new4); init4.extend(new4init)
+        size4 = [x for x in size4 if x!=[]]
+        init4 = [x for x in init4 if x!=[]]
+        actual4 = [x for x in actual4 if x!=[]]
     used3.clear()
     if len(size3)>=2:
         for m in range(0,len(size3)-1):
@@ -347,6 +391,7 @@ def cleanup(combos, sorted_spaces, listing):
         size4 = [x for x in size4 if x!=[]]
         init4 = [x for x in init4 if x!=[]]
     used3.clear()
+    new3, new3init = [], []
     if len(size3)>=3:
         for m in range(0,len(size3)-2):
             if m in used3:
