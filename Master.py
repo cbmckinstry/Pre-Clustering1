@@ -279,10 +279,10 @@ def cleanup(combos, sorted_spaces, listing):
                 for a in range(len(size3[n])):
                     if placedFlag:
                         break
-                    for b in range(0,len(size4[m])-2):
+                    for b in range(0,len(size4[m])-1):
                         if placedFlag:
                             break
-                        for c in range(b+1,len(size4[m])-1):
+                        for c in range(b+1,len(size4[m])):
                             if placedFlag:
                                 break
                             placed6s = min((actual4[m][c]+actual4[m][b]+actual3[n][a])//6,total6s)
@@ -321,13 +321,13 @@ def cleanup(combos, sorted_spaces, listing):
                 spaces = actual3[m].copy()+actual3[n].copy()
                 ind = size3[m].copy()+size3[n].copy()
                 comb, init = combine(spaces,[total5s,total6s],ind)
-                if comb and m not in used4 and n not in used3:
+                if comb and m not in used3 and n not in used3:
                     used3.add(n);used3.add(m)
-                    size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]
+                    size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[];actual3[n]=[];actual3[m]=[]
                     other.extend(comb); init_other.extend(init)
-
         size3 = [x for x in size3 if x!=[]]
         init3 = [x for x in init3 if x!=[]]
+        actual3 = [x for x in actual3 if x!=[]]
     used4.clear()
     if len(size4)>=2:
         for m in range(0,len(size4)-1):
@@ -340,7 +340,7 @@ def cleanup(combos, sorted_spaces, listing):
                 spaces = actual4[m].copy()+actual4[n].copy()
                 ind = size4[m].copy()+size4[n].copy()
                 comb, init = combine(spaces,[total5s,total6s],ind)
-                if comb and m not in used4 and n not in used3:
+                if comb and m not in used4 and n not in used4:
                     used4.add(n);used4.add(m)
                     size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[]
                     other.extend(comb); init_other.extend(init)
