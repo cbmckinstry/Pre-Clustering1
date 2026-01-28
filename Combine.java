@@ -2360,6 +2360,66 @@ public class Combine {
         Set<Integer> used9 = new HashSet<>(used5);
         List<int[]> init3 = new ArrayList<>();
 
+        for (int a = filteredSpaces.size() - 1; a >= 4; a--) {
+            if (five9 == 0) break;
+            if (used9.contains(a)) continue;
+            if (filteredSpaces.get(a)>1) break;
+            for (int b = a - 1; b >= 3; b--) {
+                if (used9.contains(b)) continue;
+                if (filteredSpaces.get(b)>1) break;
+                for (int c = b - 1; c >= 2; c--) {
+                    if (used9.contains(c)) continue;
+                    if (filteredSpaces.get(c)>1) break;
+                    for (int d = c - 1; d >= 1; d--) {
+                        if (used9.contains(d)) continue;
+                        if (filteredSpaces.get(d)>1) break;
+                        for (int e = d - 1; e >= 0; e--) {
+                            if (used9.contains(e)) continue;
+                            if (filteredSpaces.get(e)>1) break;
+
+                            int allSum = filteredSpaces.get(a) + filteredSpaces.get(b) + filteredSpaces.get(c) + filteredSpaces.get(d) + filteredSpaces.get(e);
+                            int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(a), filteredSpaces.get(b)), filteredSpaces.get(c)), filteredSpaces.get(d)), filteredSpaces.get(e));
+
+                            if (!used9.contains(a) && !used9.contains(b) && !used9.contains(c) && !used9.contains(d) && !used9.contains(e) &&
+                                    allSum >= (5) &&
+                                    allSum - minElem < (5) &&
+                                    (five9 > 0)) {
+
+                                five9 -= 1;
+                                used9.add(a);
+                                used9.add(b);
+                                used9.add(c);
+                                used9.add(d);
+                                used9.add(e);
+                                fives9.add(new int[]{a + 1, b + 1, c + 1, d + 1, e+1});
+                                init3.add(new int[]{1, 0});
+
+                                if (six9 == 0 && five9==0) {
+                                    return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
+                                }
+
+                                List<Object> trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                if ((boolean) trial1.get(4)) {
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fives9);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        six9 = shortfall[1];
+        five9= shortfall[0];
+        fives9 = new ArrayList<>();
+        used9 = new HashSet<>(used5);
+        init3 = new ArrayList<>();
+
         for (int i = filteredSpaces.size() - 1; i >= 4; i--) {
             if (six9 == 0) break;
             if (used9.contains(i)) continue;
@@ -2477,40 +2537,39 @@ public class Combine {
         used9 = new HashSet<>(used5);
         init3 = new ArrayList<>();
 
-
         for (int a = filteredSpaces.size() - 1; a >= 4; a--) {
-            if (five9 == 0) break;
-            if (used9.contains(a)) continue;
-            if (filteredSpaces.get(a)>1) break;
+            if (five9 ==0 ) break;
+            if (used9.contains(a) || filteredSpaces.get(a)<2) continue;
+            if (filteredSpaces.get(a)>2) break;
             for (int b = a - 1; b >= 3; b--) {
-                if (used9.contains(b)) continue;
-                if (filteredSpaces.get(b)>1) break;
+                if (used9.contains(b) || filteredSpaces.get(b)<2) continue;
+                if (filteredSpaces.get(b)>2) break;
                 for (int c = b - 1; c >= 2; c--) {
-                    if (used9.contains(c)) continue;
-                    if (filteredSpaces.get(c)>1) break;
+                    if (used9.contains(c) || filteredSpaces.get(c)<2) continue;
+                    if (filteredSpaces.get(c)>2) break;
                     for (int d = c - 1; d >= 1; d--) {
-                        if (used9.contains(d)) continue;
-                        if (filteredSpaces.get(d)>1) break;
+                        if (used9.contains(d) || filteredSpaces.get(d)<2) continue;
+                        if (filteredSpaces.get(d)>2) break;
                         for (int e = d - 1; e >= 0; e--) {
-                            if (used9.contains(e)) continue;
-                            if (filteredSpaces.get(e)>1) break;
+                            if (used9.contains(e) || filteredSpaces.get(e)<2) continue;
+                            if (filteredSpaces.get(e)>2) break;
 
                             int allSum = filteredSpaces.get(a) + filteredSpaces.get(b) + filteredSpaces.get(c) + filteredSpaces.get(d) + filteredSpaces.get(e);
                             int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(a), filteredSpaces.get(b)), filteredSpaces.get(c)), filteredSpaces.get(d)), filteredSpaces.get(e));
 
                             if (!used9.contains(a) && !used9.contains(b) && !used9.contains(c) && !used9.contains(d) && !used9.contains(e) &&
-                                    allSum >= (5) &&
-                                    allSum - minElem < (5) &&
-                                    (five9 > 0)) {
+                                    allSum >= (10) &&
+                                    allSum - minElem < (10) &&
+                                    (five9 > 1)) {
 
-                                five9 -= 1;
+                                five9 -= 2;
                                 used9.add(a);
                                 used9.add(b);
                                 used9.add(c);
                                 used9.add(d);
                                 used9.add(e);
                                 fives9.add(new int[]{a + 1, b + 1, c + 1, d + 1, e+1});
-                                init3.add(new int[]{1, 0});
+                                init3.add(new int[]{2, 0});
 
                                 if (six9 == 0 && five9==0) {
                                     return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
@@ -2532,6 +2591,65 @@ public class Combine {
             }
         }
 
+        six9 = shortfall[1];
+        five9= shortfall[0];
+        fives9 = new ArrayList<>();
+        used9 = new HashSet<>(used5);
+        init3 = new ArrayList<>();
+
+        for (int a = filteredSpaces.size() - 1; a >= 4; a--) {
+            if (five9 ==0 ) break;
+            if (used9.contains(a) || filteredSpaces.get(a)<3) continue;
+            if (filteredSpaces.get(a)>3) break;
+            for (int b = a - 1; b >= 3; b--) {
+                if (used9.contains(b) || filteredSpaces.get(b)<3) continue;
+                if (filteredSpaces.get(b)>3) break;
+                for (int c = b - 1; c >= 2; c--) {
+                    if (used9.contains(c) || filteredSpaces.get(c)<3) continue;
+                    if (filteredSpaces.get(c)>3) break;
+                    for (int d = c - 1; d >= 1; d--) {
+                        if (used9.contains(d) || filteredSpaces.get(d)<3) continue;
+                        if (filteredSpaces.get(d)>3) break;
+                        for (int e = d - 1; e >= 0; e--) {
+                            if (used9.contains(e) || filteredSpaces.get(e)<3) continue;
+                            if (filteredSpaces.get(e)>3) break;
+
+                            int allSum = filteredSpaces.get(a) + filteredSpaces.get(b) + filteredSpaces.get(c) + filteredSpaces.get(d) + filteredSpaces.get(e);
+                            int minElem = Math.min(Math.min(Math.min(Math.min(filteredSpaces.get(a), filteredSpaces.get(b)), filteredSpaces.get(c)), filteredSpaces.get(d)), filteredSpaces.get(e));
+
+                            if (!used9.contains(a) && !used9.contains(b) && !used9.contains(c) && !used9.contains(d) && !used9.contains(e) &&
+                                    allSum >= (15) &&
+                                    allSum - minElem < (15) &&
+                                    (five9 > 2)) {
+
+                                five9 -= 3;
+                                used9.add(a);
+                                used9.add(b);
+                                used9.add(c);
+                                used9.add(d);
+                                used9.add(e);
+                                fives9.add(new int[]{a + 1, b + 1, c + 1, d + 1, e+1});
+                                init3.add(new int[]{3, 0});
+
+                                if (six9 == 0 && five9==0) {
+                                    return Arrays.asList(fives9, init3, new int[]{0, 0}, used9, true);
+                                }
+
+                                List<Object> trial1 = fours(filteredAllocations, filteredSpaces, new int[]{five9, six9}, 5, used9);
+
+                                if ((boolean) trial1.get(4)) {
+                                    finalCombos = mergeLists((List<int[]>) trial1.get(0), fives9);
+                                    finalInit = mergeLists((List<int[]>) trial1.get(1), init3);
+                                    finalUsed = (Set<Integer>) trial1.get(3);
+                                    return Arrays.asList(finalCombos, finalInit, new int[]{0, 0}, finalUsed, true);
+                                }
+
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
         six6 = shortfall[1];
         five6 = shortfall[0];
