@@ -61,13 +61,13 @@ def determineflags(combos):
         flags[2] = 'Y'
         return flags
 
-    count_len3 = 0
+    count_len4 = 0
     for elem in combos:
-        if len(elem) >= 4:
+        if len(elem) >= 5:
             flags[1] = 'Y'
-        if len(elem) == 3 and count_len3<3:
-            count_len3 += 1
-            if count_len3 >= 2:
+        if len(elem) == 4 and count_len4<3:
+            count_len4 += 1
+            if count_len4 >= 2:
                 flags[0] = 'Y'
         if flags[0] == 'Y' and flags[1] == 'Y':
             break
@@ -81,7 +81,8 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
 
     file_exists = path.exists()
 
-    combos_str = "" if not combos else "||".join(",".join(map(str, c)) for c in combos)
+    # compact representation for CSV
+    combos_str = "" if not combos else "|".join(",".join(map(str, c)) for c in combos)
 
     with path.open("a", newline="") as f:
         w = csv.writer(f)
@@ -91,8 +92,8 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
                 "sum_vehicles",
                 "pers5",
                 "pers6",
-                "flags_3len3",
-                "flags_len4plus",
+                "flags_2len4",
+                "flags_len5plus",
                 "flags_empty",
                 "combos"
             ])
@@ -108,12 +109,13 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
             combos_str
         ])
 
+
 def multisets(n):
     return [list(c) for c in combinations_with_replacement(range(1, 6), n)]
 
 if __name__ == '__main__':
-    lower=6
-    upper=13
+    lower=3
+    upper=19
     for size in range(lower,upper):
         x = [0, 5, 4, 3, 2, 1]
         sets = multisets(size)
