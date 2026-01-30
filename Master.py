@@ -176,13 +176,14 @@ def combine(space, shortfall, indices, backup_size=5):
     space, indices = map(list, zip(*paired)) if paired else ([], [])
 
     if sum(space) < backup_size * shortfall[0] + 6 * shortfall[1]:
-        return None, None
+        return None, None, None
 
     six = shortfall[1]
     backup = shortfall[0]
     used=set()
     combos = []
     init = []
+    actual = []
 
     for m in range(len(space) - 2, -1, -1):
         if six == 0:
@@ -202,9 +203,10 @@ def combine(space, shortfall, indices, backup_size=5):
                 combos.append([indices[m], indices[n]])
                 six -= 1
                 init.append([0, 1])
+                actual.append([space[m],space[n]])
 
                 if backup == 0 and six == 0:
-                    return combos, init
+                    return combos, init, actual
     for m in range(len(space) - 2, -1, -1):
         if backup == 0:
             break
@@ -222,11 +224,12 @@ def combine(space, shortfall, indices, backup_size=5):
                 combos.append([indices[m], indices[n]])
                 backup -= 1
                 init.append([1, 0])
+                actual.append([space[m],space[n]])
 
                 if backup == 0 and six == 0:
-                    return combos, init
+                    return combos, init, actual
 
-    return None, None
+    return None, None, None
 
 def sort_by_sum(combos, sorted_spaces, listing, actualCombos, one_based=False):
     if not combos:
@@ -244,6 +247,7 @@ def sort_by_sum(combos, sorted_spaces, listing, actualCombos, one_based=False):
 def cleanup(combos, sorted_spaces, listing):
     size4, size3, other = [], [], []
     init4, init3, init_other = [], [], []
+    size2, init2, actual2  = [], [], []
     actualCombos, actual4, actual3 = [],[],[]
 
     for i in range(len(combos)):
@@ -258,12 +262,15 @@ def cleanup(combos, sorted_spaces, listing):
             size4.append(c); init4.append(l); actual4.append(ac)
         elif len(c) == 3:
             size3.append(c); init3.append(l); actual3.append(ac)
+        elif len(c) == 2:
+            size2.append(c); init2.append(l); actual2.append(ac)
         else:
             other.append(c); init_other.append(l)
 
     size4, init4, actual4 = sort_by_sum(size4, sorted_spaces, init4, actual4)
     size3, init3, actual3 = sort_by_sum(size3, sorted_spaces, init3, actual3)
-    new3, new3init = [],[]
+    size2, init2, actual2 = sort_by_sum(size2, sorted_spaces, init2, actual2)
+    new3, new3init, new3actual = [],[],[]
     used4,used3 = set(),set()
     progressFlag = False
     if size4 and size3:
@@ -275,7 +282,6 @@ def cleanup(combos, sorted_spaces, listing):
                     continue
                 total5s, total6s = init4[m][0]+init3[n][0],init4[m][1]+init3[n][1]
                 placedFlag = False
-
                 for a in range(len(size3[n])):
                     if placedFlag:
                         break
@@ -293,25 +299,23 @@ def cleanup(combos, sorted_spaces, listing):
                             spacesR, indR = actual3[n].copy(), size3[n].copy()
                             spacesR.pop(a); indR.pop(a)
                             spaces, ind = spacesL+spacesR, indL+indR
-                            comb, init = combine(spaces,remaining,ind)
+                            comb, init, new2 = combine(spaces,remaining,ind)
                             if comb and m not in used4 and n not in used3:
                                 new3.append([size4[m][b],size4[m][c],size3[n][a]])
-                                actual3.append([actual4[m][b],actual4[m][c],actual3[n][a]])
+                                new3actual.append([actual4[m][b],actual4[m][c],actual3[n][a]])
                                 used3.add(n);used4.add(m)
                                 new3init.append([placed5s,placed6s])
                                 size3[n]=[]; init3[n]=[];size4[m]=[];init4[m]=[];actual3[n]=[];actual4[m]=[]
-                                other.extend(comb); init_other.extend(init)
+                                size2.extend(comb); init2.extend(init); actual2.extend(new2)
                                 placedFlag, progressFlag = True, True
-        size3.extend(new3); init3.extend(new3init)
-        size3 = [x for x in size3 if x!=[]]
-        init3 = [x for x in init3 if x!=[]]
-        size4 = [x for x in size4 if x!=[]]
-        init4 = [x for x in init4 if x!=[]]
-        actual3 = [x for x in actual3 if x!=[]]
-        actual4 = [x for x in actual4 if x!=[]]
-    new4, new4init = [],[]
-    used4 = set()
-    if len(size4)>2:
+        size3.extend(new3); init3.extend(new3init); actual3.extend(new3actual)
+        packed3 = [(s,i,a) for s,i,a in zip(size3, init3, actual3) if s]
+        packed4 = [(s,i,a) for s,i,a in zip(size4, init4, actual4) if s]
+        size3, init3, actual3 = (map(list, zip(*packed3)) if packed3 else ([], [], []))
+        size4, init4, actual4 = (map(list, zip(*packed4)) if packed4 else ([], [], []))
+    new4, new4init, new4actual = [],[],[]
+    used4.clear()
+    if len(size4)>=2:
         for m in range(0,len(size4)-1):
             if m in used4:
                 continue
@@ -340,19 +344,18 @@ def cleanup(combos, sorted_spaces, listing):
                                 spacesR, indR = actual4[n].copy(), size4[n].copy()
                                 spacesR.pop(d); indR.pop(d); spacesR.pop(c); indR.pop(c)
                                 spaces, ind = spacesL+spacesR, indL+indR
-                                comb, init = combine(spaces,remaining,ind)
+                                comb, init, new2 = combine(spaces,remaining,ind)
                                 if comb and m not in used4 and n not in used4:
                                     new4.append([size4[m][a],size4[m][b],size4[n][c],size4[n][d]])
-                                    actual4.append([actual4[m][a],actual4[m][b],actual4[n][c],actual4[n][d]])
+                                    new4actual.append([actual4[m][a],actual4[m][b],actual4[n][c],actual4[n][d]])
                                     used4.add(n);used4.add(m)
                                     new4init.append([placed5s,placed6s])
                                     size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[];actual4[n]=[];actual4[m]=[]
-                                    other.extend(comb); init_other.extend(init)
+                                    size2.extend(comb); init2.extend(init); actual2.extend(new2)
                                     placedFlag, progressFlag = True, True
-        size4.extend(new4); init4.extend(new4init)
-        size4 = [x for x in size4 if x!=[]]
-        init4 = [x for x in init4 if x!=[]]
-        actual4 = [x for x in actual4 if x!=[]]
+        size4.extend(new4); init4.extend(new4init); actual4.extend(new4actual)
+        packed4 = [(s,i,a) for s,i,a in zip(size4, init4, actual4) if s]
+        size4, init4, actual4 = (map(list, zip(*packed4)) if packed4 else ([], [], []))
     used3.clear()
     if len(size3)>=2:
         for m in range(0,len(size3)-1):
@@ -364,14 +367,15 @@ def cleanup(combos, sorted_spaces, listing):
                 total5s, total6s = init3[m][0]+init3[n][0],init3[m][1]+init3[n][1]
                 spaces = actual3[m].copy()+actual3[n].copy()
                 ind = size3[m].copy()+size3[n].copy()
-                comb, init = combine(spaces,[total5s,total6s],ind)
+                comb, init, new2 = combine(spaces,[total5s,total6s],ind)
                 if comb and m not in used3 and n not in used3:
                     used3.add(n);used3.add(m)
                     size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[];actual3[n]=[];actual3[m]=[]
-                    other.extend(comb); init_other.extend(init)
-        size3 = [x for x in size3 if x!=[]]
-        init3 = [x for x in init3 if x!=[]]
-        actual3 = [x for x in actual3 if x!=[]]
+                    size2.extend(comb); init2.extend(init); actual2.extend(new2)
+                    placedFlag, progressFlag = False,True
+        packed3 = [(s,i,a) for s,i,a in zip(size3, init3, actual3) if s]
+        size3, init3, actual3 = (map(list, zip(*packed3)) if packed3 else ([], [], []))
+
     used4.clear()
     if len(size4)>=2:
         for m in range(0,len(size4)-1):
@@ -383,15 +387,18 @@ def cleanup(combos, sorted_spaces, listing):
                 total5s, total6s = init4[m][0]+init4[n][0],init4[m][1]+init4[n][1]
                 spaces = actual4[m].copy()+actual4[n].copy()
                 ind = size4[m].copy()+size4[n].copy()
-                comb, init = combine(spaces,[total5s,total6s],ind)
+                comb, init, new2 = combine(spaces,[total5s,total6s],ind)
                 if comb and m not in used4 and n not in used4:
                     used4.add(n);used4.add(m)
                     size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[]
-                    other.extend(comb); init_other.extend(init)
-        size4 = [x for x in size4 if x!=[]]
-        init4 = [x for x in init4 if x!=[]]
+                    actual4[n]=[];actual4[m]=[]
+                    size2.extend(comb); init2.extend(init); actual2.extend(new2)
+                    placedFlag, progressFlag = False,True
+        packed4 = [(s,i,a) for s,i,a in zip(size4, init4, actual4) if s]
+        size4, init4, actual4 = (map(list, zip(*packed4)) if packed4 else ([], [], []))
+
     used3.clear()
-    new3, new3init = [], []
+    new3, new3init, new3actual = [], [], []
     if len(size3)>=3:
         for m in range(0,len(size3)-2):
             if m in used3:
@@ -404,7 +411,6 @@ def cleanup(combos, sorted_spaces, listing):
                         continue
                     total5s, total6s = init3[m][0]+init3[n][0]+init3[o][0],init3[m][1]+init3[n][1]+init3[o][1]
                     placedFlag = False
-
                     for a in range(len(size3[m])):
                         if placedFlag:
                             break
@@ -424,23 +430,132 @@ def cleanup(combos, sorted_spaces, listing):
                                 spacesR, indR = actual3[o].copy(), size3[o].copy()
                                 spacesR.pop(c); indR.pop(c)
                                 spaces, ind = spacesL+spacesM+spacesR, indL+indM+indR
-                                comb, init = combine(spaces,remaining,ind)
+                                comb, init, new2 = combine(spaces,remaining,ind)
                                 if comb and m not in used3 and n not in used3 and o not in used3:
                                     new3.append([size3[m][a],size3[n][b],size3[o][c]])
-                                    actual3.append([actual3[m][a],actual3[n][b],actual3[o][c]])
+                                    new3actual.append([actual3[m][a],actual3[n][b],actual3[o][c]])
                                     used3.add(n);used3.add(m);used3.add(o)
                                     new3init.append([placed5s,placed6s])
                                     size3[n]=[]; init3[n]=[];size3[m]=[];init3[m]=[]; size3[o]=[];init3[o]=[]
-                                    other.extend(comb); init_other.extend(init)
+                                    actual3[n]=[];actual3[m]=[];actual3[o]=[]
+                                    size2.extend(comb); init2.extend(init); actual2.extend(new2)
                                     placedFlag, progressFlag = True,True
-        size3.extend(new3); init3.extend(new3init)
-        size3 = [x for x in size3 if x!=[]]
-        init3 = [x for x in init3 if x!=[]]
-        size4 = [x for x in size4 if x!=[]]
-        init4 = [x for x in init4 if x!=[]]
+        size3.extend(new3); init3.extend(new3init); actual3.extend(new3actual)
+        packed3 = [(s,i,a) for s,i,a in zip(size3, init3, actual3) if s]
+        size3, init3, actual3 = (map(list, zip(*packed3)) if packed3 else ([], [], []))
+
+    used4.clear()
+    if len(size4)>=2:
+        for m in range(0,len(size4)-1):
+            if m in used4:
+                continue
+            for n in range(m+1,len(size4)):
+                if n in used4 or m in used4:
+                    continue
+                total5s, total6s = init4[m][0]+init4[n][0],init4[m][1]+init4[n][1]
+                placedFlag = False
+                for a in range(0,len(size4[m])):
+                    if placedFlag:
+                        break
+                    for b in range(0,len(size4[m])):
+                        if placedFlag:
+                            break
+                        if b==a:
+                            continue
+                        for c in range(0,len(size4[n])):
+                            if placedFlag:
+                                break
+                            for d in range(0,len(size4[n])):
+                                if placedFlag:
+                                    break
+                                if d==c:
+                                    continue
+                                the2 = actual4[m][a]+actual4[n][c]
+                                first3 = actual4[m][b]+sum(actual4[n][:min(c,d)])+sum(actual4[n][min(c,d)+1:max(c,d)])+sum(actual4[n][max(c,d)+1:])
+                                second3 = actual4[n][d]+sum(actual4[m][:min(a,b)])+sum(actual4[m][min(a,b)+1:max(a,b)])+sum(actual4[m][max(a,b)+1:])
+
+                                the2actual = [actual4[m][a]]+[actual4[n][c]]
+                                first3actual = [actual4[m][b]]+actual4[n][:min(c,d)]+actual4[n][min(c,d)+1:max(c,d)]+actual4[n][max(c,d)+1:]
+                                second3actual = [actual4[n][d]]+actual4[m][:min(a,b)]+actual4[m][min(a,b)+1:max(a,b)]+actual4[m][max(a,b)+1:]
+
+                                new2 = [size4[m][a]]+[size4[n][c]]
+                                new31 = [size4[m][b]]+size4[n][:min(c,d)]+size4[n][min(c,d)+1:max(c,d)]+size4[n][max(c,d)+1:]
+                                new32 = [size4[n][d]]+size4[m][:min(a,b)]+size4[m][min(a,b)+1:max(a,b)]+size4[m][max(a,b)+1:]
+
+                                placed6s2s = min(the2//6,total6s)
+                                placed5s2s = min((the2-6*placed6s2s)//5,total5s)
+                                remaining = [total5s-placed5s2s,total6s-placed6s2s]
+
+                                placed6sfirst = min(first3//6,remaining[1])
+                                placed5sfirst = min((first3-6*placed6sfirst)//5,remaining[0])
+                                remaining1 = [remaining[0]-placed5sfirst,remaining[1]-placed6sfirst]
+
+                                placed6ssecond = min(second3//6,remaining1[1])
+                                placed5ssecond = min((second3-6*placed6ssecond)//5,remaining1[0])
+                                remaining2 = [remaining1[0]-placed5ssecond,remaining1[1]-placed6ssecond]
+
+                                if sum(remaining2)==0:
+                                    size3.extend([new31,new32])
+                                    actual3.extend([first3actual,second3actual])
+                                    init3.extend([[placed5sfirst,placed6sfirst],[placed5ssecond,placed6ssecond]])
+                                    used4.add(n);used4.add(m)
+                                    size4[n]=[]; init4[n]=[];size4[m]=[];init4[m]=[];actual4[n]=[];actual4[m]=[]
+                                    size2.append(new2); init2.append([placed5s2s,placed6s2s]); actual2.append(the2actual)
+                                    placedFlag, progressFlag = True, True
+
+        packed4 = [(s,i,a) for s,i,a in zip(size4, init4, actual4) if s]
+        size4, init4, actual4 = (map(list, zip(*packed4)) if packed4 else ([], [], []))
+
+    used4.clear()
+    used2 = set()
+    if len(size4)>=1 and len(size2)>=1:
+        for m in range(0,len(size4)):
+            if m in used4:
+                continue
+            for n in range(0,len(size2)):
+                if n in used2 or m in used4:
+                    continue
+                placedFlag=False
+                total5s = init4[m][0]+init2[n][0]
+                total6s = init4[m][1]+init2[n][1]
+                for a in range(0,len(size4[m])-1):
+                    if placedFlag:
+                        break
+                    for b in range(a+1,len(size4[m])):
+                        if placedFlag:
+                            break
+                        new31 = [size2[n][0], size4[m][a], size4[m][b]]
+                        new32 = [size2[n][1]] + size4[m][:a] + size4[m][a+1:b] + size4[m][b+1:]
+
+                        first3actual = [actual2[n][0], actual4[m][a], actual4[m][b]]
+                        second3actual = [actual2[n][1]] + actual4[m][:a] + actual4[m][a+1:b] + actual4[m][b+1:]
+
+                        first3 = actual2[n][0] + actual4[m][a] + actual4[m][b]
+                        second3 = actual2[n][1] + sum(actual4[m][:a]) + sum(actual4[m][a+1:b]) + sum(actual4[m][b+1:])
+
+                        placed6s1 = min(first3//6,total6s)
+                        placed5s1 = min((first3-6*placed6s1)//5,total5s)
+                        remaining = [total5s-placed5s1,total6s-placed6s1]
+
+                        placed6s2 = min(second3//6,remaining[1])
+                        placed5s2 = min((second3-6*placed6s2)//5,remaining[0])
+                        remaining1 = [remaining[0]-placed5s2,remaining[1]-placed6s2]
+                        if sum(remaining1)==0:
+                            size3.extend([new31,new32])
+                            init3.extend([[placed5s1,placed6s1],[placed5s2,placed6s2]])
+                            actual3.extend([first3actual,second3actual])
+                            used4.add(m); used2.add(n)
+                            size4[m]=[]; size2[n]=[]; init4[m]=[]; init2[n]=[]; actual4[m]=[]; actual2[n]=[]
+                            placedFlag, progressFlag = True, True
+
+        packed4 = [(s,i,a) for s,i,a in zip(size4, init4, actual4) if s]
+        size4, init4, actual4 = (map(list, zip(*packed4)) if packed4 else ([], [], []))
+        packed2 = [(s,i,a) for s,i,a in zip(size2, init2, actual2) if s]
+        size2, init2, actual2 = (map(list, zip(*packed2)) if packed2 else ([], [], []))
 
     size4 = [[x+1 for x in combo]for combo in size4]
     size3 = [[x+1 for x in combo]for combo in size3]
+    size2 = [[x+1 for x in combo]for combo in size2]
     other = [[x+1 for x in combo]for combo in other]
 
-    return size4+size3+other, init4+init3+init_other, progressFlag
+    return size4+size3+size2+other, init4+init3+init2+init_other, progressFlag
