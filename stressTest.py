@@ -1,8 +1,9 @@
 from Master import *
-import time
 import csv
 from pathlib import Path
 from itertools import combinations_with_replacement
+from datetime import datetime
+from zoneinfo import ZoneInfo
 
 def main(vehlist,pers5,pers6):
     veh2 = vehlist.copy()
@@ -52,28 +53,44 @@ def main(vehlist,pers5,pers6):
     while progress:
         combos,listing, progress = cleanup(combos, sorted_spaces, listing)
     combos = person_calc(combos.copy(), sorted_sizes.copy())
-    return combos
+    return combos, listing
 
-def determineflags(combos):
-    flags = ['N', 'N', 'N']
+def determineflags(combos, init):
+    flags = ['N', 'N', 'N', 'N', 'N']
 
     if not combos:
-        flags[2] = 'Y'
+        flags[4] = 'Y'
         return flags
 
-    count_len4 = 0
-    for elem in combos:
-        if len(elem) >= 5:
-            flags[1] = 'Y'
-        if len(elem) == 4 and count_len4<3:
-            count_len4 += 1
-            if count_len4 >= 2:
+    count4, count5, count6 = 0,0,0
+    total4, total5, total6  = 0,0,0
+    for x in range(len(combos)):
+        total = 5*init[x][0]+6*init[x][1]
+        length = len(combos[x])
+        if length==4:
+            count4+=1
+            if count4==1:
+                total4 = total
+            if count4==2 and total4!=total:
                 flags[0] = 'Y'
-        if flags[0] == 'Y' and flags[1] == 'Y':
-            break
-
+                continue
+        if length==5:
+            count5+=1
+            if count5==1:
+                total5 = total
+            if count5==2 and total5!=total:
+                flags[1] = 'Y'
+                continue
+        if length==6:
+            count6+=1
+            if count6==1:
+                total6 = total
+            if count6==2 and total6!=total:
+                flags[2] = 'Y'
+                continue
+        if length==5 and sum(init[x]) not in {1,4}:
+            flags[3] = 'Y'
     return flags
-
 
 def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
     path = Path(filepath)
@@ -81,7 +98,6 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
 
     file_exists = path.exists()
 
-    # compact representation for CSV
     combos_str = "" if not combos else "|".join(",".join(map(str, c)) for c in combos)
 
     with path.open("a", newline="") as f:
@@ -92,9 +108,11 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
                 "sum_vehicles",
                 "pers5",
                 "pers6",
-                "flags_2len4",
-                "flags_len5plus",
-                "flags_empty",
+                "flags_unequal_4s",
+                "flags_unequal_5s",
+                "flags_unequal_6s",
+                "flags_weird_5",
+                "failure",
                 "combos"
             ])
 
@@ -106,38 +124,59 @@ def writetocsv(filepath, vehicles, pers5, pers6, combos, flags):
             flags[0],
             flags[1],
             flags[2],
+            flags[3],
+            flags[4],
             combos_str
         ])
 
-
-def multisets(n):
-    return [list(c) for c in combinations_with_replacement(range(1, 6), n)]
+def multisets(n,upper):
+    return [list(c) for c in combinations_with_replacement(range(1, upper), n)]
 
 if __name__ == '__main__':
-    lower=3
-    upper=19
+    lower=9
+    upper=31
+    priority = 6
+    vers = 1
     for size in range(lower,upper):
         x = [0, 5, 4, 3, 2, 1]
-        sets = multisets(size)
+        if priority==1:
+            sets = multisets(size, 6)
+        elif priority==2:
+            sets = multisets(size, 5)
+        else:
+            sets = multisets(size, priority)
 
-        filepath = Path.home() / "Desktop" / "trials" / f"StressTest_{size}_{int(time.time())}.csv"
+        timestamp = datetime.now().strftime("%M%S")
+        filepath = Path.home() / "Desktop" / f"trial{priority}s-{vers}" / f"StressTest_{size}_{timestamp}.csv"
 
-        skip_sums = {1, 2, 3, 4, 7, 8, 9, 14, 13, 19, 9}
+        skip_sums = {1, 2, 3, 4, 7, 8, 9, 13, 14, 19}
 
         for vehicles in sets:
             s = sum(vehicles)
-            if s in skip_sums:
+            if s in skip_sums and priority!=1 and priority!=2:
                 continue
+            if priority==6:
+                pers5 = x[s%6]
+                remainder = s - 5*pers5
+                pers6 = remainder // 6
+            elif priority==5:
+                pers6 = s%5
+                remainder = s - 6*pers6
+                pers5 = remainder // 5
+            elif priority==1:
+                pers6 = s//6
+                pers5 = 0
+            elif priority==2:
+                pers5 = s//5
+                pers6 = 0
+            else:
+                break
+            combos, init = main(vehicles, pers5, pers6)
 
-            pers5 = x[s % 6]
-            remainder = s - 5 * pers5
-            if remainder < 0 or remainder % 6 != 0:
-                continue
-            pers6 = remainder // 6
-            combos = main(vehicles, pers5, pers6)
-
-            flags = determineflags(combos)
+            flags = determineflags(combos, init)
             writetocsv(filepath, vehicles, pers5, pers6, combos, flags)
 
-        print(f"Wrote results for {str(size)} to: {filepath}")
+        timestamp = datetime.now(ZoneInfo("America/Chicago")).strftime("%Y-%m-%d %H:%M:%S %Z")
+
+        print(f"[{timestamp}] Wrote results for {size} to: {filepath}")
     print("All done!")
